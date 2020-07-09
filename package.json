@@ -1,0 +1,26 @@
+{
+  "name": "api-giga",
+  "version": "1.0.0",
+  "description": "api responsible for dealing with the business rules of the Grupo Atemde",
+  "main": "src/index",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Saulolxx/api_giga.git"
+  },
+  "keywords": [
+    "aapi",
+    "giga",
+    "giga",
+    "grupo",
+    "atemde"
+  ],
+  "author": "Saulo Lins Dias",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Saulolxx/api_giga/issues"
+  },
+  "homepage": "https://github.com/Saulolxx/api_giga#readme"
+}
