@@ -4,11 +4,13 @@
   "description": "api responsible for dealing with the business rules of the Grupo Atemde",
   "main": "src/index",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "lint": "eslint --config=./.eslintrc.js --ext .js ./",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon src/server.js"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Saulolxx/api_giga.git"
+    "url": "git+https://github.com/Grupo-Atemde/api-giga.git"
   },
   "keywords": [
     "aapi",
@@ -20,7 +22,30 @@
   "author": "Saulo Lins Dias",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/Saulolxx/api_giga/issues"
+    "url": "https://github.com/Grupo-Atemde/api-giga/issues"
   },
-  "homepage": "https://github.com/Saulolxx/api_giga#readme"
+  "homepage": "https://github.com/Grupo-Atemde/api-giga#readme",
+  "dependencies": {
+    "@truepic/queryql": "^0.4.0",
+    "axios": "^0.19.2",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "jsonwebtoken": "^8.5.1",
+    "knex": "^0.21.2",
+    "moment": "^2.27.0",
+    "pg": "^8.3.0",
+    "pg-hstore": "^2.3.3",
+    "sequelize": "^6.3.0",
+    "yup": "^0.29.1"
+  },
+  "devDependencies": {
+    "eslint": "^7.4.0",
+    "eslint-config-airbnb-base": "^14.2.0",
+    "eslint-config-prettier": "^6.11.0",
+    "eslint-plugin-import": "^2.22.0",
+    "eslint-plugin-prettier": "^3.1.4",
+    "nodemon": "^2.0.4",
+    "prettier": "^2.0.5",
+    "sucrase": "^3.15.0"
+  }
 }
