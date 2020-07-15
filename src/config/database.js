@@ -6,6 +6,7 @@ module.exports = {
       atemde: {
         dialect: 'postgres',
         host: 'localhost',
+        port: 5432,
         username: 'postgres',
         password: 'mypass',
         database: 'atemde',
@@ -19,6 +20,7 @@ module.exports = {
       idental: {
         dialect: 'postgres',
         host: 'localhost',
+        port: 5432,
         username: 'postgres',
         password: 'mypass',
         database: 'atemde',
@@ -38,6 +40,7 @@ module.exports = {
         username: process.env.DB_USER_ATEMDE || 'postgres',
         password: process.env.DB_PASS_ATEMDE,
         database: process.env.DB_DATABASE_ATEMDE,
+        port: process.env.DB_PORT_ATEMDE,
         define: {
           timestamps: false,
           underscore: true,
@@ -51,6 +54,7 @@ module.exports = {
         username: process.env.DB_USER_IDENTAL || 'postgres',
         password: process.env.DB_PASS_IDENTAL,
         database: process.env.DB_DATABASE_IDENTAL,
+        port: process.env.DB_PORT_IDENTAL,
         define: {
           timestamps: false,
           underscore: true,
