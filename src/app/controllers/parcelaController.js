@@ -274,6 +274,20 @@ class ParcelaController {
         .when('modPagamento', (modPagamento, field) =>
           modPagamento === 2 || modPagamento === 34 ? field.required() : field
         ),
+      paymentid: Yup.string()
+        .when('modPagamento', (modPagamento, field) =>
+          modPagamento === 2 || modPagamento === 34 ? field.required() : field
+        )
+        .when('lop_id_tipo_baixa', (tipoBaixa, field) =>
+          parseInt(tipoBaixa, 10) === 4 ? field.required : field
+        ),
+      tid: Yup.string()
+        .when('modPagamento', (modPagamento, field) =>
+          modPagamento === 2 || modPagamento === 34 ? field.required() : field
+        )
+        .when('lop_id_tipo_baixa', (tipoBaixa, field) =>
+          parseInt(tipoBaixa, 10) === 4 ? field.required : field
+        ),
     });
 
     const carteira = await new TipoCarteira(req.pool).findPK(
@@ -330,6 +344,8 @@ class ParcelaController {
       fop_in_pre_conciliacao,
       che_id_cheque,
       lote_id,
+      paymentid,
+      tid,
     } = req.body;
 
     const { id } = req.params;
@@ -394,6 +410,8 @@ class ParcelaController {
       fop_in_conciliado,
       fop_in_pre_conciliacao,
       che_id_cheque,
+      paymentid,
+      tid,
     };
 
     try {

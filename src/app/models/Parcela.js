@@ -1,7 +1,4 @@
 /* eslint-disable no-unused-vars */
-import ParcelaLote from './ParcelaLote';
-import FormaPagamento from './FormaPagamento';
-
 const DEFAULT_ERR_RESPONSE = {
   error: 503,
   data: {
@@ -204,6 +201,8 @@ export default class Parcela {
       fop_in_conciliado = true,
       fop_in_pre_conciliacao = false,
       che_id_cheque,
+      paymentid,
+      tid,
     } = data;
 
     try {
@@ -216,7 +215,7 @@ export default class Parcela {
       const {
         rows: createFormaPagamento,
       } = await this.pool.query(
-        'INSERT INTO formapagamento (parcelaid, agenciaid, contaid, numerocheque, numerocartao, numerodocumento, numeromatricula, numerotransacao, validadecartao, tipodecarteiraid, numeroempresa, tipocartaoid, obs, numeroboleto, codigosegurancacartao, valor, centrocustoid, nome_emitente, contacheque, fop_in_conciliado, fop_in_pre_conciliacao, che_id_cheque) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22) RETURNING *',
+        'INSERT INTO formapagamento (parcelaid, agenciaid, contaid, numerocheque, numerocartao, numerodocumento, numeromatricula, numerotransacao, validadecartao, tipodecarteiraid, numeroempresa, tipocartaoid, obs, numeroboleto, codigosegurancacartao, valor, centrocustoid, nome_emitente, contacheque, fop_in_conciliado, fop_in_pre_conciliacao, che_id_cheque, paymentid, tid,) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24) RETURNING *',
         [
           id,
           agenciaid,
@@ -240,6 +239,8 @@ export default class Parcela {
           fop_in_conciliado,
           fop_in_pre_conciliacao,
           che_id_cheque,
+          paymentid,
+          tid,
         ]
       );
 
@@ -268,6 +269,53 @@ export default class Parcela {
     } catch (err) {
       await this.pool.query('ROLLBACK');
       throw err;
+    }
+  }
+
+  async filterParcelas(limit) {
+    try {
+      const { rows } = await this.pool.query(
+        `
+      SELECT
+        parcela.id AS parcela_id,
+        parcela.valor AS parcela_valor,
+        parcela.statusgrupoid AS parcela_status,
+        parcela.numero AS parcela_numero,
+        cn_tipodecarteira.modalidadepagamentoid AS modalidade_pagamento,
+        cn_tipodecarteira.id AS tipo_pagamento,
+        titulo.id AS titulo_id,
+        sp_dadospessoafisica.id AS pessoa_id,
+        sp_dadospessoafisica.nome AS pessoa_nome,
+        cn_contrato.id AS contrato_id,
+        cartao.id AS cartao_id,
+        cartao.numerocartao AS numero_cartao,
+        cartao.codigosegurancacartao AS codigo_seguranca_cartao,
+        cartao.validadecartao AS validade_cartao,
+        cartao.diadevencimento AS dia_vencimento_cartao,
+        cartao.nome_titular
+        FROM parcela
+        INNER JOIN titulo ON (parcela.tituloid = titulo.id)
+        INNER JOIN cn_tipodecarteira ON (titulo.tipodecarteiraid = cn_tipodecarteira.id)
+        INNER JOIN cn_contrato ON (titulo.numerocontratoid = cn_contrato.id)
+        INNER JOIN cn_associadopf ON (cn_contrato.id = cn_associadopf.id)
+        INNER JOIN sp_dadospessoafisica ON (cn_associadopf.responsavelfinanceiroid = sp_dadospessoafisica.id)
+        RIGHT JOIN cartao ON (sp_dadospessoafisica.id = cartao.pessoaid)
+        WHERE (parcela.datavencimento BETWEEN current_date - 3 AND current_date)
+        AND (parcela.statusgrupoid = 1)
+        AND (cn_tipodecarteira.modalidadepagamentoid = 2 OR (titulo.modpagamentoid IS NOT NULL AND (titulo.modpagamentoid = 2 AND titulo.modpagamentoid = 34)))
+        AND (cn_contrato.tipocontratoid = 5 AND cn_contrato.statusid = 8)
+        AND (cartao.car_in_principal = true AND cartao.validadecartao > current_date)
+        AND NOT parcela.pcl_in_cobranca
+        LIMIT $1
+      `,
+        [limit]
+      );
+
+      if (!rows.length) return [];
+
+      return rows;
+    } catch (err) {
+      return DEFAULT_ERR_RESPONSE;
     }
   }
 }
