@@ -6,6 +6,7 @@
   "scripts": {
     "lint": "eslint --config=./.eslintrc.js --ext .js ./",
     "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "sucrase ./src -d ./dist --transforms imports",
     "dev": "nodemon src/server.js"
   },
   "repository": {
