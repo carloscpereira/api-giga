@@ -3,12 +3,13 @@ import 'dotenv/config';
 import express from 'express';
 import * as Sentry from '@sentry/node';
 import Youch from 'youch';
+import queryParams from 'express-query-params';
 
 import 'express-async-errors';
 
 import routes from './routes';
 import sentryConfig from './config/sentry';
-import './database';
+// import './database';
 
 class App {
   constructor() {
@@ -24,6 +25,12 @@ class App {
   middleware() {
     this.server.use(Sentry.Handlers.requestHandler());
     this.server.use(express.json());
+    this.server.use(
+      queryParams({
+        format: 'sql',
+        blacklistParams: ['limit', 'order', 'page', 'perPage'],
+      })
+    );
   }
 
   routes() {

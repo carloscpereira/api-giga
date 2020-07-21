@@ -318,4 +318,106 @@ export default class Parcela {
       return DEFAULT_ERR_RESPONSE;
     }
   }
+
+  async newGet(q, params, { limit = 20 }) {
+    try {
+      let query = `
+      SELECT * FROM
+      (SELECT
+
+        -- Referentes a parcela
+        parcela.id as parcela_id,
+        parcela.statusgrupoid as parcela_statusid,
+        parcela.valor as parcela_valor,
+        parcela.valor_bruto as parcela_valor_bruto,
+        parcela.numero as parcela_numero,
+        parcela.datavencimento as parcela_vencimento,
+        parcelalote.pal_dt_pagamento as parcela_pagamento,
+        parcela.datacadastramento as parcela_cadastro,
+        parcela.pcl_in_cobranca as parcela_in_cobranca,
+
+        -- Referentes ao Lote
+        lotepagamento.id as lote_id,
+        lotepagamento.datacadastro as lote_cadastro,
+        lotepagamento.lop_dt_baixa as lote_baixa,
+
+        -- Referentes ao Titulo
+        titulo.id as titulo_id,
+        titulo.valor as titulo_valor,
+        titulo.numerototalparcelas as titulo_parcelas,
+        titulo.statusid as titulo_statusid,
+
+        -- Referentes a Carteira
+        cn_tipodecarteira.id as carteira_id,
+        cn_tipodecarteira.descricao as carteira_tipo,
+        cn_tipodecarteira.modalidadepagamentoid as carteira_modalidadeid,
+        modpagamento.descricao AS carteira_modalidade,
+
+        -- Referentes a Boleto
+        parcela.linhadigitavel as boleto_linhadigitavel,
+        parcela.codigobarras as boleto_codigobarras,
+        parcela.nossonumero as boleto_nossonumero,
+        parcela.taxaboleto as boleto_taxaboleto,
+        parcela.taxamora as boleto_taxamora,
+
+        -- Referentes ao Pagante
+        sp_dadospessoafisica.id as rf_id,
+        sp_dadospessoafisica.nome as rf_nome,
+        sp_dadospessoafisica.rg as rf_rg,
+        sp_dadospessoafisica.cpf as rf_cpf,
+        sp_dadospessoafisica.datanascimento as rf_nascimento,
+
+        -- Referentes ao Email Pagante
+        sp_email.descricao as rf_email,
+
+        -- Refetentes ao Telefone Pagante
+        sp_telefone.numero as rf_numero,
+
+        -- Referente ao Cartão de Créditos
+        cartao.id as cartao_id,
+          cartao.numerocartao as cartao_numero,
+          cartao.codigosegurancacartao as cartao_codigoseguranca,
+          cartao.validadecartao as cartao_validade,
+          cartao.diadevencimento as cartao_diavencimento,
+          cartao.nome_titular as cartao_titular,
+
+        -- Referente ao Contrato
+        cn_contrato.id as contrato_id,
+        cn_contrato.numerocontrato as contrato_numero,
+        cn_contrato.statusid as contrato_statusid,
+        cn_contrato.dataadesao as contrato_adesao,
+        cn_contrato.datacancelamento as contrato_cancelamento
+
+
+          FROM parcela
+          INNER JOIN titulo ON (parcela.tituloid = titulo.id)
+          INNER JOIN cn_tipodecarteira ON (titulo.tipodecarteiraid = cn_tipodecarteira.id)
+          INNER JOIN cn_contrato ON (titulo.numerocontratoid = cn_contrato.id)
+          INNER JOIN cn_associadopf ON (cn_contrato.id = cn_associadopf.id)
+          INNER JOIN sp_dadospessoafisica ON (cn_associadopf.responsavelfinanceiroid = sp_dadospessoafisica.id)
+          INNER JOIN cartao ON (sp_dadospessoafisica.id = cartao.pessoaid AND cartao.car_in_principal)
+        LEFT JOIN sp_email ON (sp_dadospessoafisica.id = sp_email.dadosid AND sp_email.ema_in_principal = true)
+        LEFT JOIN sp_telefone ON (sp_dadospessoafisica.id = sp_telefone.dadosid AND sp_telefone.tel_in_principal = true)
+        LEFT JOIN modpagamento ON (cn_tipodecarteira.modalidadepagamentoid = modpagamento.id)
+        LEFT JOIN formapagamento ON (parcela.id = formapagamento.parcelaid)
+        LEFT JOIN parcelalote ON (parcela.id = parcelalote.parcelaid)
+        LEFT JOIN lotepagamento ON (parcelalote.pal_id_lote_pagamento = lotepagamento.id)) AS p
+      `;
+
+      if (!!q && !!params) {
+        query += ` WHERE ${q}`;
+      }
+
+      query += ` LIMIT ${limit}`;
+
+      // console.log(query);
+
+      const { rows } = await this.pool.query(query, params);
+
+      return rows;
+    } catch (err) {
+      console.log(err);
+      return DEFAULT_ERR_RESPONSE;
+    }
+  }
 }

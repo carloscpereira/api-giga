@@ -1,6 +1,8 @@
 import * as Yup from 'yup';
 import pool from '../../utils/Database';
 import knex from '../../utils/Knex';
+import connectionConfig from '../../config/database';
+import Database from '../../database';
 
 export default async (req, res, next) => {
   const schema = Yup.object().shape({
@@ -25,6 +27,12 @@ export default async (req, res, next) => {
   }
 
   const { operator } = req.params;
+
+  req.connection = connectionConfig[process.env.NODE_ENV].databases[operator];
+
+  // eslint-disable-next-line no-new
+  new Database(req.connection);
+
   req.pool = pool[operator];
   req.knex = knex[operator];
 

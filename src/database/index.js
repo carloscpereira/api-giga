@@ -1,49 +1,27 @@
-const Sequelize = require('sequelize');
+import Sequelize from 'sequelize';
 
-require('dotenv/config');
+import Parcela from '../app/models/Sequelize/Parcela';
 
-const env = process.env.NODE_ENV || 'development';
-const config = require('../config/database')[env];
+// import databaseConfig from '../config/database';
 
-const databases = Object.keys(config.databases);
-
-const modelsAtemde = [];
-const modelsIdental = [];
-
-// Init Sequelize on all databases
+const models = [Parcela];
 
 class Database {
-  constructor() {
+  constructor(config) {
+    // this.connection = connection;
+    this.config = config;
     this.init();
   }
 
   init() {
-    this.connection = {};
+    this.connection = new Sequelize(this.config);
 
-    for (let i = 0; i < databases.length; i += 1) {
-      const database = databases[i];
-      const dbPath = config.databases[database];
-
-      this.connection[database] = new Sequelize(
-        dbPath.database,
-        dbPath.username,
-        dbPath.password,
-        dbPath
-      );
-    }
-
-    modelsAtemde
-      .map((model) => model.init(this.connection.atemde))
-      .map(
-        (model) =>
-          model.associate && model.associate(this.connection.atemde.models)
-      );
-    modelsIdental
-      .map((model) => model.init(this.connection.idental))
+    models
+      .map((model) => model.init(this.connection))
       .map(
         (model) => model.associate && model.associate(this.connection.models)
       );
   }
 }
 
-export default new Database();
+export default Database;

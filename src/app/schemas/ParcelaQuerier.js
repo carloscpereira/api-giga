@@ -16,7 +16,7 @@ export default class ParcelaQuerier extends QueryQL {
   defineValidation(schema) {
     return {
       'filter:tituloid[=]': schema.number(),
-      'filter:datavencimento[between][]': schema.string(),
+      'filter:datavencimento[between]': schema.string(),
     };
   }
 

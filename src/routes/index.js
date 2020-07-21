@@ -5,39 +5,69 @@ import parcelaController from '../app/controllers/parcelaController';
 import loteController from '../app/controllers/loteController';
 import ocorrenciaController from '../app/controllers/ocorrenciaController';
 
+import gettersController from '../app/controllers/gettersController';
+
+// import Parcela from '../app/models/Sequelize/Parcela';
+
 const routes = new Router();
 
 routes.get('/ping', (req, res) => {
   return res.send('Pong!');
 });
 
+// Rotas do servidor de cobrança
+
+routes.get('/parcelas/', gettersController.parcelas);
+
+routes.get(
+  '/parcelas/:operator/query/srv',
+  operatorMiddleware,
+  parcelaController.filterParecelas
+);
+
+// routes.get('/:operator/testando', operatorMiddleware, async (req, res) => {
+//   try {
+//     const parcelas = await Parcela.sequelize;
+//     console.log(parcelas);
+//     res.send('ok');
+//   } catch (err) {
+//     console.log(err);
+//     res.json({ error: true });
+//   }
+//   // console.log(await Parcela.findAll());
+
+//   // res.send('ok');
+// });
+
 /**
  * Rotas referente a parcelas
  */
-routes.get('/:operator/parcelas', operatorMiddleware, parcelaController.index);
+routes.get('/parcelas/:operator', operatorMiddleware, parcelaController.index);
+
 routes.get(
-  '/:operator/parcelas/:id',
+  '/parcelas/:operator/:id',
   operatorMiddleware,
   parcelaController.show
 );
 routes.put(
-  '/:operator/parcelas/:id',
+  '/parcelas/:operator/:id',
   operatorMiddleware,
   parcelaController.update
 );
+
 // routes.delete('/:operator/parcelas/:id', operatorMiddleware);
-routes.post('/:operator/parcelas', operatorMiddleware, parcelaController.store);
+routes.post('/parcelas/:operator', operatorMiddleware, parcelaController.store);
 
 // Faz a baixa de um array de parcelas
 routes.put(
-  '/:operator/parcelas/void/baixa',
+  '/parcelas/:operator/void/baixa',
   operatorMiddleware,
   parcelaController.baixaParcelas
 );
 
 // Faz a baixa de uma única parcela
 routes.put(
-  '/:operator/parcelas/:id/baixa',
+  '/parcelas/:operator/:id/baixa',
   operatorMiddleware,
   parcelaController.baixaParcela
 );
@@ -45,25 +75,25 @@ routes.put(
 /**
  * Rotas referentes a Lotes
  */
-routes.get('/:operator/lotes', operatorMiddleware, loteController.index);
-routes.post('/:operator/lotes', operatorMiddleware, loteController.store);
-routes.put('/:operator/lotes/:id', operatorMiddleware, loteController.update);
+routes.get('/lotes/:operator', operatorMiddleware, loteController.index);
+routes.post('/lotes/:operator', operatorMiddleware, loteController.store);
+routes.put('/lotes/:operator/:id', operatorMiddleware, loteController.update);
 
 /**
  * Rotas referentes a ocorrencias
  */
 routes.get(
-  '/:operator/ocorrencias',
+  '/ocorrencias/:operator',
   operatorMiddleware,
   ocorrenciaController.index
 );
 routes.post(
-  '/:operator/ocorrencias',
+  '/ocorrencias/:operator',
   operatorMiddleware,
   ocorrenciaController.store
 );
 routes.put(
-  '/:operator/ocorrencias/:id',
+  '/ocorrencias/:operator/:id',
   operatorMiddleware,
   ocorrenciaController.update
 );

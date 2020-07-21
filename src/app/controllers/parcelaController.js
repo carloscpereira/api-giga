@@ -2,15 +2,23 @@
 /* eslint-disable no-await-in-loop */
 /* eslint-disable no-restricted-syntax */
 import * as Yup from 'yup';
-import ParcelaQuerier from '../schemas/ParcelaQuerier';
-import Parcela from '../models/Parcela';
 import LotePagamento from '../models/LotePagamento';
 import TipoCarteira from '../models/TipoCarteira';
+import Parcela from '../models/Parcela';
 
 class ParcelaController {
   async index(req, res) {
-    const querier = new ParcelaQuerier(req.query, req.knex('parcela'));
-    const parcelas = await querier.run();
+    // const parcelas = await req.pool.query(query);
+
+    // const querier = new ParcelaQuerier(req.query, req.knex('parcela'));
+    // const parcelas = await querier.run();
+    const { limit } = req.query;
+
+    const parcelas = await new Parcela(req.pool).newGet(
+      req.parsedQuery.query,
+      req.parsedQuery.values,
+      { limit }
+    );
 
     res.json({ error: null, data: parcelas });
   }
@@ -232,6 +240,27 @@ class ParcelaController {
     return res.json({ error: null, data: response });
   }
 
+  async filterParecelas(req, res) {
+    try {
+      const {
+        query: { limit },
+      } = req;
+
+      const parcelas = await new Parcela(req.pool).filterParcelas(limit);
+
+      if (parcelas && parcelas.error) {
+        return res.status(parcelas.error).json(parcelas);
+      }
+
+      return res.json({ error: null, data: parcelas });
+    } catch (err) {
+      return res.status(400).json({
+        error: 400,
+        data: { error: 'Internal Server Error', message: err.message },
+      });
+    }
+  }
+
   async baixaParcela(req, res) {
     const schema = Yup.object().shape({
       pessoausuarioid: Yup.number().integer(),
@@ -437,67 +466,95 @@ class ParcelaController {
 
   async baixaParcelas(req, res) {
     const schema = Yup.object().shape({
-      parcelas: Yup.array().of(Yup.number().integer()).required(),
+      parcelas: Yup.array().of(
+        Yup.object().shape({
+          id: Yup.numer().integer().required(),
+          modPagamento: Yup.number().integer().required(),
+          numerocartao: Yup.string().when(
+            'modPagamento',
+            (modPagamento, field) =>
+              modPagamento === 2 || modPagamento === 34
+                ? field.required()
+                : field
+          ),
+
+          numerocheque: Yup.string().when(
+            'modPagamento',
+            (modPagamento, field) =>
+              modPagamento === 1 ? field.required() : field
+          ),
+          numerodocumento: Yup.string().when(
+            'modPagamento',
+            (modPagamento, field) =>
+              modPagamento === 10 ? field.required() : field
+          ),
+          numeromatricula: Yup.string().when(
+            'modPagamento',
+            (modPagamento, field) =>
+              modPagamento === 10 ? field.required() : field
+          ),
+          validadecartao: Yup.date().when(
+            'modPagamento',
+            (modPagamento, field) =>
+              modPagamento === 2 || modPagamento === 34
+                ? field.required()
+                : field
+          ),
+          numerotransacao: Yup.string(),
+          numeroboleto: Yup.string().when(
+            'modPagamento',
+            (modPagamento, field) =>
+              modPagamento === 7 ? field.required() : field
+          ),
+          codigosegurancacartao: Yup.number()
+            .integer()
+            .when('modPagamento', (modPagamento, field) =>
+              modPagamento === 2 || modPagamento === 34
+                ? field.required()
+                : field
+            ),
+          obs: Yup.string(),
+          numeroempresa: Yup.string(),
+          tipodecarteiraid: Yup.number().integer().required(),
+          tipocartaoid: Yup.number().integer(),
+          contaid: Yup.number().integer(),
+          agenciaid: Yup.number().integer(),
+        })
+      ),
       pessoausuarioid: Yup.number().integer(),
       lop_id_pessoa: Yup.number().integer(),
       lote_id: Yup.number().integer(),
       lop_id_tipo_baixa: Yup.number().integer().required(),
       lop_in_tipo_movimento: Yup.string().required(),
-      modPagamento: Yup.number().integer().required(),
-      agenciaid: Yup.number().integer(),
-      contaid: Yup.number().integer(),
-      numerocheque: Yup.string().when('modPagamento', (modPagamento, field) =>
-        modPagamento === 1 ? field.required() : field
-      ),
-      numerocartao: Yup.string().when('modPagamento', (modPagamento, field) =>
-        modPagamento === 2 || modPagamento === 34 ? field.required() : field
-      ),
-      numerodocumento: Yup.string().when(
-        'modPagamento',
-        (modPagamento, field) =>
-          modPagamento === 10 ? field.required() : field
-      ),
-      numeromatricula: Yup.string().when(
-        'modPagamento',
-        (modPagamento, field) =>
-          modPagamento === 10 ? field.required() : field
-      ),
-      numerotransacao: Yup.string(),
-      validadecartao: Yup.date().when('modPagamento', (modPagamento, field) =>
-        modPagamento === 2 || modPagamento === 34 ? field.required() : field
-      ),
-      tipodecarteiraid: Yup.number().integer().required(),
-      numeroempresa: Yup.string(),
-      tipocartaoid: Yup.number().integer(),
-      obs: Yup.string(),
-      numeroboleto: Yup.string().when('modPagamento', (modPagamento, field) =>
-        modPagamento === 7 ? field.required() : field
-      ),
-      codigosegurancacartao: Yup.number()
-        .integer()
-        .when('modPagamento', (modPagamento, field) =>
-          modPagamento === 2 || modPagamento === 34 ? field.required() : field
-        ),
     });
 
-    const carteira = await new TipoCarteira(req.pool).findPK(
-      req.body.tipodecarteiraid
-    );
+    if (!req.body.parcelas) {
+      return res.status(401).json({
+        error: 401,
+        data: { message: 'Validation fails', errors: 'parcelas' },
+      });
+    }
 
-    const modPagamento = carteira
-      ? parseInt(carteira.modalidadepagamentoid, 10)
-      : null;
+    req.body.parcelas = Promise.all(
+      req.body.parcelas.map(async (p) => {
+        const carteira = await new TipoCarteira(req.pool).findPK(
+          p.tipodecarteiraid
+        );
+        const modPagamento = carteira
+          ? parseInt(carteira.modalidadepagamentoid, 10)
+          : null;
+        return { ...p, modPagamento };
+      })
+    );
 
     if (
       !(await schema.isValid({
         ...req.body,
-        modPagamento,
       }))
     ) {
       try {
         await schema.validate({
           ...req.body,
-          modPagamento,
         });
       } catch (error) {
         return res.status(401).json({
@@ -512,26 +569,6 @@ class ParcelaController {
       lop_id_pessoa = 1,
       lop_id_tipo_baixa = 4,
       lop_in_tipo_movimento = 'C',
-      agenciaid,
-      contaid,
-      numerocheque,
-      numerocartao,
-      numerodocumento,
-      numeromatricula,
-      numerotransacao,
-      validadecartao,
-      tipodecarteiraid,
-      numeroempresa,
-      tipocartaoid,
-      nome_emitente,
-      centrocustoid,
-      obs,
-      numeroboleto,
-      codigosegurancacartao,
-      contacheque,
-      fop_in_conciliado,
-      fop_in_pre_conciliacao,
-      che_id_cheque,
       lote_id,
     } = req.body;
 
@@ -564,44 +601,48 @@ class ParcelaController {
 
     req.pool.query('BEGIN');
 
-    const dataInvoice = {
+    let dataInvoice = {
       idLotePagamento: lotePagamento.id,
-      agenciaid,
-      contaid,
-      numerocheque,
-      numerocartao,
-      numerodocumento,
-      numeromatricula,
-      numerotransacao,
-      validadecartao,
-      tipodecarteiraid,
-      numeroempresa,
-      tipocartaoid,
-      nome_emitente,
-      centrocustoid,
-      obs,
-      numeroboleto,
-      codigosegurancacartao,
-      contacheque,
-      fop_in_conciliado,
-      fop_in_pre_conciliacao,
-      che_id_cheque,
     };
 
-    for (const id of parcelas) {
+    for (const p of parcelas) {
       try {
-        const parcela = await new Parcela(req.pool).findPK(id);
+        const parcela = await new Parcela(req.pool).findPK(p.id);
 
         if (parseInt(parcela.statusgrupoid, 10) === 2) {
           parcelaErr.push({
-            id,
+            id: p.id,
             error:
               'Portion cannot be invoiced because it has already been invoiced',
           });
           continue;
         }
 
-        await new Parcela(req.pool).invoice({ ...dataInvoice, id });
+        dataInvoice = {
+          ...dataInvoice,
+          agenciaid: p.agenciaid,
+          contaid: p.contaid,
+          numerocheque: p.numerocheque,
+          numerocartao: p.numerocartao,
+          numerodocumento: p.numerodocumento,
+          numeromatricula: p.numeromatricula,
+          numerotransacao: p.numerotransacao,
+          validadecartao: p.validadecartao,
+          tipodecarteiraid: p.tipodecarteiraid,
+          numeroempresa: p.numeroempresa,
+          tipocartaoid: p.tipocartaoid,
+          nome_emitente: p.nome_emitente,
+          centrocustoid: p.centrocustoid,
+          obs: p.obs,
+          numeroboleto: p.numeroboleto,
+          codigosegurancacartao: p.codigosegurancacartao,
+          contacheque: p.contacheque,
+          fop_in_conciliado: p.fop_in_conciliado,
+          fop_in_pre_conciliacao: p.fop_in_pre_conciliacao,
+          che_id_cheque: p.che_id_cheque,
+        };
+
+        await new Parcela(req.pool).invoice({ ...dataInvoice, id: p.id });
       } catch (err) {
         req.pool.query('ROLLBACK');
         return res.status(400).json({

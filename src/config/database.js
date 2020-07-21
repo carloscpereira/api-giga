@@ -16,7 +16,6 @@ module.exports = {
           underscoreAll: true,
         },
       },
-
       idental: {
         dialect: 'postgres',
         host: 'localhost',
@@ -47,7 +46,6 @@ module.exports = {
           underscoreAll: true,
         },
       },
-
       idental: {
         dialect: process.env.DB_DIALECT_IDENTAL || 'postgres',
         host: process.env.DB_HOST_IDENTAL || 'localhost',
