@@ -392,6 +392,8 @@ export default class Parcela {
         cn_contrato.datacancelamento as contrato_cancelamento,
 
         -- Forma Pagamento
+        formapagamento.valor as formapamento_valor,
+
         -- Cheque
         formapagamento.numerocheque as formapamento_cheque,
         formapagamento.contacheque as formapagamento_cheque_conta,
