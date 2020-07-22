@@ -1,7 +1,7 @@
 import { Router } from 'express';
-
 import { Op } from 'sequelize';
-import operatorMiddleware from '../app/middlewares/operator';
+
+import { checkOperator as operatorMiddleware } from '../app/middlewares';
 
 import gettersController from '../app/controllers/gettersController';
 import parcelaController from '../app/controllers/parcelaController';

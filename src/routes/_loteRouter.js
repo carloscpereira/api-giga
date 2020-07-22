@@ -1,6 +1,6 @@
 import { Router } from 'express';
 
-import operatorMiddleware from '../app/middlewares/operator';
+import { checkOperator as operatorMiddleware } from '../app/middlewares';
 
 import loteController from '../app/controllers/loteController';
 

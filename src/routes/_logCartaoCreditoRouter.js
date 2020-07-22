@@ -1,6 +1,6 @@
 import { Router } from 'express';
 
-import operatorMiddleware from '../app/middlewares/operator';
+import { checkOperator as operatorMiddleware } from '../app/middlewares';
 
 import logCartaoCreditoController from '../app/controllers/logCartaoCreditoController';
 
