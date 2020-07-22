@@ -7,13 +7,15 @@ import queryParams from 'express-query-params';
 
 import 'express-async-errors';
 
-// import routes from './routes/index2';
+import { checkAuthorization } from './app/middlewares';
+
 import {
   parcelaRouter,
   loteRouter,
   ocorrenciaRouter,
   logCartaoCreditoRouter,
 } from './routes';
+
 import sentryConfig from './config/sentry';
 // import './database';
 
@@ -31,6 +33,7 @@ class App {
   middleware() {
     this.server.use(Sentry.Handlers.requestHandler());
     this.server.use(express.json());
+    this.server.use(checkAuthorization);
     this.server.use(
       queryParams({
         format: 'sql',
