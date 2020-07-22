@@ -1,10 +1,22 @@
 import Sequelize from 'sequelize';
 
 import Parcela from '../app/models/Sequelize/Parcela';
+import FormaPagamento from '../app/models/Sequelize/FormaPagamento';
+import Titulo from '../app/models/Sequelize/Titulo';
+import Contrato from '../app/models/Sequelize/Contrato';
+import Documento from '../app/models/Sequelize/Documento';
+import LogCartaoCredito from '../app/models/Sequelize/LogCartaoCredito';
 
 // import databaseConfig from '../config/database';
 
-const models = [Parcela];
+const models = [
+  Parcela,
+  FormaPagamento,
+  Titulo,
+  Contrato,
+  Documento,
+  LogCartaoCredito,
+];
 
 class Database {
   constructor(config) {
