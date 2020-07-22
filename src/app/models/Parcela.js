@@ -328,6 +328,7 @@ export default class Parcela {
         -- Referentes a parcela
         parcela.id as parcela_id,
         parcela.statusgrupoid as parcela_statusid,
+        statusgrupo.descricao as parcela_status,
         parcela.valor as parcela_valor,
         parcela.valor_bruto as parcela_valor_bruto,
         parcela.numero as parcela_numero,
@@ -375,31 +376,60 @@ export default class Parcela {
 
         -- Referente ao Cartão de Créditos
         cartao.id as cartao_id,
-          cartao.numerocartao as cartao_numero,
-          cartao.codigosegurancacartao as cartao_codigoseguranca,
-          cartao.validadecartao as cartao_validade,
-          cartao.diadevencimento as cartao_diavencimento,
-          cartao.nome_titular as cartao_titular,
+        cartao.numerocartao as cartao_numero,
+        cartao.codigosegurancacartao as cartao_codigoseguranca,
+        cartao.validadecartao as cartao_validade,
+        cartao.diadevencimento as cartao_diavencimento,
+        cartao.nome_titular as cartao_titular,
 
         -- Referente ao Contrato
         cn_contrato.id as contrato_id,
         cn_contrato.numerocontrato as contrato_numero,
         cn_contrato.statusid as contrato_statusid,
         cn_contrato.dataadesao as contrato_adesao,
-        cn_contrato.datacancelamento as contrato_cancelamento
+        cn_contrato.datacancelamento as contrato_cancelamento,
+
+        -- Forma Pagamento
+        -- Cheque
+        formapagamento.numerocheque as formapamento_cheque,
+        formapagamento.contacheque as formapagamento_cheque_conta,
+        formapagamento.nome_emitente as formapagamento_cheque_emitente,
+        -- Cartão
+        formapagamento.numerocartao as formapagamento_catao_numero,
+        formapagamento.validadecartao as formapagamento_cartao_validade,
+        formapagamento.codigosegurancacartao as formapagamento_cartao_codigoseguranca,
+        -- Consignado
+        formapagamento.numerodocumento as formapagamento_documento,
+        formapagamento.numeromatricula as formapagamento_matricula,
+        -- Transferencia
+        formapagamento.numerotransacao as formapagamento_transacao,
+        -- Boleto
+        formapagamento.numeroboleto as formapagamento_boleto,
+        -- Carteira
+        formapagamento.tipodecarteiraid as formapagamento_carteiraid,
+        formapagamento.agenciaid as formapagamento_agenciaid,
+        fp_agencia.descricao as formapagamento_agencia,
+        fp_agencia.codigo as formapagamento_agencia_codigo,
+        fpa_banco.descricao as formapagamento_banco,
+        fpa_banco.codigo as formapagamento_banco_codigo,
+        fp_conta.numero as formapagamento_conta
 
 
-          FROM parcela
-          INNER JOIN titulo ON (parcela.tituloid = titulo.id)
-          INNER JOIN cn_tipodecarteira ON (titulo.tipodecarteiraid = cn_tipodecarteira.id)
-          INNER JOIN cn_contrato ON (titulo.numerocontratoid = cn_contrato.id)
-          INNER JOIN cn_associadopf ON (cn_contrato.id = cn_associadopf.id)
-          INNER JOIN sp_dadospessoafisica ON (cn_associadopf.responsavelfinanceiroid = sp_dadospessoafisica.id)
-          INNER JOIN cartao ON (sp_dadospessoafisica.id = cartao.pessoaid AND cartao.car_in_principal)
+        FROM parcela
+        INNER JOIN statusgrupo ON (parcela.statusgrupoid = statusgrupo.id)
+        INNER JOIN titulo ON (parcela.tituloid = titulo.id)
+        INNER JOIN cn_tipodecarteira ON (titulo.tipodecarteiraid = cn_tipodecarteira.id)
+        INNER JOIN cn_contrato ON (titulo.numerocontratoid = cn_contrato.id)
+        INNER JOIN cn_associadopf ON (cn_contrato.id = cn_associadopf.id)
+        INNER JOIN sp_dadospessoafisica ON (cn_associadopf.responsavelfinanceiroid = sp_dadospessoafisica.id)
+        INNER JOIN cartao ON (sp_dadospessoafisica.id = cartao.pessoaid AND cartao.car_in_principal)
         LEFT JOIN sp_email ON (sp_dadospessoafisica.id = sp_email.dadosid AND sp_email.ema_in_principal = true)
         LEFT JOIN sp_telefone ON (sp_dadospessoafisica.id = sp_telefone.dadosid AND sp_telefone.tel_in_principal = true)
         LEFT JOIN modpagamento ON (cn_tipodecarteira.modalidadepagamentoid = modpagamento.id)
         LEFT JOIN formapagamento ON (parcela.id = formapagamento.parcelaid)
+        LEFT JOIN agencia fp_agencia ON (formapagamento.agenciaid = fp_agencia.id)
+        LEFT JOIN banco fpa_banco ON (fp_agencia.bancoid = fpa_banco.id)
+        LEFT JOIN conta fp_conta ON (formapagamento.contaid = fp_conta.id)
         LEFT JOIN parcelalote ON (parcela.id = parcelalote.parcelaid)
         LEFT JOIN lotepagamento ON (parcelalote.pal_id_lote_pagamento = lotepagamento.id)) AS p
       `;
