@@ -7,7 +7,13 @@ import queryParams from 'express-query-params';
 
 import 'express-async-errors';
 
-import routes from './routes';
+// import routes from './routes/index2';
+import {
+  parcelaRouter,
+  loteRouter,
+  ocorrenciaRouter,
+  logCartaoCreditoRouter,
+} from './routes';
 import sentryConfig from './config/sentry';
 // import './database';
 
@@ -34,7 +40,10 @@ class App {
   }
 
   routes() {
-    this.server.use(routes);
+    this.server.use('/parcelas/log/cartao-credito', logCartaoCreditoRouter);
+    this.server.use('/ocorrencias', ocorrenciaRouter);
+    this.server.use('/lotes', loteRouter);
+    this.server.use('/parcelas', parcelaRouter);
     this.server.use(Sentry.Handlers.errorHandler());
   }
 
