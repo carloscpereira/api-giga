@@ -26,20 +26,26 @@ export default class Parcela extends Model {
         cobranca_cancelada: Sequelize.BOOLEAN,
         valor_bruto: Sequelize.STRING,
         pcl_in_cobranca: Sequelize.BOOLEAN,
-        // id: {
-        //   type: Sequelize.UUID,
-        //   defaultValue: Sequelize.UUIDV1,
-        //   primaryKey: true,
-        // },
-        // password: Sequelize.VIRTUAL,
-        // name: Sequelize.STRING,
-        // email: Sequelize.STRING,
-        // password_hash: Sequelize.STRING,
-        // provider: Sequelize.BOOLEAN,
       },
       { sequelize, tableName: 'parcela' }
     );
 
     return this;
+  }
+
+  static associate(models) {
+    this.hasMany(models.FormaPagamento, {
+      foreignKey: 'parcelaid',
+      as: 'pagamento',
+    });
+    this.belongsTo(models.Titulo, { foreignKey: 'tituloid', as: 'titulo' });
+    this.belongsTo(models.Documento, {
+      foreignKey: 'tipodocumentoid',
+      as: 'documento',
+    });
+    this.hasMany(models.LogCartaoCredito, {
+      foreignKey: 'parcelaid',
+      as: 'log_cartao',
+    });
   }
 }
