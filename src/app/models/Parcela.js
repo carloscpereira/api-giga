@@ -381,6 +381,8 @@ export default class Parcela {
         cartao.validadecartao as cartao_validade,
         cartao.diadevencimento as cartao_diavencimento,
         cartao.nome_titular as cartao_titular,
+        cartao.tipocartaoid as cartao_tipoid,
+        c_tipo.descricao as cartao_tipo,
 
         -- Referente ao Contrato
         cn_contrato.id as contrato_id,
@@ -398,6 +400,8 @@ export default class Parcela {
         formapagamento.numerocartao as formapagamento_catao_numero,
         formapagamento.validadecartao as formapagamento_cartao_validade,
         formapagamento.codigosegurancacartao as formapagamento_cartao_codigoseguranca,
+        formapagamento.tid as formapagamento_cartao_tid,
+        formapagamento.paymentid as formapagamento_cartao_paymentid,
         -- Consignado
         formapagamento.numerodocumento as formapagamento_documento,
         formapagamento.numeromatricula as formapagamento_matricula,
@@ -431,6 +435,7 @@ export default class Parcela {
         LEFT JOIN banco fpa_banco ON (fp_agencia.bancoid = fpa_banco.id)
         LEFT JOIN conta fp_conta ON (formapagamento.contaid = fp_conta.id)
         LEFT JOIN parcelalote ON (parcela.id = parcelalote.parcelaid)
+        LEFT JOIN tipocartao c_tipo ON (cartao.tipocartaoid = c_tipo.id)
         LEFT JOIN lotepagamento ON (parcelalote.pal_id_lote_pagamento = lotepagamento.id)) AS p
       `;
 
