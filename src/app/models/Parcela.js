@@ -418,8 +418,10 @@ export default class Parcela {
         fp_agencia.codigo as formapagamento_agencia_codigo,
         fpa_banco.descricao as formapagamento_banco,
         fpa_banco.codigo as formapagamento_banco_codigo,
-        fp_conta.numero as formapagamento_conta
+        fp_conta.numero as formapagamento_conta,
 
+        (SELECT array_to_json(array_agg(row_to_json(d))) FROM (SELECT * FROM cn_ocorrenciacontrato WHERE cn_ocorrenciacontrato.numerocontratoid = cn_contrato.id AND cn_ocorrenciacontrato.obs ILIKE CONCAT('%', parcela.id ,'%')) d) AS ocorrencias,
+        (SELECT array_to_json(array_agg(row_to_json(d))) FROM (SELECT * FROM log_cartaocredito WHERE log_cartaocredito.parcelaid = parcela.id) d) AS logs_cartaocredito
 
         FROM parcela
         INNER JOIN statusgrupo ON (parcela.statusgrupoid = statusgrupo.id)
