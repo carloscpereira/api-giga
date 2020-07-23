@@ -43,6 +43,19 @@ routes.get('/:operator', operatorMiddleware, parcelaController.index);
 routes.get('/:operator/:id', operatorMiddleware, parcelaController.show);
 routes.put('/:operator/:id', operatorMiddleware, parcelaController.update);
 
+routes.put('/:operator/:id/pause', operatorMiddleware, parcelaController.pause);
+routes.put('/:operator/:id/start', operatorMiddleware, parcelaController.start);
+routes.put(
+  '/:operator/:id/in-cobranca',
+  operatorMiddleware,
+  parcelaController.addCobranca
+);
+routes.put(
+  '/:operator/:id/out-cobranca',
+  operatorMiddleware,
+  parcelaController.remCobranca
+);
+
 routes.post('/:operator', operatorMiddleware, parcelaController.store);
 
 // Faz a baixa de um array de parcelas

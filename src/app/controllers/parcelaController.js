@@ -5,6 +5,7 @@ import * as Yup from 'yup';
 import LotePagamento from '../models/LotePagamento';
 import TipoCarteira from '../models/TipoCarteira';
 import Parcela from '../models/Parcela';
+import ParcelaSeq from '../models/Sequelize/Parcela';
 
 class ParcelaController {
   async index(req, res) {
@@ -253,6 +254,78 @@ class ParcelaController {
       }
 
       return res.json({ error: null, data: parcelas });
+    } catch (err) {
+      return res.status(400).json({
+        error: 400,
+        data: { error: 'Internal Server Error', message: err.message },
+      });
+    }
+  }
+
+  async pause(req, res) {
+    try {
+      const { id } = req.params;
+
+      const parcela = await ParcelaSeq.update(
+        { paused_at: new Date() },
+        { where: { id }, returning: true }
+      );
+
+      return res.json({ error: null, data: parcela });
+    } catch (err) {
+      return res.status(400).json({
+        error: 400,
+        data: { error: 'Internal Server Error', message: err.message },
+      });
+    }
+  }
+
+  async start(req, res) {
+    try {
+      const { id } = req.params;
+
+      const parcela = await ParcelaSeq.update(
+        { paused_at: null },
+        { where: { id }, returning: true }
+      );
+
+      return res.json({ error: null, data: parcela });
+    } catch (err) {
+      return res.status(400).json({
+        error: 400,
+        data: { error: 'Internal Server Error', message: err.message },
+      });
+    }
+  }
+
+  async addCobranca(req, res) {
+    try {
+      const { id } = req.params;
+
+      const parcela = await ParcelaSeq.update(
+        { pcl_in_cobranca: true },
+        { where: { id }, returning: true }
+      );
+
+      return res.json({ error: null, data: parcela });
+    } catch (err) {
+      return res.status(400).json({
+        error: 400,
+        data: { error: 'Internal Server Error', message: err.message },
+      });
+    }
+  }
+
+  async remCobranca(req, res) {
+    try {
+      const { id } = req.params;
+
+      const parcela = await ParcelaSeq.update(
+        { pcl_in_cobranca: false },
+        { where: { id }, returning: true }
+      );
+
+      return res.json({ error: null, data: parcela });
     } catch (err) {
       return res.status(400).json({
         error: 400,
