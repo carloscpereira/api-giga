@@ -7,18 +7,18 @@ class GettersController {
       const poolAtemde = pool.atemde;
       const poolIdental = pool.idental;
 
-      const { limit } = req.query;
+      const { limit, page, perPage } = req.query;
 
       let parcelasAtemde = await new Parcela(poolAtemde).newGet(
         req.parsedQuery.query,
         req.parsedQuery.values,
-        { limit }
+        { limit, page, perPage }
       );
 
       let parcelasIdental = await new Parcela(poolIdental).newGet(
         req.parsedQuery.query,
         req.parsedQuery.values,
-        { limit }
+        { limit, page, perPage }
       );
 
       if (

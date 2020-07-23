@@ -13,12 +13,12 @@ class ParcelaController {
 
     // const querier = new ParcelaQuerier(req.query, req.knex('parcela'));
     // const parcelas = await querier.run();
-    const { limit } = req.query;
+    const { limit, page, perPage } = req.query;
 
     const parcelas = await new Parcela(req.pool).newGet(
       req.parsedQuery.query,
       req.parsedQuery.values,
-      { limit }
+      { limit, page, perPage }
     );
 
     res.json({ error: null, data: parcelas });

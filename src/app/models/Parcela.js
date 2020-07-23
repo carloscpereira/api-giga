@@ -319,8 +319,11 @@ export default class Parcela {
     }
   }
 
-  async newGet(q, params, { limit = 20 }) {
+  async newGet(q, params, { limit = 20, perPage, page = 1 }) {
     try {
+      const limite = perPage || limit;
+      const offset = (page - 1) * limite;
+
       let query = `
       SELECT * FROM
       (SELECT
@@ -450,8 +453,8 @@ export default class Parcela {
         query += ` WHERE ${q}`;
       }
 
-      query += ` LIMIT ${limit}`;
-
+      query += ` ORDER BY parcela_vencimento, parcela_pagamento, rf_nome DESC  LIMIT ${limite} OFFSET ${offset}`;
+      // console.log(offset, limite);
       // console.log(query);
 
       const { rows } = await this.pool.query(query, params);
