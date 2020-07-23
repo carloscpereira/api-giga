@@ -267,7 +267,7 @@ class ParcelaController {
       const { id } = req.params;
 
       const parcela = await ParcelaSeq.update(
-        { paused_at: new Date() },
+        { paused_at: new Date(), pcl_in_pause: true },
         { where: { id }, returning: true }
       );
 
@@ -285,7 +285,7 @@ class ParcelaController {
       const { id } = req.params;
 
       const parcela = await ParcelaSeq.update(
-        { paused_at: null },
+        { paused_at: null, pcl_in_pause: false },
         { where: { id }, returning: true }
       );
 

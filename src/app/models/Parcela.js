@@ -339,7 +339,8 @@ export default class Parcela {
         parcelalote.pal_dt_pagamento as parcela_pagamento,
         parcela.datacadastramento as parcela_cadastro,
         parcela.pcl_in_cobranca as parcela_in_cobranca,
-        parcela.paused_at as parcela_paused,
+        parcela.paused_at as parcela_pausedAt,
+        parcela.pcl_in_pause as parcela_paused,
 
         -- Referentes ao Lote
         lotepagamento.id as lote_id,
