@@ -435,7 +435,7 @@ export default class Parcela {
         INNER JOIN cn_contrato ON (titulo.numerocontratoid = cn_contrato.id)
         INNER JOIN cn_associadopf ON (cn_contrato.id = cn_associadopf.id)
         INNER JOIN sp_dadospessoafisica ON (cn_associadopf.responsavelfinanceiroid = sp_dadospessoafisica.id)
-        INNER JOIN cartao ON (sp_dadospessoafisica.id = cartao.pessoaid AND cartao.car_in_principal)
+        LEFT JOIN cartao ON (sp_dadospessoafisica.id = cartao.pessoaid AND cartao.car_in_principal)
         LEFT JOIN sp_email ON (sp_dadospessoafisica.id = sp_email.dadosid AND sp_email.ema_in_principal = true)
         LEFT JOIN sp_telefone ON (sp_dadospessoafisica.id = sp_telefone.dadosid AND sp_telefone.tel_in_principal = true)
         LEFT JOIN modpagamento ON (cn_tipodecarteira.modalidadepagamentoid = modpagamento.id)
