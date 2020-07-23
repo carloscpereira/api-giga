@@ -14,6 +14,7 @@ import {
   loteRouter,
   ocorrenciaRouter,
   logCartaoCreditoRouter,
+  contratoRouter,
 } from './routes';
 
 import sentryConfig from './config/sentry';
@@ -37,7 +38,7 @@ class App {
     this.server.use(
       queryParams({
         format: 'sql',
-        blacklistParams: ['limit', 'order', 'page', 'perPage'],
+        blacklistParams: ['limit', 'page', 'perPage'],
       })
     );
   }
@@ -47,6 +48,7 @@ class App {
     this.server.use('/ocorrencias', ocorrenciaRouter);
     this.server.use('/lotes', loteRouter);
     this.server.use('/parcelas', parcelaRouter);
+    this.server.use('/contratos', contratoRouter);
     this.server.use(Sentry.Handlers.errorHandler());
   }
 

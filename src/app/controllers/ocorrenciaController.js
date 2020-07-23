@@ -1,4 +1,5 @@
 import * as Yup from 'yup';
+import moment from 'moment';
 import OcorrenciaQuerier from '../schemas/OcorrenciaQuerier';
 import Ocorrencia from '../models/Ocorrencia';
 
@@ -34,7 +35,7 @@ class OcorrenciaController {
         horaocorrencia: Yup.string(),
       });
 
-      schema.validate(req.body);
+      await schema.validate(req.body);
 
       const {
         dataocorrencia = new Date(),

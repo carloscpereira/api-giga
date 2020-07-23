@@ -26,6 +26,7 @@ export default class Contrato extends Model {
         chaveex: Sequelize.INTEGER,
         tipodecarteiraid: Sequelize.INTEGER,
         databloqueio: Sequelize.DATE,
+        motivoadesaoid: Sequelize.INTEGER,
         motivocancelamentoid: Sequelize.INTEGER,
         datareativacao: Sequelize.DATE,
         bloqueadopesquisa: Sequelize.BOOLEAN,

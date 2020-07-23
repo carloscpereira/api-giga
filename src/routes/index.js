@@ -3,5 +3,12 @@ import parcelaRouter from './_parcelaRouter';
 import ocorrenciaRouter from './_ocorrenciaRouter';
 import loteRouter from './_loteRouter';
 import logCartaoCreditoRouter from './_logCartaoCreditoRouter';
+import contratoRouter from './_contratoRouter';
 
-export { parcelaRouter, ocorrenciaRouter, loteRouter, logCartaoCreditoRouter };
+export {
+  parcelaRouter,
+  ocorrenciaRouter,
+  loteRouter,
+  logCartaoCreditoRouter,
+  contratoRouter,
+};
