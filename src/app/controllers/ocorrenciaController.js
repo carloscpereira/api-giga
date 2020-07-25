@@ -1,17 +1,24 @@
 import * as Yup from 'yup';
-import moment from 'moment';
-import OcorrenciaQuerier from '../schemas/OcorrenciaQuerier';
-import Ocorrencia from '../models/Ocorrencia';
+import queryStringConverter from 'sequelize-querystring-converter';
+import Ocorrencia from '../models/Sequelize/Ocorrencia';
+
+// import Ocorrencia from '../models/Ocorrencia';
 
 class OcorrenciaController {
   async index(req, res) {
-    const querier = new OcorrenciaQuerier(
-      req.query,
-      req.knex('cn_ocorrenciacontrato')
-    );
-    const ocorrencias = await querier.run();
+    try {
+      const { page = 1, limit = 20, ...query } = req.query;
+      const criteria = queryStringConverter.convert({
+        query: { limit, ...query, offset: (page - 1) * limit },
+      });
 
-    res.json({ error: null, data: ocorrencias });
+      const ocorrencias = await Ocorrencia.findAll(criteria);
+      return res.json({ error: null, data: ocorrencias });
+    } catch (err) {
+      return res
+        .status(500)
+        .json({ error: 500, data: { message: 'Internal Server Error' } });
+    }
   }
 
   async store(req, res) {
@@ -74,12 +81,8 @@ class OcorrenciaController {
         ocorrenciasistema,
         horaocorrencia,
       };
-
-      const response = await new Ocorrencia(req.pool).create(data);
-
-      if (response && response.error) {
-        return res.status(response.error).json(response);
-      }
+      console.log(data);
+      const response = await Ocorrencia.create(data);
 
       return res.json(response);
     } catch (err) {
@@ -116,7 +119,7 @@ class OcorrenciaController {
         horaocorrencia: Yup.string(),
       });
 
-      schema.validate(req.body);
+      await schema.validate(req.body);
 
       const {
         body: {
@@ -141,30 +144,28 @@ class OcorrenciaController {
       } = req;
 
       const data = {
-        id,
-        dataocorrencia,
-        datavalidade,
-        statusid,
-        obs,
-        pessoaagendante,
-        descricao,
-        codigo,
-        numerocontratoid,
-        grupoocorrenciaid,
-        subgrupoocorrencia,
-        departamentoid,
-        setorid,
-        calendario_id,
-        tipoocorrencia_calendario,
-        ocorrenciasistema,
-        horaocorrencia,
+        ...(dataocorrencia ? { dataocorrencia } : {}),
+        ...(datavalidade ? { datavalidade } : {}),
+        ...(statusid ? { statusid } : {}),
+        ...(obs ? { obs } : {}),
+        ...(pessoaagendante ? { pessoaagendante } : {}),
+        ...(descricao ? { descricao } : {}),
+        ...(codigo ? { codigo } : {}),
+        ...(numerocontratoid ? { numerocontratoid } : {}),
+        ...(grupoocorrenciaid ? { grupoocorrenciaid } : {}),
+        ...(subgrupoocorrencia ? { subgrupoocorrencia } : {}),
+        ...(departamentoid ? { departamentoid } : {}),
+        ...(setorid ? { setorid } : {}),
+        ...(calendario_id ? { calendario_id } : {}),
+        ...(tipoocorrencia_calendario ? { tipoocorrencia_calendario } : {}),
+        ...(ocorrenciasistema ? { ocorrenciasistema } : {}),
+        ...(horaocorrencia ? { horaocorrencia } : {}),
       };
 
-      const response = await new Ocorrencia(req.pool).update(data);
-
-      if (response && response.error) {
-        return res.status(response.error).json(response);
-      }
+      const response = await Ocorrencia.update(data, {
+        where: { id },
+        returning: true,
+      });
 
       return res.json(response);
     } catch (err) {
