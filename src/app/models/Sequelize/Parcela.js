@@ -47,5 +47,10 @@ export default class Parcela extends Model {
       foreignKey: 'parcelaid',
       as: 'log_cartao',
     });
+    this.belongsToMany(models.LotePagamento, {
+      through: 'parcelalote',
+      as: 'lote',
+      foreignKey: 'parcelaid',
+    });
   }
 }
