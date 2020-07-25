@@ -541,7 +541,7 @@ class ParcelaController {
     const schema = Yup.object().shape({
       parcelas: Yup.array().of(
         Yup.object().shape({
-          id: Yup.numer().integer().required(),
+          id: Yup.number().integer().required(),
           modPagamento: Yup.number().integer().required(),
           numerocartao: Yup.string().when(
             'modPagamento',
@@ -592,6 +592,24 @@ class ParcelaController {
           tipocartaoid: Yup.number().integer(),
           contaid: Yup.number().integer(),
           agenciaid: Yup.number().integer(),
+          paymentid: Yup.string()
+            .when('modPagamento', (modPagamento, field) =>
+              modPagamento === 2 || modPagamento === 34
+                ? field.required()
+                : field
+            )
+            .when('lop_id_tipo_baixa', (tipoBaixa, field) =>
+              parseInt(tipoBaixa, 10) === 4 ? field.required : field
+            ),
+          tid: Yup.string()
+            .when('modPagamento', (modPagamento, field) =>
+              modPagamento === 2 || modPagamento === 34
+                ? field.required()
+                : field
+            )
+            .when('lop_id_tipo_baixa', (tipoBaixa, field) =>
+              parseInt(tipoBaixa, 10) === 4 ? field.required : field
+            ),
         })
       ),
       pessoausuarioid: Yup.number().integer(),
@@ -608,7 +626,7 @@ class ParcelaController {
       });
     }
 
-    req.body.parcelas = Promise.all(
+    req.body.parcelas = await Promise.all(
       req.body.parcelas.map(async (p) => {
         const carteira = await new TipoCarteira(req.pool).findPK(
           p.tipodecarteiraid
@@ -713,11 +731,14 @@ class ParcelaController {
           fop_in_conciliado: p.fop_in_conciliado,
           fop_in_pre_conciliacao: p.fop_in_pre_conciliacao,
           che_id_cheque: p.che_id_cheque,
+          paymentid: p.paymentid,
+          tid: p.tid,
         };
 
         await new Parcela(req.pool).invoice({ ...dataInvoice, id: p.id });
       } catch (err) {
         req.pool.query('ROLLBACK');
+        console.log(err);
         return res.status(400).json({
           error: 400,
           data: { error: 'Internal Server Error', message: err.message },

@@ -207,7 +207,7 @@ export default class Parcela {
 
     try {
       await this.pool.query('BEGIN');
-      const parcela = this.findPK(id);
+      const parcela = await this.findPK(id);
 
       /**
        * Cria a forma de pagamento
@@ -215,7 +215,7 @@ export default class Parcela {
       const {
         rows: createFormaPagamento,
       } = await this.pool.query(
-        'INSERT INTO formapagamento (parcelaid, agenciaid, contaid, numerocheque, numerocartao, numerodocumento, numeromatricula, numerotransacao, validadecartao, tipodecarteiraid, numeroempresa, tipocartaoid, obs, numeroboleto, codigosegurancacartao, valor, centrocustoid, nome_emitente, contacheque, fop_in_conciliado, fop_in_pre_conciliacao, che_id_cheque, paymentid, tid,) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24) RETURNING *',
+        'INSERT INTO formapagamento (parcelaid, agenciaid, contaid, numerocheque, numerocartao, numerodocumento, numeromatricula, numerotransacao, validadecartao, tipodecarteiraid, numeroempresa, tipocartaoid, obs, numeroboleto, codigosegurancacartao, valor, centrocustoid, nome_emitente, contacheque, fop_in_conciliado, fop_in_pre_conciliacao, che_id_cheque, paymentid, tid) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24) RETURNING *',
         [
           id,
           agenciaid,
@@ -268,6 +268,7 @@ export default class Parcela {
       return parcela;
     } catch (err) {
       await this.pool.query('ROLLBACK');
+      console.log(err);
       throw err;
     }
   }
