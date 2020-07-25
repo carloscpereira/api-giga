@@ -2,8 +2,6 @@ import * as Yup from 'yup';
 import queryStringConverter from 'sequelize-querystring-converter';
 import Ocorrencia from '../models/Sequelize/Ocorrencia';
 
-// import Ocorrencia from '../models/Ocorrencia';
-
 class OcorrenciaController {
   async index(req, res) {
     try {
