@@ -6,6 +6,9 @@ import Titulo from '../app/models/Sequelize/Titulo';
 import Contrato from '../app/models/Sequelize/Contrato';
 import Documento from '../app/models/Sequelize/Documento';
 import LogCartaoCredito from '../app/models/Sequelize/LogCartaoCredito';
+import Ocorrencia from '../app/models/Sequelize/Ocorrencia';
+import LotePagamento from '../app/models/Sequelize/LotePagamento';
+import ParcelaLote from '../app/models/Sequelize/ParcelaLote';
 
 // import databaseConfig from '../config/database';
 
@@ -16,6 +19,9 @@ const models = [
   Contrato,
   Documento,
   LogCartaoCredito,
+  Ocorrencia,
+  LotePagamento,
+  ParcelaLote,
 ];
 
 class Database {
