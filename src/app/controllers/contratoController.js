@@ -305,7 +305,7 @@ class ContratoController {
         ...(centrocustoid ? { centrocustoid } : {}),
       };
 
-      const contrato = Contrato.update(data, {
+      const contrato = await Contrato.update(data, {
         where: { id },
         returning: true,
       });
@@ -381,7 +381,7 @@ class ContratoController {
           .json({ error: 401, data: { message: 'Contrato cannot find ' } });
       }
 
-      contrato.update({
+      await contrato.update({
         statusid: 3,
       });
 
@@ -429,7 +429,7 @@ class ContratoController {
         });
       }
 
-      const contratoUpdated = contrato.update(
+      const contratoUpdated = await contrato.update(
         {
           statusid: 8,
         },
@@ -441,7 +441,7 @@ class ContratoController {
       return res.status(201).json({
         error: null,
         data: {
-          message: 'Contract successfully blocked',
+          message: 'Contract successfully unlocked',
           data: contratoUpdated,
         },
       });
