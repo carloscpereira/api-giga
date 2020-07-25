@@ -27,6 +27,8 @@ export default class FormaPagamento extends Model {
         fop_in_conciliado: Sequelize.BOOLEAN,
         fop_in_pre_conciliacao: Sequelize.BOOLEAN,
         che_id_cheque: Sequelize.INTEGER,
+        paymentid: Sequelize.STRING,
+        tid: Sequelize.STRING,
       },
       { sequelize, tableName: 'formapagamento' }
     );
