@@ -4,6 +4,7 @@ import express from 'express';
 import * as Sentry from '@sentry/node';
 import Youch from 'youch';
 import queryParams from 'express-query-params';
+import cors from 'cors';
 
 import 'express-async-errors';
 
@@ -18,6 +19,7 @@ import {
 } from './routes';
 
 import sentryConfig from './config/sentry';
+import corsConfig from './config/cors';
 // import './database';
 
 class App {
@@ -32,6 +34,7 @@ class App {
   }
 
   middleware() {
+    this.server.use(cors(corsConfig));
     this.server.use(Sentry.Handlers.requestHandler());
     this.server.use(express.json());
     this.server.use(checkAuthorization);
