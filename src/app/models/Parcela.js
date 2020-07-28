@@ -455,7 +455,7 @@ export default class Parcela {
         query += ` WHERE ${q}`;
       }
 
-      query += ` ORDER BY parcela_vencimento, parcela_pagamento, rf_nome DESC  LIMIT ${limite} OFFSET ${offset}`;
+      query += ` ORDER BY parcela_vencimento, parcela_pagamento, rf_nome ASC LIMIT ${limite} OFFSET ${offset}`;
       // console.log(offset, limite);
       // console.log(query);
 
