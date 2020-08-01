@@ -301,7 +301,7 @@ export default class Parcela {
         INNER JOIN cn_associadopf ON (cn_contrato.id = cn_associadopf.id)
         INNER JOIN sp_dadospessoafisica ON (cn_associadopf.responsavelfinanceiroid = sp_dadospessoafisica.id)
         RIGHT JOIN cartao ON (sp_dadospessoafisica.id = cartao.pessoaid)
-        WHERE (parcela.datavencimento = current_date - 1)
+        WHERE (parcela.datavencimento = current_date)
         AND (parcela.statusgrupoid = 1)
         AND (cn_tipodecarteira.modalidadepagamentoid = 2 OR (titulo.modpagamentoid IS NOT NULL AND (titulo.modpagamentoid = 2 AND titulo.modpagamentoid = 34)))
         AND (cn_contrato.tipocontratoid = 5 AND cn_contrato.statusid = 8)
