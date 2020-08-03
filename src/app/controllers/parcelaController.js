@@ -2,6 +2,7 @@
 /* eslint-disable no-await-in-loop */
 /* eslint-disable no-restricted-syntax */
 import * as Yup from 'yup';
+import moment from 'moment';
 import LotePagamento from '../models/LotePagamento';
 import TipoCarteira from '../models/TipoCarteira';
 import Parcela from '../models/Parcela';
@@ -362,9 +363,16 @@ class ParcelaController {
             modPagamento === 10 ? field.required() : field
         ),
         numerotransacao: Yup.string(),
-        validadecartao: Yup.date().when('modPagamento', (modPagamento, field) =>
-          modPagamento === 2 || modPagamento === 34 ? field.required() : field
-        ),
+        validadecartao: Yup.string()
+          // eslint-disable-next-line no-useless-escape
+          .matches(/^(0?[1-9]|1[012])[\/\-]\d{4}$/gim, {
+            message:
+              'Invalid date format. Valid format for this field is MM/YYYY where the month must be between 1 and 12 and year with four digits',
+            excludeEmptyString: false,
+          })
+          .when('modPagamento', (modPagamento, field) =>
+            modPagamento === 2 || modPagamento === 34 ? field.required() : field
+          ),
         tipodecarteiraid: Yup.number().integer().required(),
         numeroempresa: Yup.string(),
         tipocartaoid: Yup.number().integer(),
@@ -381,6 +389,8 @@ class ParcelaController {
         tid: Yup.string(),
       });
 
+      console.log(req.body);
+
       const carteira = await new TipoCarteira(req.pool).findPK(
         req.body.tipodecarteiraid
       );
@@ -388,11 +398,6 @@ class ParcelaController {
       const modPagamento = carteira
         ? parseInt(carteira.modalidadepagamentoid, 10)
         : null;
-
-      console.log({
-        ...req.body,
-        modPagamento,
-      });
 
       await schema.validate({
         ...req.body,
@@ -477,7 +482,7 @@ class ParcelaController {
         numerodocumento,
         numeromatricula,
         numerotransacao,
-        validadecartao,
+        validadecartao: moment(validadecartao, 'MM/YYYY').format('DD/MM/YYYY'),
         tipodecarteiraid,
         numeroempresa,
         tipocartaoid,
@@ -517,7 +522,7 @@ class ParcelaController {
       if (err instanceof Yup.ValidationError) {
         return res.status(401).json({
           error: 401,
-          data: { message: 'Validation fails', errors: err.inner },
+          data: { message: 'Validation fails', errors: err.errors },
         });
       }
       return res
