@@ -335,206 +335,195 @@ class ParcelaController {
   }
 
   async baixaParcela(req, res) {
-    const schema = Yup.object().shape({
-      pessoausuarioid: Yup.number().integer(),
-      lop_id_pessoa: Yup.number().integer(),
-      lote_id: Yup.number().integer(),
-      lop_id_tipo_baixa: Yup.number().integer().required(),
-      lop_in_tipo_movimento: Yup.string().required(),
-      modPagamento: Yup.number().integer().required(),
-      agenciaid: Yup.number().integer(),
-      contaid: Yup.number().integer(),
-      numerocheque: Yup.string().when('modPagamento', (modPagamento, field) =>
-        modPagamento === 1 ? field.required() : field
-      ),
-      numerocartao: Yup.string().when('modPagamento', (modPagamento, field) =>
-        modPagamento === 2 || modPagamento === 34 ? field.required() : field
-      ),
-      numerodocumento: Yup.string().when(
-        'modPagamento',
-        (modPagamento, field) =>
-          modPagamento === 10 ? field.required() : field
-      ),
-      numeromatricula: Yup.string().when(
-        'modPagamento',
-        (modPagamento, field) =>
-          modPagamento === 10 ? field.required() : field
-      ),
-      numerotransacao: Yup.string(),
-      validadecartao: Yup.date().when('modPagamento', (modPagamento, field) =>
-        modPagamento === 2 || modPagamento === 34 ? field.required() : field
-      ),
-      tipodecarteiraid: Yup.number().integer().required(),
-      numeroempresa: Yup.string(),
-      tipocartaoid: Yup.number().integer(),
-      obs: Yup.string(),
-      numeroboleto: Yup.string().when('modPagamento', (modPagamento, field) =>
-        modPagamento === 7 ? field.required() : field
-      ),
-      codigosegurancacartao: Yup.number()
-        .integer()
-        .when('modPagamento', (modPagamento, field) =>
+    try {
+      const schema = Yup.object().shape({
+        pessoausuarioid: Yup.number().integer(),
+        lop_id_pessoa: Yup.number().integer(),
+        lote_id: Yup.number().integer(),
+        lop_id_tipo_baixa: Yup.number().integer().required(),
+        lop_in_tipo_movimento: Yup.string().required(),
+        modPagamento: Yup.number().integer().required(),
+        agenciaid: Yup.number().integer(),
+        contaid: Yup.number().integer(),
+        numerocheque: Yup.string().when('modPagamento', (modPagamento, field) =>
+          modPagamento === 1 ? field.required() : field
+        ),
+        numerocartao: Yup.string().when('modPagamento', (modPagamento, field) =>
           modPagamento === 2 || modPagamento === 34 ? field.required() : field
         ),
-      paymentid: Yup.string()
-        .when('modPagamento', (modPagamento, field) =>
-          modPagamento === 2 || modPagamento === 34 ? field.required() : field
-        )
-        .when('lop_id_tipo_baixa', (tipoBaixa, field) =>
-          parseInt(tipoBaixa, 10) === 4 ? field.required : field
+        numerodocumento: Yup.string().when(
+          'modPagamento',
+          (modPagamento, field) =>
+            modPagamento === 10 ? field.required() : field
         ),
-      tid: Yup.string()
-        .when('modPagamento', (modPagamento, field) =>
-          modPagamento === 2 || modPagamento === 34 ? field.required() : field
-        )
-        .when('lop_id_tipo_baixa', (tipoBaixa, field) =>
-          parseInt(tipoBaixa, 10) === 4 ? field.required : field
+        numeromatricula: Yup.string().when(
+          'modPagamento',
+          (modPagamento, field) =>
+            modPagamento === 10 ? field.required() : field
         ),
-    });
+        numerotransacao: Yup.string(),
+        validadecartao: Yup.date().when('modPagamento', (modPagamento, field) =>
+          modPagamento === 2 || modPagamento === 34 ? field.required() : field
+        ),
+        tipodecarteiraid: Yup.number().integer().required(),
+        numeroempresa: Yup.string(),
+        tipocartaoid: Yup.number().integer(),
+        obs: Yup.string(),
+        numeroboleto: Yup.string().when('modPagamento', (modPagamento, field) =>
+          modPagamento === 7 ? field.required() : field
+        ),
+        codigosegurancacartao: Yup.number()
+          .integer()
+          .when('modPagamento', (modPagamento, field) =>
+            modPagamento === 2 || modPagamento === 34 ? field.required() : field
+          ),
+        paymentid: Yup.string(),
+        tid: Yup.string(),
+      });
 
-    const carteira = await new TipoCarteira(req.pool).findPK(
-      req.body.tipodecarteiraid
-    );
+      const carteira = await new TipoCarteira(req.pool).findPK(
+        req.body.tipodecarteiraid
+      );
 
-    const modPagamento = carteira
-      ? parseInt(carteira.modalidadepagamentoid, 10)
-      : null;
+      const modPagamento = carteira
+        ? parseInt(carteira.modalidadepagamentoid, 10)
+        : null;
 
-    console.log(carteira.modalidadepagamentoid);
-
-    if (
-      !(await schema.isValid({
+      console.log({
         ...req.body,
         modPagamento,
-      }))
-    ) {
-      try {
-        await schema.validate({
-          ...req.body,
-          modPagamento,
-        });
-      } catch (error) {
-        return res.status(401).json({
+      });
+
+      await schema.validate({
+        ...req.body,
+        modPagamento,
+      });
+
+      const {
+        lop_id_pessoa = 1,
+        lop_id_tipo_baixa = 4,
+        lop_in_tipo_movimento = 'C',
+        agenciaid,
+        contaid,
+        numerocheque,
+        numerocartao,
+        numerodocumento,
+        numeromatricula,
+        numerotransacao,
+        validadecartao,
+        tipodecarteiraid,
+        numeroempresa,
+        tipocartaoid,
+        nome_emitente,
+        centrocustoid,
+        obs,
+        numeroboleto,
+        codigosegurancacartao,
+        contacheque,
+        fop_in_conciliado,
+        fop_in_pre_conciliacao,
+        che_id_cheque,
+        lote_id,
+        paymentid,
+        tid,
+      } = req.body;
+
+      const { id } = req.params;
+
+      const parcela = await new Parcela(req.pool).findPK(id);
+      let lotePagamento;
+
+      if ((parcela && parseInt(parcela.statusgrupoid, 10) === 2) || !parcela) {
+        return res.json({
           error: 401,
-          data: { message: 'Validation fails', errors: error.errors },
+          data: {
+            message:
+              'Portion cannot be invoiced because it has already been invoiced',
+          },
         });
       }
-    }
 
-    const {
-      lop_id_pessoa = 1,
-      lop_id_tipo_baixa = 4,
-      lop_in_tipo_movimento = 'C',
-      agenciaid,
-      contaid,
-      numerocheque,
-      numerocartao,
-      numerodocumento,
-      numeromatricula,
-      numerotransacao,
-      validadecartao,
-      tipodecarteiraid,
-      numeroempresa,
-      tipocartaoid,
-      nome_emitente,
-      centrocustoid,
-      obs,
-      numeroboleto,
-      codigosegurancacartao,
-      contacheque,
-      fop_in_conciliado,
-      fop_in_pre_conciliacao,
-      che_id_cheque,
-      lote_id,
-      paymentid,
-      tid,
-    } = req.body;
+      /**
+       * Criando lote para efetuar a baixa
+       */
+      if (lote_id) {
+        lotePagamento = await new LotePagamento(req.pool).findPK(lote_id);
+      }
 
-    const { id } = req.params;
+      if (
+        !lote_id ||
+        !lotePagamento ||
+        (lotePagamento && parseInt(lotePagamento.statusid, 10) !== 1) ||
+        lotePagamento.error
+      ) {
+        lotePagamento = await new LotePagamento(req.pool).create({
+          statusid: 1,
+          datacadastro: new Date(),
+          pessoausuarioid: 1,
+          lop_id_pessoa,
+          lop_id_tipo_baixa,
+          lop_in_tipo_movimento,
+          lop_in_cobranca: false,
+        });
+      }
 
-    const parcela = await new Parcela(req.pool).findPK(id);
-    let lotePagamento;
+      const dataInvoice = {
+        id,
+        idLotePagamento: lotePagamento.id,
+        agenciaid,
+        contaid,
+        numerocheque,
+        numerocartao,
+        numerodocumento,
+        numeromatricula,
+        numerotransacao,
+        validadecartao,
+        tipodecarteiraid,
+        numeroempresa,
+        tipocartaoid,
+        nome_emitente,
+        centrocustoid,
+        obs,
+        numeroboleto,
+        codigosegurancacartao,
+        contacheque,
+        fop_in_conciliado,
+        fop_in_pre_conciliacao,
+        che_id_cheque,
+        paymentid,
+        tid,
+      };
 
-    if ((parcela && parseInt(parcela.statusgrupoid, 10) === 2) || !parcela) {
-      return res.json({
-        error: 401,
-        data: {
-          message:
-            'Portion cannot be invoiced because it has already been invoiced',
-        },
+      try {
+        await new Parcela(req.pool).invoice(dataInvoice);
+      } catch (err) {
+        return res.status(400).json({
+          error: 400,
+          data: { error: 'Internal Server Error', message: err.message },
+        });
+      }
+
+      /**
+       * Baixa Lote
+       */
+      await new LotePagamento(req.pool).update({
+        id: lotePagamento.id,
+        statusid: 2,
+        lop_dt_baixa: new Date(),
       });
-    }
 
-    /**
-     * Criando lote para efetuar a baixa
-     */
-    if (lote_id) {
-      lotePagamento = await new LotePagamento(req.pool).findPK(lote_id);
-    }
-
-    if (
-      !lote_id ||
-      !lotePagamento ||
-      (lotePagamento && parseInt(lotePagamento.statusid, 10) !== 1) ||
-      lotePagamento.error
-    ) {
-      lotePagamento = await new LotePagamento(req.pool).create({
-        statusid: 1,
-        datacadastro: new Date(),
-        pessoausuarioid: 1,
-        lop_id_pessoa,
-        lop_id_tipo_baixa,
-        lop_in_tipo_movimento,
-        lop_in_cobranca: false,
-      });
-    }
-
-    const dataInvoice = {
-      id,
-      idLotePagamento: lotePagamento.id,
-      agenciaid,
-      contaid,
-      numerocheque,
-      numerocartao,
-      numerodocumento,
-      numeromatricula,
-      numerotransacao,
-      validadecartao,
-      tipodecarteiraid,
-      numeroempresa,
-      tipocartaoid,
-      nome_emitente,
-      centrocustoid,
-      obs,
-      numeroboleto,
-      codigosegurancacartao,
-      contacheque,
-      fop_in_conciliado,
-      fop_in_pre_conciliacao,
-      che_id_cheque,
-      paymentid,
-      tid,
-    };
-
-    try {
-      await new Parcela(req.pool).invoice(dataInvoice);
+      return res.json({ error: null, data: lotePagamento });
     } catch (err) {
-      return res.status(400).json({
-        error: 400,
-        data: { error: 'Internal Server Error', message: err.message },
-      });
+      if (err instanceof Yup.ValidationError) {
+        return res.status(401).json({
+          error: 401,
+          data: { message: 'Validation fails', errors: err.inner },
+        });
+      }
+      return res
+        .status(404)
+        .json({ error: 404, data: { message: 'Internal Server Error' } });
     }
-
-    /**
-     * Baixa Lote
-     */
-    await new LotePagamento(req.pool).update({
-      id: lotePagamento.id,
-      statusid: 2,
-      lop_dt_baixa: new Date(),
-    });
-
-    return res.json({ error: null, data: lotePagamento });
   }
 
   async baixaParcelas(req, res) {
