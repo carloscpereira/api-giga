@@ -329,6 +329,9 @@ export default class Parcela {
       SELECT * FROM
       (SELECT
 
+        -- Extra
+        cn_associadopf.diavencimento as diavencimento,
+
         -- Referentes a parcela
         parcela.id as parcela_id,
         parcela.statusgrupoid as parcela_statusid,
