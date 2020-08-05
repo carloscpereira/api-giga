@@ -424,6 +424,7 @@ export default class Parcela {
         formapagamento.tipodecarteiraid as formapagamento_carteiraid,
         fp_carteira.descricao as formapagamento_carteira,
         fp_modpagamento.descricao as formapagamento_modalidadepagamento,
+        fp_modpagamento.id as formapagamento_modalidadepagamentoid,
         formapagamento.agenciaid as formapagamento_agenciaid,
         fp_agencia.descricao as formapagamento_agencia,
         fp_agencia.codigo as formapagamento_agencia_codigo,
