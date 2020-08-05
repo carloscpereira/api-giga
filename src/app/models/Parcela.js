@@ -420,6 +420,7 @@ export default class Parcela {
         -- Carteira
         formapagamento.tipodecarteiraid as formapagamento_carteiraid,
         fp_carteira.descricao as formapagamento_carteira,
+        fp_modpagamento.descricao as formapagamento_modalidadepagamento,
         formapagamento.agenciaid as formapagamento_agenciaid,
         fp_agencia.descricao as formapagamento_agencia,
         fp_agencia.codigo as formapagamento_agencia_codigo,
@@ -447,6 +448,7 @@ export default class Parcela {
         LEFT JOIN conta fp_conta ON (formapagamento.contaid = fp_conta.id)
         LEFT JOIN parcelalote ON (parcela.id = parcelalote.parcelaid)
         LEFT JOIN cn_tipodecarteira fp_carteira ON (formapagamento.tipodecarteiraid = fp_carteira.id)
+        LEFT JOIN modpagamento fp_modpagamento ON (fp_carteira.modalidadepagamentoid  = fp_modpagamento.id)
         LEFT JOIN tipocartao c_tipo ON (cartao.tipocartaoid = c_tipo.id)
         LEFT JOIN lotepagamento ON (parcelalote.pal_id_lote_pagamento = lotepagamento.id)) AS p
       `;
