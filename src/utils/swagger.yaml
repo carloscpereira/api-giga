@@ -1,0 +1,1214 @@
+openapi: '3.0.0'
+
+info:
+  title: 'API GIGA'
+  description: 'Api de aplicações do grupo atemde'
+  version: '1.0.0'
+  contact:
+    name: 'Contatos Atemde'
+    email: 'contato@atemde.com.br'
+
+servers:
+  - url: '{protocol}://idental.com.br/api/giga'
+    variables:
+      protocol:
+        enum:
+          - http
+          - https
+        default: https
+    description: 'Servidor de aplicações'
+
+paths:
+  /parcelas:
+    get:
+      description: 'Retorna todas as parcelas das operadoras Atemde e Idental'
+      summary: 'Retorna todas as parcelas de ambas operadoras'
+      tags:
+        - Parcelas
+      parameters:
+        - in: 'query'
+          name: 'limit'
+          required: false
+          description: 'Define a quantidade de itens retornados'
+          schema:
+            type: 'integer'
+            default: 20
+            minimum: 1
+            maximum: 1000
+        - in: 'query'
+          name: 'page'
+          required: false
+          description: 'Define o número da página ou da sessão dos itens retornados'
+          schema:
+            type: 'integer'
+            minimum: 1
+            default: 1
+      responses:
+        200:
+          description: 'Requisição realizada com sucesso'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SuperParcela'
+
+  /parcelas/{operator}:
+    parameters:
+      - in: 'path'
+        name: 'operator'
+        required: true
+        description: 'Nome da operadora em minúsculo'
+        schema:
+          type: 'string'
+          enum: ['idental', 'atemde']
+    get:
+      description: 'Retorna todas parcelas de uma determinada operadora'
+      summary: 'Parcelas da operadora'
+      tags:
+        - Parcelas
+      responses:
+        200:
+          description: 'Requisição realizada com sucesso'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: integer
+                    example: null
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SuperParcela'
+    post:
+      description: 'Criar uma nova parcela'
+      summary: 'Criar Parcela'
+      tags:
+        - Parcelas
+      requestBody:
+        description: 'Corpo de requisição'
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Parcela'
+      responses:
+        200:
+          description: 'Requisição realizada com sucesso'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Parcela'
+        400:
+          description: 'Campo faltando ou com tipo inválido'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors400'
+        401:
+          description: 'Necessário autenticação'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors401'
+        500:
+          description: 'Erro Interno'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors500'
+
+  /parcelas/{operator}/{parcelaId}:
+    parameters:
+      - in: 'path'
+        name: 'operator'
+        required: true
+        description: 'Nome da operadora em minúsculo'
+        schema:
+          type: 'string'
+          enum: ['idental', 'atemde']
+      - in: 'path'
+        name: 'parcelaId'
+        required: true
+        description: 'Index da parcela'
+        schema:
+          type: integer
+    get:
+      description: Retorna uma única parcela da operadora
+      summary: Retorna uma parcela
+      tags:
+        - Parcelas
+      responses:
+        200:
+          description: 'Requisição realizada com sucesso'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuperParcela'
+    put:
+      description: Atualiza uma determinada parcela da operadora
+      summary: Atualizar parcela
+      tags:
+        - Parcelas
+      requestBody:
+        description: Corpo da requisição
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Parcela'
+      responses:
+        200:
+          description: Requisição realizada com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Parcela'
+        400:
+          description: 'Campo faltando ou com tipo inválido'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors400'
+        401:
+          description: 'Necessário autenticação'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors401'
+        500:
+          description: 'Erro Interno'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors500'
+
+  /parcelas/{operator}/{parcelaId}/pause:
+    parameters:
+      - in: 'path'
+        name: 'operator'
+        required: true
+        description: 'Nome da operadora em minúsculo'
+        schema:
+          type: 'string'
+          enum: ['idental', 'atemde']
+      - in: 'path'
+        name: 'parcelaId'
+        required: true
+        description: 'Index da parcela'
+        schema:
+          type: integer
+    put:
+      description: Alterar status da parcela para pausado
+      deprecated: true
+      summary: Pausar parcela
+      tags:
+        - Operações Financeiras
+      responses:
+        200:
+          description: Requisição realizada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /parcelas/{operator}/{parcelaId}/start:
+    parameters:
+      - in: 'path'
+        name: 'operator'
+        required: true
+        description: 'Nome da operadora em minúsculo'
+        schema:
+          type: 'string'
+          enum: ['idental', 'atemde']
+      - in: 'path'
+        name: 'parcelaId'
+        required: true
+        description: 'Index da parcela'
+        schema:
+          type: integer
+    put:
+      deprecated: true
+      description: Altera o status da parcela para não pausado
+      summary: Iniciar parcela
+      tags:
+        - Operações Financeiras
+      responses:
+        200:
+          description: Requisição realizada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /parcelas/{operator}/{parcelaId}/in-cobranca:
+    parameters:
+      - in: 'path'
+        name: 'operator'
+        required: true
+        description: 'Nome da operadora em minúsculo'
+        schema:
+          type: 'string'
+          enum: ['idental', 'atemde']
+      - in: 'path'
+        name: 'parcelaId'
+        required: true
+        description: 'Index da parcela'
+        schema:
+          type: integer
+    put:
+      description: Altera o status para parcela para em cobrança
+      summary: Parcela em cobrança
+      tags:
+        - Operações Financeiras
+      responses:
+        200:
+          description: Requisição realizada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /parcelas/{operator}/{parcelaId}/out-cobranca:
+    parameters:
+      - in: 'path'
+        name: 'operator'
+        required: true
+        description: 'Nome da operadora em minúsculo'
+        schema:
+          type: 'string'
+          enum: ['idental', 'atemde']
+      - in: 'path'
+        name: 'parcelaId'
+        required: true
+        description: 'Index da parcela'
+        schema:
+          type: integer
+    put:
+      description: Altera o status da parcela, tirando-a da cobrança e permitindo cobranças futuras
+      summary: Parcela liberada
+      tags:
+        - Operações Financeiras
+      responses:
+        200:
+          description: Requisição realizada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /parcelas/{operator}/{parcelaId}/baixa:
+    parameters:
+      - in: 'path'
+        name: 'operator'
+        required: true
+        description: 'Nome da operadora em minúsculo'
+        schema:
+          type: 'string'
+          enum: ['idental', 'atemde']
+      - in: 'path'
+        name: 'parcelaId'
+        required: true
+        description: 'Index da parcela'
+        schema:
+          type: integer
+    put:
+      description: Realiza a baixa de uma única parcela
+      summary: Baixa Parcela
+      tags:
+        - Operações Financeiras
+      requestBody:
+        description: Corpo da requisição
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BaixaParcela'
+      responses:
+        200:
+          description: Requisição realizada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /parcelas/{operator}/void/baixa:
+    parameters:
+      - in: 'path'
+        name: 'operator'
+        required: true
+        description: 'Nome da operadora em minúsculo'
+        schema:
+          type: 'string'
+          enum: ['idental', 'atemde']
+      - in: 'path'
+        name: 'parcelaId'
+        required: true
+        description: 'Index da parcela'
+        schema:
+          type: integer
+    put:
+      description: Realiza a baixa de um grupo de parcelas
+      summary: Baixa Grupo de Parcelas
+      tags:
+        - Operações Financeiras
+      requestBody:
+        description: Corpo da requisição
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BaixaParcelasBody'
+      responses:
+        200:
+          description: Requisição realizada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /ocorrencias/{operator}:
+    parameters:
+      - in: 'path'
+        name: 'operator'
+        required: true
+        description: 'Nome da operadora em minúsculo'
+        schema:
+          type: 'string'
+          enum: ['idental', 'atemde']
+    get:
+      description: 'Retorna todas ocorrencias de uma determinada operadora'
+      summary: 'Ocorências da operadora'
+      tags:
+        - Ocorrencias
+      responses:
+        200:
+          description: 'Requisição realizada com sucesso'
+          content:
+            application/json:
+              schema:
+                type: object
+    post:
+      description: 'Cria uma nova ocorrência'
+      summary: 'Cria Ocorrência'
+      tags:
+        - Ocorrencias
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#components/schemas/Ocorrencia'
+      responses:
+        200:
+          description: 'Requisição realizada com sucesso'
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /ocorrencias/{operator}/{ocorrenciaId}:
+    parameters:
+      - in: 'path'
+        name: 'operator'
+        required: true
+        description: 'Nome da operadora em minúsculo'
+        schema:
+          type: 'string'
+          enum: ['idental', 'atemde']
+      - in: 'path'
+        name: 'ocorrenciaId'
+        required: true
+        description: 'Indice da ocorrência no banco de dados'
+        schema:
+          type: 'integer'
+    put:
+      description: 'Atualiza uma ocorrência com os dados enviados no body'
+      summary: 'Atualiza Ocorrência'
+      tags:
+        - Ocorrencias
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#components/schemas/Ocorrencia'
+      responses:
+        200:
+          description: 'Requisição realizada com sucesso'
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /lotes/{operator}:
+    parameters:
+      - in: 'path'
+        name: 'operator'
+        required: true
+        description: 'Nome da operadora em minúsculo'
+        schema:
+          type: 'string'
+          enum: ['idental', 'atemde']
+    get:
+      description: 'Retorna todos os lotes de uma determinada operadora'
+      summary: 'Lotes da operadora'
+      tags:
+        - Lotes
+      responses:
+        200:
+          description: 'Requisição realizada com sucesso'
+          content:
+            application/json:
+              schema:
+                type: object
+    post:
+      description: 'Cria uma novo lote'
+      summary: 'Cria Lote'
+      tags:
+        - Lotes
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#components/schemas/Lote'
+      responses:
+        200:
+          description: 'Requisição realizada com sucesso'
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /lotes/{operator}/{loteId}:
+    parameters:
+      - in: 'path'
+        name: 'operator'
+        required: true
+        description: 'Nome da operadora em minúsculo'
+        schema:
+          type: 'string'
+          enum: ['idental', 'atemde']
+      - in: 'path'
+        name: 'loteId'
+        required: true
+        description: 'Indice do Lote no banco de dados'
+        schema:
+          type: 'integer'
+    put:
+      description: 'Atualiza o lote com os dados enviados no body'
+      summary: 'Atualiza Lote'
+      tags:
+        - Lotes
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#components/schemas/Lote'
+      responses:
+        200:
+          description: 'Requisição realizada com sucesso'
+          content:
+            application/json:
+              schema:
+                type: object
+    get:
+      description: 'Retorna um lote através do id'
+      summary: 'Retorna um Lote'
+      tags:
+        - Lotes
+      responses:
+        200:
+          description: 'Requisição realizada com sucesso'
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /parcelas/log/cartao-credito/{operator}:
+    parameters:
+      - in: 'path'
+        name: 'operator'
+        required: true
+        description: 'Nome da operadora em minúsculo'
+        schema:
+          type: 'string'
+          enum: ['idental', 'atemde']
+    get:
+      description: 'Retorna todos os logs de cartão de crédito registrado por uma operadora'
+      summary: 'Logs da operadora'
+      tags:
+        - Logs Cartão de Crédito
+      responses:
+        200:
+          description: 'Requisição realizada com sucesso'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: integer
+                    nullable: true
+                    example: null
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/LogCardCredit'
+    post:
+      description: 'Cria um novo registro de passada de cartão de créditos'
+      summary: 'Criar Log'
+      tags:
+        - Logs Cartão de Crédito
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogCardCredit'
+      responses:
+        200:
+          description: 'Log criado com sucesso'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: integer
+                    nullable: true
+                    example: null
+                  data:
+                    $ref: '#/components/schemas/LogCardCredit'
+        400:
+          description: 'Campo faltando ou com tipo inválido'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors400'
+        401:
+          description: 'Necessário autenticação'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors401'
+        500:
+          description: 'Erro Interno'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors500'
+
+  /parcelas/log/cartao-credito/{operator}/{logId}:
+    parameters:
+      - in: 'path'
+        name: 'operator'
+        required: true
+        description: 'Nome da operadora em minúsculo'
+        schema:
+          type: 'string'
+          enum: ['idental', 'atemde']
+      - in: 'path'
+        name: 'logId'
+        required: true
+        description: 'Indice do Log no banco de dados'
+        schema:
+          type: 'integer'
+    put:
+      description: 'Atualiza o log com os dados enviados no body'
+      summary: 'Atualiza Log'
+      tags:
+        - Logs Cartão de Crédito
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#components/schemas/LogCardCredit'
+      responses:
+        201:
+          description: 'Log criado com sucesso'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: integer
+                    nullable: true
+                    example: null
+                  data:
+                    $ref: '#/components/schemas/LogCardCredit'
+        400:
+          description: 'Campo faltando ou com tipo inválido'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors400'
+        401:
+          description: 'Necessário autenticação'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors401'
+        500:
+          description: 'Erro Interno'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors500'
+
+    get:
+      description: 'Retorna um log através do id'
+      summary: 'Retorna um Log'
+      tags:
+        - Logs Cartão de Crédito
+      responses:
+        200:
+          description: 'Requisição realizada com sucesso'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: integer
+                    nullable: true
+                    example: null
+                  data:
+                    $ref: '#/components/schemas/LogCardCredit'
+
+components:
+  schemas:
+    Parcela:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        tituloid:
+          type: integer
+        pessoausuarioid:
+          type: integer
+        tipodocumentoid:
+          type: integer
+        numerodocumento:
+          type: number
+        taxamora:
+          type: number
+        taxajuro:
+          type: number
+        numero:
+          type: number
+        datavencimento:
+          type: string
+          format: date-time
+        datacadastramento:
+          type: string
+          format: date-time
+          readOnly: true
+        numerotransacao:
+          type: string
+        statusgrupoid:
+          type: integer
+        valor:
+          type: number
+        linhadigitavel:
+          type: string
+        codigobarras:
+          type: string
+        taxaboleto:
+          type: number
+        nossonumero:
+          type: string
+        seqboleto:
+          type: number
+        statusarquivo:
+          type: integer
+        cobranca_cancelada:
+          type: boolean
+        valor_bruto:
+          type: number
+        pcl_in_cobranca:
+          type: boolean
+      required:
+        - tituloid
+        - pessoausuarioid
+        - tipodocumentoid
+        - datavencimento
+        - valor
+    SuperParcela:
+      type: object
+      properties:
+        parcela_id:
+          type: string
+        parcela_statusid:
+          type: string
+        parcela_status:
+          type: string
+        parcela_valor:
+          type: number
+          format: double
+        parcela_valor_bruto:
+          type: number
+          format: double
+        parcela_numero:
+          type: integer
+        parcela_vencimento:
+          type: string
+          format: date-time
+        parcela_pagamento:
+          type: string
+          format: date-time
+        parcela_cadastro:
+          type: string
+          format: date-time
+        parcela_in_cobranca:
+          type: boolean
+        parcela_pausedAt:
+          type: string
+          format: date-time
+        parcela_paused:
+          type: boolean
+        lote_id:
+          type: integer
+        lote_cadastro:
+          type: string
+          format: date-time
+        lote_baixa:
+          type: string
+          format: date-time
+        titulo_id:
+          type: string
+        titulo_valor:
+          type: number
+          format: double
+        titulo_parcelas:
+          type: integer
+        titulo_statusid:
+          type: integer
+        carteira_id:
+          type: string
+        carteira_tipo:
+          type: string
+        carteira_modalidadeid:
+          type: integer
+        carteira_modalidade:
+          type: string
+        boleto_linhadigitavel:
+          type: string
+        boleto_codigobarras:
+          type: string
+        boleto_nossonumero:
+          type: string
+        boleto_taxaboleto:
+          type: string
+        boleto_taxamora:
+          type: string
+        rf_id:
+          type: string
+        rf_nome:
+          type: string
+        rf_rg:
+          type: string
+        rf_cpf:
+          type: string
+        rf_nascimento:
+          type: string
+          format: date-time
+        rf_email:
+          type: string
+        rf_numero:
+          type: string
+        cartao_id:
+          type: string
+        cartao_numero:
+          type: string
+        cartao_codigoseguranca:
+          type: string
+        cartao_validade:
+          type: string
+        cartao_diavencimento:
+          type: string
+        cartao_titular:
+          type: string
+        cartao_tipoid:
+          type: string
+        cartao_tipo:
+          type: string
+        contrato_id:
+          type: string
+        contrato_numero:
+          type: string
+        contrato_statusid:
+          type: string
+        contrato_adesao:
+          type: string
+          format: date-time
+        contrato_cancelamento:
+          type: string
+        formapamento_valor:
+          type: number
+          format: double
+        formapamento_cheque:
+          type: string
+        formapagamento_cheque_conta:
+          type: string
+        formapagamento_cheque_emitente:
+          type: string
+        formapagamento_catao_numero:
+          type: string
+        formapagamento_cartao_validade:
+          type: string
+        formapagamento_cartao_codigoseguranca:
+          type: string
+        formapagamento_cartao_tid:
+          type: string
+        formapagamento_cartao_paymentid:
+          type: string
+        formapagamento_documento:
+          type: string
+        formapagamento_matricula:
+          type: string
+        formapagamento_transacao:
+          type: string
+        formapagamento_boleto:
+          type: string
+        formapagamento_carteiraid:
+          type: integer
+        formapagamento_carteira:
+          type: string
+        formapagamento_modalidadepagamento:
+          type: string
+        formapagamento_agenciaid:
+          type: string
+        formapagamento_agencia:
+          type: string
+        formapagamento_agencia_codigo:
+          type: string
+        formapagamento_banco:
+          type: string
+        formapagamento_banco_codigo:
+          type: string
+        formapagamento_conta:
+          type: string
+        ocorrencias:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ocorrencia'
+        logs_cartaocredito:
+          type: array
+          items:
+            $ref: '#/components/schemas/LogCardCredit'
+    BaixaParcela:
+      type: object
+      properties:
+        LoteId:
+          type: integer
+        TipoBaixa:
+          type: integer
+        PessoaId:
+          type: integer
+        TipoMovimento:
+          type: string
+          enum: ['C', 'D']
+          description: 'C para Crédito e D para Débito'
+        FormaPagamento:
+          type: array
+          items:
+            type: object
+            properties:
+              Modalidade:
+                type: integer
+              Carteira:
+                type: integer
+              Valor:
+                type: number
+              NumeroTransacao:
+                type: string
+              PaymentId:
+                type: string
+              Tid:
+                type: string
+              CartaoCredito:
+                type: object
+                properties:
+                  Numero:
+                    type: string
+                    example: '123456789123'
+                  Validade:
+                    type: string
+                    pattern: '^(0?[1-9]|1[012])[/-]\d{4}$'
+                    example: '12/2020'
+                  CodigoSeguranca:
+                    type: string
+                    example: '123'
+                    minimum: 1
+                    maximum: 4
+                  TipoCartaoId:
+                    type: string
+                required:
+                  - Numero
+                  - Validade
+                  - CodigoSeguranca
+                  - TipoCartaoId
+              Cheque:
+                type: object
+                properties:
+                  Emitente:
+                    type: string
+                  Conta:
+                    type: string
+                  Numero:
+                    type: string
+                  ChequeId:
+                    type: integer
+                required:
+                  - Emitente
+                  - Conta
+                  - Numero
+                  - ChequeId
+              Boleto:
+                type: object
+                properties:
+                  Numero:
+                    type: string
+                    description: 'Nosso Número'
+                required:
+                  - Numero
+              Consignado:
+                type: object
+                properties:
+                  Documento:
+                    type: string
+                  Matricula:
+                    type: string
+                required:
+                  - Documento
+                  - Matricula
+              Transferencia:
+                type: object
+                properties:
+                  ContaId:
+                    type: integer
+                  AgenciaId:
+                    type: integer
+                required:
+                  - ContaId
+                  - AgenciaId
+            required:
+              - Modalidade
+              - Carteira
+              - Valor
+    BaixaParcelasBody:
+      type: object
+      properties:
+        pessoausuarioid:
+          type: integer
+        lop_id_pessoa:
+          type: integer
+        lote_id:
+          type: integer
+        lop_id_tipo_baixa:
+          type: integer
+        lop_in_tipo_movimento:
+          type: string
+        parcelas:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              numerocartao:
+                type: string
+              numerocheque:
+                type: string
+              numerodocumento:
+                type: string
+              numeromatricula:
+                type: string
+              validadecartao:
+                type: string
+                format: date
+              numerotransacao:
+                type: string
+              numeroboleto:
+                type: string
+              codigosegurancacartao:
+                type: string
+              obs:
+                type: string
+              numeroempresa:
+                type: string
+              tipodecarteiraid:
+                type: integer
+              tipocartaoid:
+                type: integer
+              contaid:
+                type: integer
+              agenciaid:
+                type: integer
+              paymentid:
+                type: string
+              tid:
+                type: string
+            required:
+              - id
+              - tipodecarteiraid
+      required:
+        - lop_id_tipo_baixa
+        - lop_in_tipo_movimento
+    Ocorrencia:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        dataocorrencia:
+          type: string
+          format: date-time
+        datavalidade:
+          type: string
+          format: date-time
+        statusid:
+          type: integer
+        obs:
+          type: string
+        pessoaagendante:
+          type: integer
+        descricao:
+          type: string
+        codigo:
+          type: integer
+        numerocontratoid:
+          type: integer
+        grupoocorrenciaid:
+          type: integer
+        subgrupoocorrencia:
+          type: integer
+        departamentoid:
+          type: integer
+        setorid:
+          type: integer
+        calendario_id:
+          type: integer
+        tipoocorrencia_calendario:
+          type: integer
+        ocorrenciasistema:
+          type: string
+        horaocorrencia:
+          type: string
+        id_gld:
+          type: string
+          nullable: true
+          readOnly: true
+      required:
+        - statusid
+        - numerocontratoid
+        - grupoocorrenciaid
+        - subgrupoocorrencia
+        - descricao
+    Lote:
+      type: object
+      properties:
+        statusid:
+          type: integer
+        datacadastro:
+          type: string
+          format: date-time
+        pessoausuarioid:
+          type: integer
+        lop_dt_baixa:
+          type: string
+          format: date-time
+        lop_id_pessoa:
+          type: integer
+        lop_id_tipo_baixa:
+          type: integer
+        lop_in_tipo_movimento:
+          type: string
+        lop_id_contrato:
+          type: integer
+        lop_in_cobranca:
+          type: boolean
+      required:
+        - lop_in_tipo_movimento
+        - statusid
+    LogCardCredit:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        tid:
+          type: string
+        authorization_code:
+          type: string
+        payment_id:
+          type: string
+        return_message:
+          type: string
+        return_code:
+          type: string
+        establishment:
+          type: integer
+          description: Estabelecimento em que foi processado
+        parcelaid:
+          type: integer
+        response:
+          type: string
+          nullable: true
+          description: Retorno completo da requisição
+        processamento:
+          type: string
+          format: date-time
+          description: Data em que fou processado o pagamento pelo cartão de crédito
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+    Errors400:
+      type: object
+      properties:
+        error:
+          type: integer
+          example: 400
+        data:
+          type: object
+          properties:
+            message:
+              type: string
+              example: 'Validation fails'
+            errors:
+              type: array
+              items:
+                type: string
+                example: 'field is a required field'
+    Errors401:
+      type: object
+      properties:
+        error:
+          type: integer
+          example: 401
+        data:
+          type: object
+          properties:
+            message:
+              type: string
+              example: 'Unauthorized'
+    Errors500:
+      type: object
+      properties:
+        error:
+          type: integer
+          example: 500
+        data:
+          type: object
+          properties:
+            message:
+              type: string
+              example: Internal Server Error

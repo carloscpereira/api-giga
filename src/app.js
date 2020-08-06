@@ -1,10 +1,14 @@
 import 'dotenv/config';
 
+import { resolve } from 'path';
 import express from 'express';
 import * as Sentry from '@sentry/node';
 import Youch from 'youch';
 import queryParams from 'express-query-params';
 import cors from 'cors';
+
+// Swagger
+import swaggerUi from 'swagger-ui-express';
 
 import 'express-async-errors';
 
@@ -20,6 +24,10 @@ import {
 
 import sentryConfig from './config/sentry';
 import corsConfig from './config/cors';
+
+const YAML = require('yamljs');
+
+const swaggerDocument = YAML.load(resolve(__dirname, 'utils', 'swagger.yaml'));
 // import './database';
 
 class App {
@@ -34,6 +42,11 @@ class App {
   }
 
   middleware() {
+    this.server.use(
+      '/documentation',
+      swaggerUi.serve,
+      swaggerUi.setup(swaggerDocument)
+    );
     this.server.use(cors(corsConfig));
     this.server.use(Sentry.Handlers.requestHandler());
     this.server.use(express.json());
