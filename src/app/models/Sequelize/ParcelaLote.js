@@ -10,6 +10,12 @@ export default class ParcelaLote extends Model {
         pal_dt_pagamento: Sequelize.DATE,
       },
       {
+        indexes: [
+          {
+            unique: true,
+            fields: ['pal_id_lote_pagamento', 'parcelaid'],
+          },
+        ],
         sequelize,
         tableName: 'parcelalote',
       }

@@ -36,7 +36,7 @@ export default class Parcela extends Model {
   static associate(models) {
     this.hasMany(models.FormaPagamento, {
       foreignKey: 'parcelaid',
-      as: 'pagamento',
+      as: { singular: 'pagamento', plural: 'pagamentos' },
     });
     this.belongsTo(models.Titulo, { foreignKey: 'tituloid', as: 'titulo' });
     this.belongsTo(models.Documento, {
@@ -47,9 +47,13 @@ export default class Parcela extends Model {
       foreignKey: 'parcelaid',
       as: 'log_cartao',
     });
+    this.hasMany(models.ParcelaAcrescimoDesconto, {
+      foreignKey: 'parcelaid',
+      as: 'descontos',
+    });
     this.belongsToMany(models.LotePagamento, {
       through: 'parcelalote',
-      as: 'lote',
+      as: { singular: 'lote', plural: 'lotes' },
       foreignKey: 'parcelaid',
     });
   }

@@ -19,6 +19,10 @@ export default class LotePagamento extends Model {
       {
         sequelize,
         tableName: 'lotepagamento',
+        name: {
+          singular: 'lote',
+          plural: 'lotes',
+        },
       }
     );
 
