@@ -149,8 +149,8 @@ class LogCartaoCreditoController {
         });
       }
       return res
-        .status(404)
-        .json({ error: 404, data: { message: 'Internal Server Error' } });
+        .status(500)
+        .json({ error: 500, data: { message: 'Internal Server Error' } });
     }
   }
 
