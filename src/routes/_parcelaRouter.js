@@ -6,7 +6,7 @@ import gettersController from '../app/controllers/gettersController';
 import parcelaController from '../app/controllers/parcelaController';
 import baixaParcelaController from '../app/controllers/baixaParcelaController';
 
-import validateBaixaParcela from '../app/validators/BaixaParcela';
+import validateBaixaParcelaStore from '../app/validators/BaixaParcelaStore';
 // Apagar
 // import Parcela from '../app/models/Sequelize/Parcela';
 // import ParcelaAcrescimoDesconto from '../app/models/Sequelize/ParcelaAcrescimoDesconto';
@@ -81,7 +81,7 @@ routes.put(
 routes.post(
   '/:operator/:id/baixa',
   operatorMiddleware,
-  validateBaixaParcela,
+  validateBaixaParcelaStore,
   baixaParcelaController.store
 );
 

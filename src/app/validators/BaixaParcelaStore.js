@@ -94,14 +94,6 @@ export default async (req, res, next) => {
       }
     }
 
-    // req.body.FormaPagamento.foreach(
-    //   ({ CartaoCredito, Cheque, Boleto, Consignado, Transferencia }) => {
-    //     console.log(
-    //       !CartaoCredito && !Cheque && !Boleto && !Consignado && !Transferencia
-    //     );
-    //   }
-    // );
-
     return next();
   } catch (error) {
     console.log(error);
