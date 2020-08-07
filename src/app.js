@@ -44,8 +44,13 @@ class App {
   middleware() {
     this.server.use(
       '/documentation',
+      async (req, res, next) => {
+        swaggerDocument.host = req.get('host');
+        req.swaggerDoc = swaggerDocument;
+        next();
+      },
       swaggerUi.serve,
-      swaggerUi.setup(swaggerDocument)
+      swaggerUi.setup()
     );
     this.server.use(cors(corsConfig));
     this.server.use(Sentry.Handlers.requestHandler());
