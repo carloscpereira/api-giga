@@ -43,6 +43,12 @@ paths:
             type: 'integer'
             minimum: 1
             default: 1
+        - in: 'header'
+          name: 'AppAuthorization'
+          required: true
+          description: Chave de autorização da aplicação
+          schema:
+            type: string
       responses:
         200:
           description: 'Requisição realizada com sucesso'
@@ -62,6 +68,12 @@ paths:
         schema:
           type: 'string'
           enum: ['idental', 'atemde']
+      - in: 'header'
+        name: 'AppAuthorization'
+        required: true
+        description: Chave de autorização da aplicação
+        schema:
+          type: string
     get:
       description: 'Retorna todas parcelas de uma determinada operadora'
       summary: 'Parcelas da operadora'
@@ -135,6 +147,12 @@ paths:
         description: 'Index da parcela'
         schema:
           type: integer
+      - in: 'header'
+        name: 'AppAuthorization'
+        required: true
+        description: Chave de autorização da aplicação
+        schema:
+          type: string
     get:
       description: Retorna uma única parcela da operadora
       summary: Retorna uma parcela
@@ -200,6 +218,12 @@ paths:
         description: 'Index da parcela'
         schema:
           type: integer
+      - in: 'header'
+        name: 'AppAuthorization'
+        required: true
+        description: Chave de autorização da aplicação
+        schema:
+          type: string
     put:
       description: Alterar status da parcela para pausado
       deprecated: true
@@ -229,6 +253,12 @@ paths:
         description: 'Index da parcela'
         schema:
           type: integer
+      - in: 'header'
+        name: 'AppAuthorization'
+        required: true
+        description: Chave de autorização da aplicação
+        schema:
+          type: string
     put:
       deprecated: true
       description: Altera o status da parcela para não pausado
@@ -258,6 +288,12 @@ paths:
         description: 'Index da parcela'
         schema:
           type: integer
+      - in: 'header'
+        name: 'AppAuthorization'
+        required: true
+        description: Chave de autorização da aplicação
+        schema:
+          type: string
     put:
       description: Altera o status para parcela para em cobrança
       summary: Parcela em cobrança
@@ -286,6 +322,12 @@ paths:
         description: 'Index da parcela'
         schema:
           type: integer
+      - in: 'header'
+        name: 'AppAuthorization'
+        required: true
+        description: Chave de autorização da aplicação
+        schema:
+          type: string
     put:
       description: Altera o status da parcela, tirando-a da cobrança e permitindo cobranças futuras
       summary: Parcela liberada
@@ -314,7 +356,13 @@ paths:
         description: 'Index da parcela'
         schema:
           type: integer
-    put:
+      - in: 'header'
+        name: 'AppAuthorization'
+        required: true
+        description: Chave de autorização da aplicação
+        schema:
+          type: string
+    post:
       description: Realiza a baixa de uma única parcela
       summary: Baixa Parcela
       tags:
@@ -349,6 +397,12 @@ paths:
         description: 'Index da parcela'
         schema:
           type: integer
+      - in: 'header'
+        name: 'AppAuthorization'
+        required: true
+        description: Chave de autorização da aplicação
+        schema:
+          type: string
     put:
       description: Realiza a baixa de um grupo de parcelas
       summary: Baixa Grupo de Parcelas
@@ -378,6 +432,12 @@ paths:
         schema:
           type: 'string'
           enum: ['idental', 'atemde']
+      - in: 'header'
+        name: 'AppAuthorization'
+        required: true
+        description: Chave de autorização da aplicação
+        schema:
+          type: string
     get:
       description: 'Retorna todas ocorrencias de uma determinada operadora'
       summary: 'Ocorências da operadora'
@@ -423,6 +483,12 @@ paths:
         description: 'Indice da ocorrência no banco de dados'
         schema:
           type: 'integer'
+      - in: 'header'
+        name: 'AppAuthorization'
+        required: true
+        description: Chave de autorização da aplicação
+        schema:
+          type: string
     put:
       description: 'Atualiza uma ocorrência com os dados enviados no body'
       summary: 'Atualiza Ocorrência'
@@ -450,6 +516,12 @@ paths:
         schema:
           type: 'string'
           enum: ['idental', 'atemde']
+      - in: 'header'
+        name: 'AppAuthorization'
+        required: true
+        description: Chave de autorização da aplicação
+        schema:
+          type: string
     get:
       description: 'Retorna todos os lotes de uma determinada operadora'
       summary: 'Lotes da operadora'
@@ -495,6 +567,12 @@ paths:
         description: 'Indice do Lote no banco de dados'
         schema:
           type: 'integer'
+      - in: 'header'
+        name: 'AppAuthorization'
+        required: true
+        description: Chave de autorização da aplicação
+        schema:
+          type: string
     put:
       description: 'Atualiza o lote com os dados enviados no body'
       summary: 'Atualiza Lote'
@@ -534,6 +612,12 @@ paths:
         schema:
           type: 'string'
           enum: ['idental', 'atemde']
+      - in: 'header'
+        name: 'AppAuthorization'
+        required: true
+        description: Chave de autorização da aplicação
+        schema:
+          type: string
     get:
       description: 'Retorna todos os logs de cartão de crédito registrado por uma operadora'
       summary: 'Logs da operadora'
@@ -613,6 +697,12 @@ paths:
         description: 'Indice do Log no banco de dados'
         schema:
           type: 'integer'
+      - in: 'header'
+        name: 'AppAuthorization'
+        required: true
+        description: Chave de autorização da aplicação
+        schema:
+          type: string
     put:
       description: 'Atualiza o log com os dados enviados no body'
       summary: 'Atualiza Log'

@@ -27,7 +27,9 @@ import corsConfig from './config/cors';
 
 const YAML = require('yamljs');
 
-const swaggerDocument = YAML.load(resolve(__dirname, 'utils', 'swagger.yaml'));
+const swaggerDocument = YAML.load(
+  resolve(__dirname, '..', 'swagger', 'swagger.yaml')
+);
 // import './database';
 
 class App {
