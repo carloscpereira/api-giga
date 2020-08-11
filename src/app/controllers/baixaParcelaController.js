@@ -5,6 +5,7 @@ import Parcela from '../models/Sequelize/Parcela';
 import Lote from '../models/Sequelize/LotePagamento';
 import ParcelaDesconto from '../models/Sequelize/ParcelaAcrescimoDesconto';
 import FormaPagamento from '../models/Sequelize/FormaPagamento';
+import ParcelaLote from '../models/Sequelize/ParcelaLote';
 
 class BaixaParcela {
   async store(req, res) {
@@ -70,16 +71,17 @@ class BaixaParcela {
         parcelaLote ||
         (await Lote.create({
           statusid: 1,
-          datacadastro: new Date(),
+          datacadastro: moment(new Date()).format(),
           pessoausuarioid: PessoaId || 1,
+          lop_id_pessoa: PessoaId || 1,
           lop_id_tipo_baixa: TipoBaixa || 4,
           lop_in_tipo_movimento: TipoMovimento || 'C',
-          lop_id_contrato: ContratoId,
+          ...(ContratoId ? { lop_id_contrato: ContratoId } : {}),
           lop_in_cobranca: false,
         }));
 
       await parcela.setLotes(lote, {
-        through: { pal_dt_pagamento: new Date() },
+        through: { pal_dt_pagamento: moment(new Date()).format() },
       });
 
       const dataFormaPagamento = formaPagamento.map(
@@ -148,7 +150,7 @@ class BaixaParcela {
             valor: diffValor * -1,
             porcent: ((diffValor * -1) / parcela.valor_bruto) * 100,
             tipomovimento: 'C',
-            dataaplicacao: new Date(),
+            dataaplicacao: moment(new Date()).format(),
             pessoausuarioid: PessoaId || 1,
             tipoincidenciasigla: 'B',
             ordem: 1,
@@ -160,7 +162,7 @@ class BaixaParcela {
             valor: diffValor,
             porcent: (diffValor / parcela.valor_bruto) * 100,
             tipomovimento: 'D',
-            dataaplicacao: new Date(),
+            dataaplicacao: moment(new Date()).format(),
             pessoausuarioid: PessoaId || 1,
             tipoincidenciasigla: 'B',
             ordem: 1,
@@ -180,7 +182,7 @@ class BaixaParcela {
       }
 
       parcela.update({ statusgrupoid: 2 });
-      lote.update({ statusid: 2, lop_dt_baixa: new Date() });
+      lote.update({ lop_dt_baixa: moment(new Date()).format(), statusid: 2 });
 
       return res.json(lote);
     } catch (error) {

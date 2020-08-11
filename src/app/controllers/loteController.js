@@ -17,7 +17,13 @@ class LoteController {
         {
           model: Parcela,
           as: 'parcelas',
-          include: [{ model: FormaPagamento, as: 'pagamento' }],
+          // through: { attributes: ['pal_dt_pagamento'] },
+          include: [
+            {
+              model: FormaPagamento,
+              as: 'pagamentos',
+            },
+          ],
         },
       ],
       ...criteria,

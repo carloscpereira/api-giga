@@ -31,9 +31,10 @@ export default class LotePagamento extends Model {
 
   static associate(models) {
     this.belongsToMany(models.Parcela, {
-      through: 'parcelalote',
+      through: models.ParcelaLote,
       as: 'parcelas',
       foreignKey: 'pal_id_lote_pagamento',
+      otherKey: 'parcelaid',
     });
     this.belongsTo(models.Contrato, {
       foreignKey: 'lop_id_contrato',

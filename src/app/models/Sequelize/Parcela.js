@@ -49,12 +49,13 @@ export default class Parcela extends Model {
     });
     this.hasMany(models.ParcelaAcrescimoDesconto, {
       foreignKey: 'parcelaid',
-      as: 'descontos',
+      as: { singular: 'desconto', plural: 'descontos' },
     });
     this.belongsToMany(models.LotePagamento, {
-      through: 'parcelalote',
+      through: models.ParcelaLote,
       as: { singular: 'lote', plural: 'lotes' },
       foreignKey: 'parcelaid',
+      otherKey: 'pal_id_lote_pagamento',
     });
   }
 }
