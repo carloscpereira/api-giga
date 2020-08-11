@@ -184,7 +184,26 @@ class BaixaParcela {
       parcela.update({ statusgrupoid: 2 });
       lote.update({ lop_dt_baixa: moment(new Date()).format(), statusid: 2 });
 
-      return res.json(lote);
+      return res.json({
+        error: null,
+        data: await Lote.findByPk(lote.id, {
+          include: [
+            {
+              model: Parcela,
+              as: 'parcelas',
+              through: {
+                attributes: ['id', 'pal_dt_pagamento'],
+              },
+              include: [
+                {
+                  model: FormaPagamento,
+                  as: 'pagamentos',
+                },
+              ],
+            },
+          ],
+        }),
+      });
     } catch (error) {
       console.log(error);
       return res
