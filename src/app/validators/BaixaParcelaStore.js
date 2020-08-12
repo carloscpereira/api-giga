@@ -19,6 +19,8 @@ export default async (req, res, next) => {
             NumeroTransacao: Yup.string(),
             PaymentId: Yup.string(),
             Tid: Yup.string(),
+            Especie: Yup.boolean(),
+            Deposito: Yup.boolean(),
             CartaoCredito: Yup.object({
               Numero: Yup.string().required(),
               Validade: Yup.string()
@@ -80,13 +82,17 @@ export default async (req, res, next) => {
       Boleto,
       Consignado,
       Transferencia,
+      Especie,
+      Deposito,
     } of FormaPagamento) {
       if (
         !CartaoCredito &&
         !Cheque &&
         !Boleto &&
         !Consignado &&
-        !Transferencia
+        !Transferencia &&
+        !Especie &&
+        !Deposito
       ) {
         throw new Yup.ValidationError(
           'It is necessary to inform the payment data for low installment'

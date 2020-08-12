@@ -1018,6 +1018,14 @@ components:
                 type: string
               Tid:
                 type: string
+              Especie:
+                type: boolean
+                default: false
+                example: false
+              Deposito:
+                type: boolean
+                default: false
+                example: false
               CartaoCredito:
                 type: object
                 properties:
