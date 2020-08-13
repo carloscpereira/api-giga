@@ -916,6 +916,156 @@ paths:
                   data:
                     $ref: '#/components/schemas/ModalidadePagamento'
 
+  /tipo-carteira/{operator}:
+    parameters:
+      - in: 'path'
+        name: 'operator'
+        required: true
+        description: 'Nome da operadora em minúsculo'
+        schema:
+          type: 'string'
+          enum: ['idental', 'atemde']
+      - in: 'header'
+        name: 'AppAuthorization'
+        required: true
+        description: Chave de autorização da aplicação
+        schema:
+          type: string
+    get:
+      description: 'Retorna todas os tipos de carteira'
+      summary: 'Carteiras da Operadora'
+      tags:
+        - Tipo de Carteira
+      responses:
+        200:
+          description: 'Requisição realizada com sucesso'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TipoCarteira'
+        500:
+          description: 'Internal Server Error'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors500'
+    post:
+      description: 'Criar novo tipo de carteira'
+      summary: 'Cria Tipo de Carteira'
+      tags:
+        - Tipo de Carteira
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TipoCarteira'
+      responses:
+        201:
+          description: 'Carteira criada com sucesso'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: integer
+                    default: null
+                    example: null
+                  data:
+                    $ref: '#/components/schemas/TipoCarteira'
+        500:
+          description: 'Internal Server Error'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors500'
+
+  /tipo-carteira/{operator}/{tipoCarteiraId}:
+    parameters:
+      - in: 'path'
+        name: 'operator'
+        required: true
+        description: 'Nome da operadora em minúsculo'
+        schema:
+          type: 'string'
+          enum: ['idental', 'atemde']
+      - in: 'path'
+        name: 'tipoCarteiraId'
+        required: true
+        description: 'Indice do tipo de carteira no banco de dados'
+        schema:
+          type: 'integer'
+      - in: 'header'
+        name: 'AppAuthorization'
+        required: true
+        description: Chave de autorização da aplicação
+        schema:
+          type: string
+    put:
+      description: 'Atualiza o tipo de carteira com os dados enviados no body'
+      summary: 'Atualiza Tipo de Carteira'
+      tags:
+        - Tipo de Carteira
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#components/schemas/TipoCarteira'
+      responses:
+        201:
+          description: 'Tipo de Carteira Atualizado com Sucesso'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: integer
+                    nullable: true
+                    example: null
+                  data:
+                    $ref: '#/components/schemas/TipoCarteira'
+        400:
+          description: 'Campo faltando ou com tipo inválido'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors400'
+        401:
+          description: 'Necessário autenticação'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors401'
+        500:
+          description: 'Erro Interno'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors500'
+
+    get:
+      description: 'Retorna um tipo de carteira através do id'
+      summary: 'Retorna um Tipo de Carteira'
+      tags:
+        - Tipo de Carteira
+      responses:
+        200:
+          description: 'Requisição realizada com sucesso'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: integer
+                    nullable: true
+                    example: null
+                  data:
+                    $ref: '#/components/schemas/TipoCarteira'
+
 components:
   schemas:
     Parcela:
@@ -1368,6 +1518,65 @@ components:
           enum: ['0', '1']
       required:
         - descricao
+    TipoCarteira:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        descricao:
+          type: string
+          minimum: 1
+          maximum: 60
+        modalidadepagamentoid:
+          type: integer
+        bancoid:
+          type: integer
+        tipocartaoid:
+          type: integer
+        carteira:
+          type: string
+        modpagantigo:
+          type: integer
+        transferenciaoutrobanco:
+          type: string
+          enum: ['0', '1']
+        boletocomregistro:
+          type: string
+          enum: ['0', '1']
+        adicionalcomissao:
+          type: string
+          enum: ['0', '1']
+        cod_remessa:
+          type: string
+          enum: ['0', '1']
+        cod_cancelamento:
+          type: string
+          minimum: 1
+          maximum: 2
+        img_doc_cobranca:
+          type: string
+        deposito_identificado:
+          type: string
+          enum: ['0', '1']
+        diafechamentoconsignataria:
+          type: integer
+        tdc_in_documento_cobranca:
+          type: boolean
+        tdc_in_bloqueio_cadastro:
+          type: boolean
+        nu_prazo_inadimplencia_cobranca:
+          type: integer
+        nu_prazo_tolerancia_autorizacao:
+          type: integer
+        nu_prazo_bloqueio_contrato:
+          type: integer
+      required:
+        - descricao
+        - modalidadepagamentoid
+        - tdc_in_documento_cobranca
+        - tdc_in_bloqueio_cadastro
+        - nu_prazo_inadimplencia_cobranca
     Lote:
       type: object
       properties:
