@@ -21,6 +21,7 @@ import {
   logCartaoCreditoRouter,
   contratoRouter,
   modalidadePagamentoRouter,
+  tipoCarteiraRouter,
 } from './routes';
 
 import sentryConfig from './config/sentry';
@@ -74,6 +75,7 @@ class App {
     this.server.use('/parcelas', parcelaRouter);
     this.server.use('/contratos', contratoRouter);
     this.server.use('/modalidade-pagamentos', modalidadePagamentoRouter);
+    this.server.use('/tipo-carteira', tipoCarteiraRouter);
     this.server.use(Sentry.Handlers.errorHandler());
   }
 
