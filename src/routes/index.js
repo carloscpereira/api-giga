@@ -4,6 +4,7 @@ import ocorrenciaRouter from './_ocorrenciaRouter';
 import loteRouter from './_loteRouter';
 import logCartaoCreditoRouter from './_logCartaoCreditoRouter';
 import contratoRouter from './_contratoRouter';
+import modalidadePagamentoRouter from './_modalidadePagamentoRouter';
 
 export {
   parcelaRouter,
@@ -11,4 +12,5 @@ export {
   loteRouter,
   logCartaoCreditoRouter,
   contratoRouter,
+  modalidadePagamentoRouter,
 };

@@ -766,6 +766,156 @@ paths:
                   data:
                     $ref: '#/components/schemas/LogCardCredit'
 
+  /modalidade-pagamentos/{operator}:
+    parameters:
+      - in: 'path'
+        name: 'operator'
+        required: true
+        description: 'Nome da operadora em minúsculo'
+        schema:
+          type: 'string'
+          enum: ['idental', 'atemde']
+      - in: 'header'
+        name: 'AppAuthorization'
+        required: true
+        description: Chave de autorização da aplicação
+        schema:
+          type: string
+    get:
+      description: 'Retorna todas as modalidades de pagamento'
+      summary: 'Modalidades Operadora'
+      tags:
+        - Modalidade Pagamento
+      responses:
+        200:
+          description: 'Requisição realizada com sucesso'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ModalidadePagamento'
+        500:
+          description: 'Internal Server Error'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors500'
+    post:
+      description: 'Criar nova modalidade de pagamento'
+      summary: 'Cria Modalidade de Pagamento'
+      tags:
+        - Modalidade Pagamento
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ModalidadePagamento'
+      responses:
+        201:
+          description: 'Modalidade criada com sucesso'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: integer
+                    default: null
+                    example: null
+                  data:
+                    $ref: '#/components/schemas/ModalidadePagamento'
+        500:
+          description: 'Internal Server Error'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors500'
+
+  /modalidade-pagamentos/{operator}/{modalidadePagamentoId}:
+    parameters:
+      - in: 'path'
+        name: 'operator'
+        required: true
+        description: 'Nome da operadora em minúsculo'
+        schema:
+          type: 'string'
+          enum: ['idental', 'atemde']
+      - in: 'path'
+        name: 'modalidadePagamentoId'
+        required: true
+        description: 'Indice da modalidade de pagamento no banco de dados'
+        schema:
+          type: 'integer'
+      - in: 'header'
+        name: 'AppAuthorization'
+        required: true
+        description: Chave de autorização da aplicação
+        schema:
+          type: string
+    put:
+      description: 'Atualiza a modalidade de pagamento com os dados enviados no body'
+      summary: 'Atualiza Modalidade de Pagamento'
+      tags:
+        - Modalidade Pagamento
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#components/schemas/ModalidadePagamento'
+      responses:
+        201:
+          description: 'Modalidade de Pagamento Atualizada com Sucesso'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: integer
+                    nullable: true
+                    example: null
+                  data:
+                    $ref: '#/components/schemas/ModalidadePagamento'
+        400:
+          description: 'Campo faltando ou com tipo inválido'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors400'
+        401:
+          description: 'Necessário autenticação'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors401'
+        500:
+          description: 'Erro Interno'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors500'
+
+    get:
+      description: 'Retorna uma modalidade de pagamento através do id'
+      summary: 'Retorna uma Modalidade de Pagamento'
+      tags:
+        - Modalidade Pagamento
+      responses:
+        200:
+          description: 'Requisição realizada com sucesso'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: integer
+                    nullable: true
+                    example: null
+                  data:
+                    $ref: '#/components/schemas/ModalidadePagamento'
+
 components:
   schemas:
     Parcela:
@@ -1204,6 +1354,19 @@ components:
         - numerocontratoid
         - grupoocorrenciaid
         - subgrupoocorrencia
+        - descricao
+    ModalidadePagamento:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        descricao:
+          type: string
+        cartaocredito:
+          type: string
+          enum: ['0', '1']
+      required:
         - descricao
     Lote:
       type: object

@@ -10,6 +10,7 @@ import Ocorrencia from '../app/models/Sequelize/Ocorrencia';
 import LotePagamento from '../app/models/Sequelize/LotePagamento';
 import ParcelaLote from '../app/models/Sequelize/ParcelaLote';
 import ParcelaAcrescimoDesconto from '../app/models/Sequelize/ParcelaAcrescimoDesconto';
+import ModalidadePagamento from '../app/models/Sequelize/ModalidadePagamento';
 
 // import databaseConfig from '../config/database';
 
@@ -23,6 +24,7 @@ const models = [
   Ocorrencia,
   LotePagamento,
   ParcelaLote,
+  ModalidadePagamento,
   ParcelaAcrescimoDesconto,
 ];
 
