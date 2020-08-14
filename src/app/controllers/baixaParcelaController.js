@@ -1,11 +1,9 @@
-/* eslint-disable no-unused-vars */
 import moment from 'moment';
 
 import Parcela from '../models/Sequelize/Parcela';
 import Lote from '../models/Sequelize/LotePagamento';
 import ParcelaDesconto from '../models/Sequelize/ParcelaAcrescimoDesconto';
 import FormaPagamento from '../models/Sequelize/FormaPagamento';
-import ParcelaLote from '../models/Sequelize/ParcelaLote';
 
 class BaixaParcela {
   async store(req, res) {
@@ -181,8 +179,11 @@ class BaixaParcela {
         await FormaPagamento.create(data);
       }
 
-      parcela.update({ statusgrupoid: 2 });
-      lote.update({ lop_dt_baixa: moment(new Date()).format(), statusid: 2 });
+      await parcela.update({ statusgrupoid: 2 });
+      await lote.update({
+        lop_dt_baixa: moment(new Date()).format(),
+        statusid: 2,
+      });
 
       return res.json({
         error: null,
