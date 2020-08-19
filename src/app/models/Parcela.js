@@ -399,6 +399,7 @@ export default class Parcela {
         cn_contrato.statusid as contrato_statusid,
         cn_contrato.dataadesao as contrato_adesao,
         cn_contrato.datacancelamento as contrato_cancelamento,
+        contrato_status.descricao as contrato_status,
 
         -- Forma Pagamento
         formapagamento.valor as formapamento_valor,
@@ -453,6 +454,7 @@ export default class Parcela {
         LEFT JOIN parcelalote ON (parcela.id = parcelalote.parcelaid)
         LEFT JOIN cn_tipodecarteira fp_carteira ON (formapagamento.tipodecarteiraid = fp_carteira.id)
         LEFT JOIN modpagamento fp_modpagamento ON (fp_carteira.modalidadepagamentoid  = fp_modpagamento.id)
+        LEFT JOIN statusgrupo contrato_status ON (cn_contrato.statusid = contrato_status.id)
         LEFT JOIN tipocartao c_tipo ON (cartao.tipocartaoid = c_tipo.id)
         LEFT JOIN lotepagamento ON (parcelalote.pal_id_lote_pagamento = lotepagamento.id)) AS p
       `;
