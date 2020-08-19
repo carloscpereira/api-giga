@@ -7,7 +7,7 @@ export default async (req, res, next) => {
       authorization_code: Yup.string().required(),
       payment_id: Yup.string().required(),
       return_message: Yup.string().required(),
-      return_code: Yup.number().integer().required(),
+      return_code: Yup.string().required(),
       establishment: Yup.number().integer().required(),
       parcelaid: Yup.number().integer().required(),
       response: Yup.string(),

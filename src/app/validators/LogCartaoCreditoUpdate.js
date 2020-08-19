@@ -11,7 +11,7 @@ export default async (req, res, next) => {
         authorization_code: Yup.string(),
         payment_id: Yup.string(),
         return_message: Yup.string(),
-        return_code: Yup.number().integer(),
+        return_code: Yup.string(),
         establishment: Yup.number().integer(),
         parcelaid: Yup.number().integer(),
         response: Yup.string(),

@@ -9,7 +9,7 @@ export default class LogCartaoCredito extends Model {
         authorization_code: Sequelize.STRING,
         payment_id: Sequelize.STRING,
         return_message: Sequelize.STRING,
-        return_code: Sequelize.INTEGER,
+        return_code: Sequelize.STRING,
         establishment: Sequelize.STRING,
         parcela_id: { type: Sequelize.INTEGER, field: 'parcelaid' },
         response: Sequelize.TEXT,
