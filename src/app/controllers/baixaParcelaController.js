@@ -9,14 +9,7 @@ class BaixaParcela {
   async store(req, res) {
     try {
       const {
-        body: {
-          LoteId,
-          TipoBaixa,
-          PessoaId,
-          TipoMovimento,
-          ContratoId,
-          FormaPagamento: formaPagamento,
-        },
+        body: { LoteId, TipoBaixa, PessoaId, TipoMovimento, ContratoId, FormaPagamento: formaPagamento },
         params: { id },
       } = req;
 
@@ -30,8 +23,7 @@ class BaixaParcela {
         return res.status(403).json({
           error: 403,
           data: {
-            message:
-              'It is not possible to change a batch that has already been finalized',
+            message: 'It is not possible to change a batch that has already been finalized',
           },
         });
       }
@@ -45,16 +37,11 @@ class BaixaParcela {
         });
       }
 
-      if (
-        parcela &&
-        parseInt(parcela.statusgrupoid, 10) !== 1 &&
-        parseInt(parcela.statusgrupoid, 10) !== 55
-      ) {
+      if (parcela && parseInt(parcela.statusgrupoid, 10) !== 1 && parseInt(parcela.statusgrupoid, 10) !== 55) {
         return res.status(403).json({
           error: 403,
           data: {
-            message:
-              'Portion cannot be invoiced because it has already been invoiced',
+            message: 'Portion cannot be invoiced because it has already been invoiced',
           },
         });
       }
@@ -99,18 +86,11 @@ class BaixaParcela {
           ...(CartaoCredito ? { numerocartao: CartaoCredito.Numero } : {}),
           ...(CartaoCredito
             ? {
-                validadecartao: moment(
-                  CartaoCredito.Validade,
-                  'mm/YYYY'
-                ).format(),
+                validadecartao: moment(CartaoCredito.Validade, 'mm/YYYY').format(),
               }
             : {}),
-          ...(CartaoCredito
-            ? { tipocartaoid: CartaoCredito.TipoCartaoId }
-            : {}),
-          ...(CartaoCredito
-            ? { codigosegurancacartao: CartaoCredito.CodigoSeguranca }
-            : {}),
+          ...(CartaoCredito ? { tipocartaoid: CartaoCredito.TipoCartaoId } : {}),
+          ...(CartaoCredito ? { codigosegurancacartao: CartaoCredito.CodigoSeguranca } : {}),
           ...(Consignado ? { numerodocumento: Consignado.Documento } : {}),
           ...(Consignado ? { numeromatricula: Consignado.Matricula } : {}),
           ...(Boleto ? { numeroboleto: Boleto.Numero } : {}),
@@ -132,9 +112,7 @@ class BaixaParcela {
         })
       );
 
-      const valorTotal = dataFormaPagamento
-        .map(({ valor }) => valor)
-        .reduce((ant, prox) => ant + prox, 0);
+      const valorTotal = dataFormaPagamento.map(({ valor }) => valor).reduce((ant, prox) => ant + prox, 0);
 
       if (valorTotal !== parcela.valor) {
         const diffValor = parcela.valor_bruto - valorTotal;
@@ -207,9 +185,60 @@ class BaixaParcela {
       });
     } catch (error) {
       console.log(error);
-      return res
-        .status(500)
-        .json({ error: 500, data: { message: 'Internal Server Error' } });
+      return res.status(500).json({ error: 500, data: { message: 'Internal Server Error' } });
+    }
+  }
+
+  async destroy(req, res) {
+    try {
+      const {
+        sequelize,
+        params: { id },
+      } = req;
+
+      const parcela = await Parcela.findByPk(id);
+      console.log(parcela.statusgrupoid);
+      if (parseInt(parcela.statusgrupoid, 10) !== 2)
+        return res.status(400).json({
+          error: 400,
+          data: { message: 'Installment not settled' },
+        });
+
+      const lotes = await parcela.getLotes();
+
+      if (lotes.length === 0)
+        return res.status(400).json({
+          error: 400,
+          data: { message: 'It is not possible to remove a portion of the batch when it is not in any batch' },
+        });
+
+      const firtLote = lotes.shift();
+      const loteParcelas = await firtLote.getParcelas();
+
+      sequelize.query('ALTER TABLE parcelalote DISABLE TRIGGER trd_parcelalote');
+      sequelize.query('ALTER TABLE parcelalote DISABLE TRIGGER triu_parcelalote');
+      sequelize.query('ALTER TABLE parcela DISABLE TRIGGER triu_parcela');
+      sequelize.query('ALTER TABLE lotepagamento DISABLE TRIGGER triu_lotepagamento');
+
+      if (loteParcelas.length > 1) {
+        await FormaPagamento.destroy({ where: { parcelaid: parcela.id } });
+        await parcela.removeLotes([firtLote.id]);
+        await parcela.update({ statusgrupoid: 1, lop_dt_baixa: null });
+      } else {
+        await FormaPagamento.destroy({ where: { parcelaid: parcela.id } });
+        await parcela.removeLotes([firtLote.id]);
+        await parcela.update({ statusgrupoid: 1, lop_dt_baixa: null });
+        await Lote.destroy({ where: { id: firtLote.id } });
+      }
+
+      sequelize.query('ALTER TABLE parcelalote ENABLE TRIGGER trd_parcelalote');
+      sequelize.query('ALTER TABLE parcelalote ENABLE TRIGGER triu_parcelalote');
+      sequelize.query('ALTER TABLE parcela ENABLE TRIGGER triu_parcela');
+      sequelize.query('ALTER TABLE lotepagamento ENABLE TRIGGER triu_lotepagamento');
+      return res.json({ error: null, data: parcela });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({ error: 500, data: { message: 'Internal Server Error' } });
     }
   }
 }
