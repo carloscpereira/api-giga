@@ -41,7 +41,17 @@ export default class Contrato extends Model {
         id_gld: Sequelize.INTEGER,
         centrocustoid: Sequelize.BIGINT,
       },
-      { sequelize, tableName: 'cn_contrato' }
+      {
+        sequelize,
+        tableName: 'cn_contrato',
+        scopes: {
+          pessoaFisica: {
+            where: {
+              tipocontratoid: 5,
+            },
+          },
+        },
+      }
     );
 
     return this;
@@ -51,6 +61,43 @@ export default class Contrato extends Model {
     this.hasMany(models.Titulo, {
       foreignKey: 'numerocontratoid',
       as: 'titulo',
+    });
+    this.belongsTo(models.TipoContrato, {
+      foreignKey: 'tipocontratoid',
+      as: {
+        singular: 'tipocontrato',
+        plural: 'tiposcontrato',
+      },
+    });
+    this.belongsToMany(models.Pessoa, {
+      through: models.AssociadoPJ,
+      foreignKey: 'id',
+      otherKey: 'responsavelfinanceiroid',
+      constraints: false,
+      as: 'responsavelpj',
+      scope: {
+        include: {
+          model: models.Vinculo,
+          as: 'vinculos',
+          where: {
+            tipopessoa: 'J',
+          },
+          requires: true,
+        },
+      },
+    });
+    console.log(models.TipoContrato);
+    this.belongsToMany(models.Pessoa, {
+      through: models.AssociadoPF,
+      foreignKey: 'id',
+      otherKey: 'responsavelfinanceiroid',
+      constraints: false,
+      as: 'responsavelpf',
+      scope: {
+        where: {
+          tipocontratoid: 5,
+        },
+      },
     });
   }
 }
