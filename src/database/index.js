@@ -13,6 +13,20 @@ import ParcelaAcrescimoDesconto from '../app/models/Sequelize/ParcelaAcrescimoDe
 import ModalidadePagamento from '../app/models/Sequelize/ModalidadePagamento';
 import TipoCarteira from '../app/models/Sequelize/TipoCarteira';
 
+import Pessoa from '../app/models/Sequelize/Pessoa';
+import Vinculo from '../app/models/Sequelize/Vinculo';
+import PessoaVinculo from '../app/models/Sequelize/PessoaVinculo';
+import PessoaFisica from '../app/models/Sequelize/PessoaFisica';
+import PessoaJuridica from '../app/models/Sequelize/PessoaJuridica';
+
+import Email from '../app/models/Sequelize/Email';
+import Endereco from '../app/models/Sequelize/Endereco';
+import Telefone from '../app/models/Sequelize/Telefone';
+import TipoContrato from '../app/models/Sequelize/TipoContrato';
+import AssociadoPF from '../app/models/Sequelize/AssociadoPF';
+import AssociadoPJ from '../app/models/Sequelize/AssociadoPJ';
+import EstadoCivil from '../app/models/Sequelize/EstadoCivil';
+
 // import databaseConfig from '../config/database';
 
 const models = [
@@ -28,6 +42,18 @@ const models = [
   ModalidadePagamento,
   ParcelaAcrescimoDesconto,
   TipoCarteira,
+  Pessoa,
+  Vinculo,
+  PessoaVinculo,
+  PessoaFisica,
+  PessoaJuridica,
+  Email,
+  Endereco,
+  Telefone,
+  TipoContrato,
+  AssociadoPF,
+  AssociadoPJ,
+  EstadoCivil,
 ];
 
 class Database {
@@ -42,9 +68,7 @@ class Database {
 
     models
       .map((model) => model.init(this.connection))
-      .map(
-        (model) => model.associate && model.associate(this.connection.models)
-      );
+      .map((model) => model.associate && model.associate(this.connection.models));
   }
 }
 
