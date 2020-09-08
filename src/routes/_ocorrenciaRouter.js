@@ -22,4 +22,4 @@ routes.put(
   ocorrenciaController.update
 );
 
-module.exports = routes;
+export default routes;

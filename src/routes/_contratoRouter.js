@@ -35,4 +35,4 @@ routes.put(
 );
 routes.delete('/:operator/:id', operatorMiddleware, contratoController.delete);
 
-module.exports = routes;
+export default routes;

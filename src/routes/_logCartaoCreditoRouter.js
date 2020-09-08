@@ -28,4 +28,4 @@ routes.post(
   logCartaoCreditoController.store
 );
 routes.delete('/:operator/:id', operatorMiddleware);
-module.exports = routes;
+export default routes;

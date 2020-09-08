@@ -24,4 +24,4 @@ routes.put(
 );
 routes.get('/:operator/:id', operatorMiddleware, loteController.show);
 
-module.exports = routes;
+export default routes;

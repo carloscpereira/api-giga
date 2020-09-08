@@ -7,34 +7,16 @@ import parcelaController from '../app/controllers/parcelaController';
 import baixaParcelaController from '../app/controllers/baixaParcelaController';
 
 import validateBaixaParcelaStore from '../app/validators/BaixaParcelaStore';
-// Apagar
-// import Parcela from '../app/models/Sequelize/Parcela';
-// import ParcelaAcrescimoDesconto from '../app/models/Sequelize/ParcelaAcrescimoDesconto';
-// import FormaPagamento from '../app/models/Sequelize/FormaPagamento';
-// import LotePagamento from '../app/models/Sequelize/LotePagamento';
+
+import newParcelaController from '../app/controllers/newParcelaController';
 
 const routes = new Router();
 
-// routes.get('/:operator/:id/sequelize', operatorMiddleware, async (req, res) => {
-//   const parcelas = await Parcela.findByPk(req.params.id, {
-//     include: [
-//       {
-//         model: ParcelaAcrescimoDesconto,
-//         as: 'descontos',
-//       },
-//       {
-//         model: FormaPagamento,
-//         as: 'pagamentos',
-//       },
-//       {
-//         model: LotePagamento,
-//         as: 'lotes',
-//       },
-//     ],
-//   });
-
-//   return res.json({ parcelas });
-// });
+routes.get(
+  '/:operator/homolog',
+  operatorMiddleware,
+  newParcelaController.index
+);
 
 routes.get('/', gettersController.parcelas);
 
@@ -85,4 +67,10 @@ routes.post(
   baixaParcelaController.store
 );
 
-module.exports = routes;
+routes.delete(
+  '/:operator/:id/baixa',
+  operatorMiddleware,
+  baixaParcelaController.destroy
+);
+
+export default routes;

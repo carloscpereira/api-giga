@@ -24,4 +24,4 @@ routes.put(
   tipoCarteiraController.update
 );
 
-module.exports = routes;
+export default routes;

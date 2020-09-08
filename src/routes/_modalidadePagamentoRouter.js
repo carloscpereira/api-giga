@@ -32,4 +32,4 @@ routes.post(
   modalidadePagamentoController.store
 );
 
-module.exports = routes;
+export default routes;
