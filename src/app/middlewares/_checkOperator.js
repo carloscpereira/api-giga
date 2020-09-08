@@ -31,7 +31,7 @@ export default async (req, res, next) => {
   req.connection = connectionConfig[process.env.NODE_ENV].databases[operator];
 
   // eslint-disable-next-line no-new
-  new Database(req.connection);
+  req.sequelize = new Database(req.connection).connection;
 
   req.pool = pool[operator];
   req.knex = knex[operator];
