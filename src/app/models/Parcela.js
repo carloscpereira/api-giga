@@ -25,9 +25,7 @@ export default class Parcela {
 
   async findPK(id) {
     try {
-      const {
-        rows,
-      } = await this.pool.query('SELECT * FROM parcela WHERE id = $1', [id]);
+      const { rows } = await this.pool.query('SELECT * FROM parcela WHERE id = $1', [id]);
       if (!rows.length) return DEFAULT_ERR_RESPONSE;
       return rows.shift();
     } catch (err) {
@@ -257,12 +255,7 @@ export default class Parcela {
       /**
        * Atualiza status da Parcela
        */
-      const {
-        rows: updateParcela,
-      } = await this.pool.query(
-        'UPDATE parcela SET statusgrupoid = 2 WHERE id = $1',
-        [id]
-      );
+      const { rows: updateParcela } = await this.pool.query('UPDATE parcela SET statusgrupoid = 2 WHERE id = $1', [id]);
       await this.pool.query('COMMIT');
 
       return parcela;
@@ -326,137 +319,153 @@ export default class Parcela {
       const offset = (page - 1) * limite;
 
       let query = `
-      SELECT * FROM
-      (SELECT
-
+      SELECT *
+      FROM (SELECT
         -- Extra
-        cn_associadopf.diavencimento as diavencimento,
+        cn_associadopf.diavencimento                                                              as diavencimento,
 
         -- Referentes a parcela
-        parcela.id as parcela_id,
-        parcela.statusgrupoid as parcela_statusid,
-        statusgrupo.descricao as parcela_status,
-        parcela.valor as parcela_valor,
-        parcela.valor_bruto as parcela_valor_bruto,
-        parcela.numero as parcela_numero,
-        parcela.datavencimento as parcela_vencimento,
-        parcelalote.pal_dt_pagamento as parcela_pagamento,
-        parcela.datacadastramento as parcela_cadastro,
-        parcela.pcl_in_cobranca as parcela_in_cobranca,
-        parcela.paused_at as parcela_pausedAt,
-        parcela.pcl_in_pause as parcela_paused,
+        parcela.id                                                                                as parcela_id,
+        parcela.statusgrupoid                                                                     as parcela_statusid,
+        statusgrupo.descricao                                                                     as parcela_status,
+        parcela.valor                                                                             as parcela_valor,
+        parcela.valor_bruto                                                                       as parcela_valor_bruto,
+        parcela.numero                                                                            as parcela_numero,
+        parcela.datavencimento                                                                    as parcela_vencimento,
+        parcelalote.pal_dt_pagamento                                                              as parcela_pagamento,
+        parcela.datacadastramento                                                                 as parcela_cadastro,
+        parcela.pcl_in_cobranca                                                                   as parcela_in_cobranca,
+        parcela.paused_at                                                                         as parcela_pausedAt,
+        parcela.pcl_in_pause                                                                      as parcela_paused,
 
         -- Referentes ao Lote
-        lotepagamento.id as lote_id,
-        lotepagamento.datacadastro as lote_cadastro,
-        lotepagamento.lop_dt_baixa as lote_baixa,
+        lotepagamento.id                                                                          as lote_id,
+        lotepagamento.datacadastro                                                                as lote_cadastro,
+        lotepagamento.lop_dt_baixa                                                                as lote_baixa,
 
         -- Referentes ao Titulo
-        titulo.id as titulo_id,
-        titulo.valor as titulo_valor,
-        titulo.numerototalparcelas as titulo_parcelas,
-        titulo.statusid as titulo_statusid,
+        titulo.id                                                                                 as titulo_id,
+        titulo.valor                                                                              as titulo_valor,
+        titulo.numerototalparcelas                                                                as titulo_parcelas,
+        titulo.statusid                                                                           as titulo_statusid,
 
         -- Referentes a Carteira
-        cn_tipodecarteira.id as carteira_id,
-        cn_tipodecarteira.descricao as carteira_tipo,
-        cn_tipodecarteira.modalidadepagamentoid as carteira_modalidadeid,
-        modpagamento.descricao AS carteira_modalidade,
+        cn_tipodecarteira.id                                                                      as carteira_id,
+        cn_tipodecarteira.descricao                                                               as carteira_tipo,
+        cn_tipodecarteira.modalidadepagamentoid                                                   as carteira_modalidadeid,
+        modpagamento.descricao                                                                    AS carteira_modalidade,
 
         -- Referentes a Boleto
-        parcela.linhadigitavel as boleto_linhadigitavel,
-        parcela.codigobarras as boleto_codigobarras,
-        parcela.nossonumero as boleto_nossonumero,
-        parcela.taxaboleto as boleto_taxaboleto,
-        parcela.taxamora as boleto_taxamora,
+        parcela.linhadigitavel                                                                    as boleto_linhadigitavel,
+        parcela.codigobarras                                                                      as boleto_codigobarras,
+        parcela.nossonumero                                                                       as boleto_nossonumero,
+        parcela.taxaboleto                                                                        as boleto_taxaboleto,
+        parcela.taxamora                                                                          as boleto_taxamora,
 
         -- Referentes ao Pagante
-        sp_dadospessoafisica.id as rf_id,
-        sp_dadospessoafisica.nome as rf_nome,
-        sp_dadospessoafisica.rg as rf_rg,
-        sp_dadospessoafisica.cpf as rf_cpf,
-        sp_dadospessoafisica.datanascimento as rf_nascimento,
+        coalesce(sp_dadospessoafisica.id,sp_dadospessoajuridica.id)                               as rf_id,
+        coalesce(sp_dadospessoafisica.nome, sp_dadospessoajuridica.razaosocial)                   as rf_nome,
+        coalesce(sp_dadospessoafisica.cpf, sp_dadospessoajuridica.cnpj)                           as rf_documento,
+        coalesce(sp_dadospessoafisica.datanascimento, sp_dadospessoajuridica.datacadastro)        as rf_nascimento,
 
         -- Referentes ao Email Pagante
-        sp_email.descricao as rf_email,
+        sp_email.descricao                                                                        as rf_email,
 
         -- Refetentes ao Telefone Pagante
-        sp_telefone.numero as rf_numero,
+        sp_telefone.numero                                                                        as rf_numero,
 
         -- Referente ao Cartão de Créditos
-        cartao.id as cartao_id,
-        cartao.numerocartao as cartao_numero,
-        cartao.codigosegurancacartao as cartao_codigoseguranca,
-        cartao.validadecartao as cartao_validade,
-        cartao.diadevencimento as cartao_diavencimento,
-        cartao.nome_titular as cartao_titular,
-        cartao.tipocartaoid as cartao_tipoid,
-        c_tipo.descricao as cartao_tipo,
+        cartao.id                                                                                 as cartao_id,
+        cartao.numerocartao                                                                       as cartao_numero,
+        cartao.codigosegurancacartao                                                              as cartao_codigoseguranca,
+        cartao.validadecartao                                                                     as cartao_validade,
+        cartao.diadevencimento                                                                    as cartao_diavencimento,
+        cartao.nome_titular                                                                       as cartao_titular,
+        cartao.tipocartaoid                                                                       as cartao_tipoid,
+        c_tipo.descricao                                                                          as cartao_tipo,
 
         -- Referente ao Contrato
-        cn_contrato.id as contrato_id,
-        cn_contrato.numerocontrato as contrato_numero,
-        cn_contrato.statusid as contrato_statusid,
-        cn_contrato.dataadesao as contrato_adesao,
-        cn_contrato.datacancelamento as contrato_cancelamento,
-        contrato_status.descricao as contrato_status,
+        cn_contrato.id                                                                            as contrato_id,
+        cn_contrato.numerocontrato                                                                as contrato_numero,
+        cn_contrato.statusid                                                                      as contrato_statusid,
+        cn_contrato.dataadesao                                                                    as contrato_adesao,
+        cn_contrato.datacancelamento                                                              as contrato_cancelamento,
+        contrato_status.descricao                                                                 as contrato_status,
 
         -- Forma Pagamento
-        formapagamento.valor as formapamento_valor,
+        formapagamento.valor                                                                      as formapamento_valor,
 
         -- Cheque
-        formapagamento.numerocheque as formapamento_cheque,
-        formapagamento.contacheque as formapagamento_cheque_conta,
-        formapagamento.nome_emitente as formapagamento_cheque_emitente,
+        formapagamento.numerocheque                                                               as formapamento_cheque,
+        formapagamento.contacheque                                                                as formapagamento_cheque_conta,
+        formapagamento.nome_emitente                                                              as formapagamento_cheque_emitente,
         -- Cartão
-        formapagamento.numerocartao as formapagamento_catao_numero,
-        formapagamento.validadecartao as formapagamento_cartao_validade,
-        formapagamento.codigosegurancacartao as formapagamento_cartao_codigoseguranca,
-        formapagamento.tid as formapagamento_cartao_tid,
-        formapagamento.paymentid as formapagamento_cartao_paymentid,
+        formapagamento.numerocartao                                                               as formapagamento_catao_numero,
+        formapagamento.validadecartao                                                             as formapagamento_cartao_validade,
+        formapagamento.codigosegurancacartao                                                      as formapagamento_cartao_codigoseguranca,
+        formapagamento.tid                                                                        as formapagamento_cartao_tid,
+        formapagamento.paymentid                                                                  as formapagamento_cartao_paymentid,
         -- Consignado
-        formapagamento.numerodocumento as formapagamento_documento,
-        formapagamento.numeromatricula as formapagamento_matricula,
+        formapagamento.numerodocumento                                                            as formapagamento_documento,
+        formapagamento.numeromatricula                                                            as formapagamento_matricula,
         -- Transferencia
-        formapagamento.numerotransacao as formapagamento_transacao,
+        formapagamento.numerotransacao                                                            as formapagamento_transacao,
         -- Boleto
-        formapagamento.numeroboleto as formapagamento_boleto,
+        formapagamento.numeroboleto                                                               as formapagamento_boleto,
         -- Carteira
-        formapagamento.tipodecarteiraid as formapagamento_carteiraid,
-        fp_carteira.descricao as formapagamento_carteira,
-        fp_modpagamento.descricao as formapagamento_modalidadepagamento,
-        fp_modpagamento.id as formapagamento_modalidadepagamentoid,
-        formapagamento.agenciaid as formapagamento_agenciaid,
-        fp_agencia.descricao as formapagamento_agencia,
-        fp_agencia.codigo as formapagamento_agencia_codigo,
-        fpa_banco.descricao as formapagamento_banco,
-        fpa_banco.codigo as formapagamento_banco_codigo,
-        fp_conta.numero as formapagamento_conta,
+        formapagamento.tipodecarteiraid                                                           as formapagamento_carteiraid,
+        fp_carteira.descricao                                                                     as formapagamento_carteira,
+        fp_modpagamento.descricao                                                                 as formapagamento_modalidadepagamento,
+        fp_modpagamento.id                                                                        as formapagamento_modalidadepagamentoid,
+        formapagamento.agenciaid                                                                  as formapagamento_agenciaid,
+        fp_agencia.descricao                                                                      as formapagamento_agencia,
+        fp_agencia.codigo                                                                         as formapagamento_agencia_codigo,
+        fpa_banco.descricao                                                                       as formapagamento_banco,
+        fpa_banco.codigo                                                                          as formapagamento_banco_codigo,
+        fp_conta.numero                                                                           as formapagamento_conta,
 
-        (SELECT array_to_json(array_agg(row_to_json(d))) FROM (SELECT * FROM cn_ocorrenciacontrato WHERE cn_ocorrenciacontrato.numerocontratoid = cn_contrato.id AND cn_ocorrenciacontrato.obs ILIKE CONCAT('%', parcela.id ,'%')) d) AS ocorrencias,
-        (SELECT array_to_json(array_agg(row_to_json(d))) FROM (SELECT * FROM log_cartaocredito WHERE log_cartaocredito.parcelaid = parcela.id) d) AS logs_cartaocredito
+        (SELECT array_to_json(array_agg(row_to_json(d)))
+          FROM (SELECT *
+                FROM cn_ocorrenciacontrato
+                WHERE cn_ocorrenciacontrato.numerocontratoid = cn_contrato.id
+                  AND cn_ocorrenciacontrato.obs ILIKE CONCAT('%' , parcela.id, '%' )) d)     AS ocorrencias,
+        (SELECT array_to_json(array_agg(row_to_json(d)))
+          FROM (SELECT *
+                FROM log_cartaocredito
+                WHERE log_cartaocredito.parcelaid = parcela.id) d)                                 AS logs_cartaocredito
 
-        FROM parcela
-        INNER JOIN statusgrupo ON (parcela.statusgrupoid = statusgrupo.id)
-        INNER JOIN titulo ON (parcela.tituloid = titulo.id)
-        INNER JOIN cn_tipodecarteira ON (titulo.tipodecarteiraid = cn_tipodecarteira.id)
-        INNER JOIN cn_contrato ON (titulo.numerocontratoid = cn_contrato.id)
-        INNER JOIN cn_associadopf ON (cn_contrato.id = cn_associadopf.id)
-        INNER JOIN sp_dadospessoafisica ON (cn_associadopf.responsavelfinanceiroid = sp_dadospessoafisica.id)
-        LEFT JOIN cartao ON (sp_dadospessoafisica.id = cartao.pessoaid AND cartao.car_in_principal)
-        LEFT JOIN sp_email ON (sp_dadospessoafisica.id = sp_email.dadosid AND sp_email.ema_in_principal = true)
-        LEFT JOIN sp_telefone ON (sp_dadospessoafisica.id = sp_telefone.dadosid AND sp_telefone.tel_in_principal = true)
-        LEFT JOIN modpagamento ON (cn_tipodecarteira.modalidadepagamentoid = modpagamento.id)
-        LEFT JOIN formapagamento ON (parcela.id = formapagamento.parcelaid)
-        LEFT JOIN agencia fp_agencia ON (formapagamento.agenciaid = fp_agencia.id)
-        LEFT JOIN banco fpa_banco ON (fp_agencia.bancoid = fpa_banco.id)
-        LEFT JOIN conta fp_conta ON (formapagamento.contaid = fp_conta.id)
-        LEFT JOIN parcelalote ON (parcela.id = parcelalote.parcelaid)
-        LEFT JOIN cn_tipodecarteira fp_carteira ON (formapagamento.tipodecarteiraid = fp_carteira.id)
-        LEFT JOIN modpagamento fp_modpagamento ON (fp_carteira.modalidadepagamentoid  = fp_modpagamento.id)
-        LEFT JOIN statusgrupo contrato_status ON (cn_contrato.statusid = contrato_status.id)
-        LEFT JOIN tipocartao c_tipo ON (cartao.tipocartaoid = c_tipo.id)
-        LEFT JOIN lotepagamento ON (parcelalote.pal_id_lote_pagamento = lotepagamento.id)) AS p
+            FROM parcela
+              INNER JOIN statusgrupo ON (parcela.statusgrupoid = statusgrupo.id)
+              INNER JOIN titulo ON (parcela.tituloid = titulo.id)
+              INNER JOIN cn_tipodecarteira ON (titulo.tipodecarteiraid = cn_tipodecarteira.id)
+              INNER JOIN cn_contrato ON (titulo.numerocontratoid = cn_contrato.id)
+
+              /*sobre Pessoa Física*/
+              LEFT JOIN cn_associadopf ON (cn_contrato.id = cn_associadopf.id)
+              LEFT JOIN sp_dadospessoafisica ON (cn_associadopf.responsavelfinanceiroid = sp_dadospessoafisica.id)
+              LEFT JOIN cartao ON (sp_dadospessoafisica.id = cartao.pessoaid AND cartao.car_in_principal)
+              /*FIM sobre Pessoa Física*/
+
+              /*sobre Pessoa Juridica*/
+              LEFT JOIN cn_associadopj ON (cn_contrato.id = cn_associadopj.id)
+              LEFT JOIN sp_dadospessoajuridica ON (cn_associadopj.responsavelfinanceiroid = sp_dadospessoajuridica.id)
+              /*FIM sobre Pessoa Juridica*/
+
+              LEFT JOIN sp_email ON (coalesce(sp_dadospessoafisica.id,sp_dadospessoajuridica.id) = sp_email.dadosid AND sp_email.ema_in_principal = true)
+              LEFT JOIN sp_telefone
+                        ON (coalesce(sp_dadospessoafisica.id,sp_dadospessoajuridica.id) = sp_telefone.dadosid AND sp_telefone.tel_in_principal = true)
+
+              LEFT JOIN modpagamento ON (cn_tipodecarteira.modalidadepagamentoid = modpagamento.id)
+              LEFT JOIN formapagamento ON (parcela.id = formapagamento.parcelaid)
+              LEFT JOIN agencia fp_agencia ON (formapagamento.agenciaid = fp_agencia.id)
+              LEFT JOIN banco fpa_banco ON (fp_agencia.bancoid = fpa_banco.id)
+              LEFT JOIN conta fp_conta ON (formapagamento.contaid = fp_conta.id)
+              LEFT JOIN parcelalote ON (parcela.id = parcelalote.parcelaid)
+              LEFT JOIN cn_tipodecarteira fp_carteira ON (formapagamento.tipodecarteiraid = fp_carteira.id)
+              LEFT JOIN modpagamento fp_modpagamento ON (fp_carteira.modalidadepagamentoid = fp_modpagamento.id)
+              LEFT JOIN statusgrupo contrato_status ON (cn_contrato.statusid = contrato_status.id)
+              LEFT JOIN tipocartao c_tipo ON (cartao.tipocartaoid = c_tipo.id)
+              LEFT JOIN lotepagamento ON (parcelalote.pal_id_lote_pagamento = lotepagamento.id)) AS p
       `;
 
       if (!!q && !!params) {
