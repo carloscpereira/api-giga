@@ -6,6 +6,7 @@ export default async (req, res, next) => {
       LoteId: Yup.number().integer(),
       TipoBaixa: Yup.number().integer(),
       PessoaId: Yup.number().integer(),
+      DataPagamento: Yup.date(),
       TipoMovimento: Yup.string().matches(/(C|D)/, {
         message: "Transaction type must be 'C' for Credit and 'D' for Debit",
         excludeEmptyString: true,
@@ -76,27 +77,9 @@ export default async (req, res, next) => {
     console.log(FormaPagamento);
 
     // eslint-disable-next-line no-restricted-syntax
-    for (const {
-      CartaoCredito,
-      Cheque,
-      Boleto,
-      Consignado,
-      Transferencia,
-      Especie,
-      Deposito,
-    } of FormaPagamento) {
-      if (
-        !CartaoCredito &&
-        !Cheque &&
-        !Boleto &&
-        !Consignado &&
-        !Transferencia &&
-        !Especie &&
-        !Deposito
-      ) {
-        throw new Yup.ValidationError(
-          'It is necessary to inform the payment data for low installment'
-        );
+    for (const { CartaoCredito, Cheque, Boleto, Consignado, Transferencia, Especie, Deposito } of FormaPagamento) {
+      if (!CartaoCredito && !Cheque && !Boleto && !Consignado && !Transferencia && !Especie && !Deposito) {
+        throw new Yup.ValidationError('It is necessary to inform the payment data for low installment');
       }
     }
 

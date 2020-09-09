@@ -9,7 +9,15 @@ class BaixaParcela {
   async store(req, res) {
     try {
       const {
-        body: { LoteId, TipoBaixa, PessoaId, TipoMovimento, ContratoId, FormaPagamento: formaPagamento },
+        body: {
+          LoteId,
+          TipoBaixa,
+          PessoaId,
+          TipoMovimento,
+          DataPagamento = moment(new Date()).format(),
+          ContratoId,
+          FormaPagamento: formaPagamento,
+        },
         params: { id },
       } = req;
 
@@ -66,7 +74,7 @@ class BaixaParcela {
         }));
 
       await parcela.setLotes(lote, {
-        through: { pal_dt_pagamento: moment(new Date()).format() },
+        through: { pal_dt_pagamento: DataPagamento },
       });
 
       const dataFormaPagamento = formaPagamento.map(
@@ -190,27 +198,28 @@ class BaixaParcela {
   }
 
   async destroy(req, res) {
-    try {
-      const {
-        sequelize,
-        params: { id },
-      } = req;
+    const {
+      sequelize,
+      params: { id },
+    } = req;
 
+    try {
       const parcela = await Parcela.findByPk(id);
-      console.log(parcela.statusgrupoid);
-      if (parseInt(parcela.statusgrupoid, 10) !== 2)
+
+      if (parseInt(parcela.statusgrupoid, 10) !== 2) {
         return res.status(400).json({
           error: 400,
           data: { message: 'Installment not settled' },
         });
+      }
 
       const lotes = await parcela.getLotes();
 
-      if (lotes.length === 0)
-        return res.status(400).json({
-          error: 400,
-          data: { message: 'It is not possible to remove a portion of the batch when it is not in any batch' },
-        });
+      if (lotes.length === 0) {
+        await parcela.update({ statusgrupoid: 1 });
+
+        return res.json({ error: null, data: parcela });
+      }
 
       const firtLote = lotes.shift();
       const loteParcelas = await firtLote.getParcelas();
@@ -237,6 +246,10 @@ class BaixaParcela {
       sequelize.query('ALTER TABLE lotepagamento ENABLE TRIGGER triu_lotepagamento');
       return res.json({ error: null, data: parcela });
     } catch (error) {
+      sequelize.query('ALTER TABLE parcelalote ENABLE TRIGGER trd_parcelalote');
+      sequelize.query('ALTER TABLE parcelalote ENABLE TRIGGER triu_parcelalote');
+      sequelize.query('ALTER TABLE parcela ENABLE TRIGGER triu_parcela');
+      sequelize.query('ALTER TABLE lotepagamento ENABLE TRIGGER triu_lotepagamento');
       console.log(error);
       return res.status(500).json({ error: 500, data: { message: 'Internal Server Error' } });
     }
