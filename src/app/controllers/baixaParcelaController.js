@@ -223,11 +223,13 @@ class BaixaParcela {
 
       const firtLote = lotes.shift();
       const loteParcelas = await firtLote.getParcelas();
+      // sequelize.query('BEGIN');
 
       sequelize.query('ALTER TABLE parcelalote DISABLE TRIGGER trd_parcelalote');
       sequelize.query('ALTER TABLE parcelalote DISABLE TRIGGER triu_parcelalote');
       sequelize.query('ALTER TABLE parcela DISABLE TRIGGER triu_parcela');
       sequelize.query('ALTER TABLE lotepagamento DISABLE TRIGGER triu_lotepagamento');
+      sequelize.query('ALTER TABLE formapagamento DISABLE TRIGGER trd_formapagamento');
 
       if (loteParcelas.length > 1) {
         await FormaPagamento.destroy({ where: { parcelaid: parcela.id } });
@@ -244,13 +246,17 @@ class BaixaParcela {
       sequelize.query('ALTER TABLE parcelalote ENABLE TRIGGER triu_parcelalote');
       sequelize.query('ALTER TABLE parcela ENABLE TRIGGER triu_parcela');
       sequelize.query('ALTER TABLE lotepagamento ENABLE TRIGGER triu_lotepagamento');
+      sequelize.query('ALTER TABLE formapagamento ENABLE TRIGGER trd_formapagamento');
+
+      // sequelize.query('COMMIT');
+
       return res.json({ error: null, data: parcela });
     } catch (error) {
+      // sequelize.query('ROLLBACK');
       sequelize.query('ALTER TABLE parcelalote ENABLE TRIGGER trd_parcelalote');
       sequelize.query('ALTER TABLE parcelalote ENABLE TRIGGER triu_parcelalote');
       sequelize.query('ALTER TABLE parcela ENABLE TRIGGER triu_parcela');
       sequelize.query('ALTER TABLE lotepagamento ENABLE TRIGGER triu_lotepagamento');
-      console.log(error);
       return res.status(500).json({ error: 500, data: { message: 'Internal Server Error' } });
     }
   }
