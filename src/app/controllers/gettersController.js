@@ -7,24 +7,27 @@ class GettersController {
       const poolAtemde = pool.atemde;
       const poolIdental = pool.idental;
 
-      const { limit, page, perPage } = req.query;
+      const { limit = 20, page, perPage, operadora = '' } = req.query;
+      let parcelasAtemde = [];
+      let parcelasIdental = [];
 
-      let parcelasAtemde = await new Parcela(poolAtemde).newGet(
-        req.parsedQuery.query,
-        req.parsedQuery.values,
-        { limit, page, perPage }
-      );
+      if (!operadora || (operadora && operadora === 'atemde')) {
+        parcelasAtemde = await new Parcela(poolAtemde).newGet(req.parsedQuery.query, req.parsedQuery.values, {
+          limit,
+          page,
+          perPage,
+        });
+      }
 
-      let parcelasIdental = await new Parcela(poolIdental).newGet(
-        req.parsedQuery.query,
-        req.parsedQuery.values,
-        { limit, page, perPage }
-      );
+      if (!operadora || (operadora && operadora === 'idental')) {
+        parcelasIdental = await new Parcela(poolIdental).newGet(req.parsedQuery.query, req.parsedQuery.values, {
+          limit,
+          page,
+          perPage,
+        });
+      }
 
-      if (
-        (parcelasAtemde && parcelasAtemde.error) ||
-        (parcelasIdental && parcelasIdental.error)
-      ) {
+      if ((parcelasAtemde && parcelasAtemde.error) || (parcelasIdental && parcelasIdental.error)) {
         return res.status(503).json({
           error: 503,
           data: {
@@ -47,9 +50,7 @@ class GettersController {
         data: [...parcelasIdental, ...parcelasAtemde],
       });
     } catch (error) {
-      return res
-        .status(500)
-        .json({ error: 500, data: { message: 'Internal server error' } });
+      return res.status(500).json({ error: 500, data: { message: 'Internal server error' } });
     }
   }
 }

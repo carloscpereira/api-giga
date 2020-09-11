@@ -53,7 +53,7 @@ class App {
     this.server.use(
       queryParams({
         format: 'sql',
-        blacklistParams: ['limit', 'page', 'perPage'],
+        blacklistParams: ['limit', 'page', 'perPage', 'operadora'],
       })
     );
   }
