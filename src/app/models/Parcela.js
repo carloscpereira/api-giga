@@ -374,6 +374,14 @@ export default class Parcela {
         -- Refetentes ao Telefone Pagante
         sp_telefone.numero                                                                        as rf_numero,
 
+        -- Referentes ao Endereco do Pagante
+        sp_endereco.logradouro                                                                    as rf_endereco_logradouro,
+        sp_endereco.bairro                                                                        as rf_endereco_bairro,
+        sp_endereco.cidade                                                                        as rf_endereco_cidade,
+        sp_endereco.estado                                                                        as rf_endereco_estado,
+        sp_endereco.cep                                                                           as rf_endereco_cep,
+        sp_endereco.complemento                                                                   as rf_endereco_complemento,
+
         -- Referente ao Cartão de Créditos
         cartao.id                                                                                 as cartao_id,
         cartao.numerocartao                                                                       as cartao_numero,
@@ -454,7 +462,7 @@ export default class Parcela {
               LEFT JOIN sp_email ON (coalesce(sp_dadospessoafisica.id,sp_dadospessoajuridica.id) = sp_email.dadosid AND sp_email.ema_in_principal = true)
               LEFT JOIN sp_telefone
                         ON (coalesce(sp_dadospessoafisica.id,sp_dadospessoajuridica.id) = sp_telefone.dadosid AND sp_telefone.tel_in_principal = true)
-
+              LEFT JOIN sp_endereco ON (COALESCE(sp_dadospessoafisica.id, sp_dadospessoajuridica.id) = sp_endereco.dadosid AND sp_endereco.end_in_principal = true)
               LEFT JOIN modpagamento ON (cn_tipodecarteira.modalidadepagamentoid = modpagamento.id)
               LEFT JOIN formapagamento ON (parcela.id = formapagamento.parcelaid)
               LEFT JOIN agencia fp_agencia ON (formapagamento.agenciaid = fp_agencia.id)
@@ -473,8 +481,6 @@ export default class Parcela {
       }
 
       query += ` ORDER BY p.parcela_vencimento DESC, p.parcela_pagamento DESC, p.rf_nome ASC LIMIT ${limite} OFFSET ${offset}`;
-
-      console.log(query, params);
 
       const { rows } = await this.pool.query(query, params);
 
