@@ -340,8 +340,8 @@ export default class Parcela {
 
         -- Referentes ao Lote
         lotepagamento.id                                                                          as lote_id,
-        lotepagamento.datacadastro                                                                as lote_cadastro,
-        lotepagamento.lop_dt_baixa                                                                as lote_baixa,
+        CAST(lotepagamento.datacadastro  AS DATE)                                                 as lote_cadastro,
+        CAST(lotepagamento.lop_dt_baixa  AS DATE)                                                 as lote_baixa,
 
         -- Referentes ao Titulo
         titulo.id                                                                                 as titulo_id,
@@ -473,6 +473,8 @@ export default class Parcela {
       }
 
       query += ` ORDER BY p.parcela_vencimento DESC, p.parcela_pagamento DESC, p.rf_nome ASC LIMIT ${limite} OFFSET ${offset}`;
+
+      console.log(query, params);
 
       const { rows } = await this.pool.query(query, params);
 
