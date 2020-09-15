@@ -73,9 +73,10 @@ class BaixaParcela {
           lop_in_cobranca: false,
         }));
 
-      await parcela.setLotes(lote, {
-        through: { pal_dt_pagamento: DataPagamento },
-      });
+      if (!parcelaLote)
+        await parcela.setLotes(lote, {
+          through: { pal_dt_pagamento: DataPagamento },
+        });
 
       const dataFormaPagamento = formaPagamento.map(
         ({
