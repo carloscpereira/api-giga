@@ -130,7 +130,7 @@ class BaixaParcela {
 
         if (diffValor < 0) {
           await ParcelaDesconto.create({
-            cmfid: 63,
+            cmfid: 180,
             parcelaid: parcela.id,
             valor: diffValor * -1,
             porcent: ((diffValor * -1) / parcela.valor_bruto) * 100,
@@ -142,7 +142,7 @@ class BaixaParcela {
           });
         } else {
           await ParcelaDesconto.create({
-            cmfid: 62,
+            cmfid: 10,
             parcelaid: parcela.id,
             valor: diffValor,
             porcent: (diffValor / parcela.valor_bruto) * 100,
