@@ -146,7 +146,7 @@ class BaixaParcela {
             parcelaid: parcela.id,
             valor: diffValor,
             porcent: (diffValor / parcela.valor_bruto) * 100,
-            tipomovimento: 'D',
+            tipomovimento: 'C',
             dataaplicacao: moment(new Date()).format(),
             pessoausuarioid: PessoaId || 1,
             tipoincidenciasigla: 'B',
