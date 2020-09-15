@@ -11,6 +11,7 @@ import tipoCarteiraRouter from './_tipoCarteiraRouter';
 import pessoaRouter from './_pessoaRouter';
 import pessoaJuridicaRouter from './_pessoaJuridicaRouter';
 import pessoaFisicaRouter from './_pessoaFisicaRouter';
+import logContatoRouter from './_logContatoRouter';
 
 const routes = Router();
 
@@ -24,5 +25,6 @@ routes.use('/tipo-carteira', tipoCarteiraRouter);
 routes.use('/pessoa-juridica', pessoaJuridicaRouter);
 routes.use('/pessoa', pessoaRouter);
 routes.use('/pessoa-fisica', pessoaFisicaRouter);
+routes.use('/system/log/contato', logContatoRouter);
 
 export default routes;

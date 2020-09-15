@@ -12,6 +12,7 @@ import ParcelaLote from '../app/models/Sequelize/ParcelaLote';
 import ParcelaAcrescimoDesconto from '../app/models/Sequelize/ParcelaAcrescimoDesconto';
 import ModalidadePagamento from '../app/models/Sequelize/ModalidadePagamento';
 import TipoCarteira from '../app/models/Sequelize/TipoCarteira';
+// import TipoContrato from '../app/models/Sequelize/TipoContrato';
 
 import Pessoa from '../app/models/Sequelize/Pessoa';
 import Vinculo from '../app/models/Sequelize/Vinculo';
@@ -26,6 +27,8 @@ import TipoContrato from '../app/models/Sequelize/TipoContrato';
 import AssociadoPF from '../app/models/Sequelize/AssociadoPF';
 import AssociadoPJ from '../app/models/Sequelize/AssociadoPJ';
 import EstadoCivil from '../app/models/Sequelize/EstadoCivil';
+
+import LogContato from '../app/models/Sequelize/LogContato';
 
 // import databaseConfig from '../config/database';
 
@@ -54,6 +57,7 @@ const models = [
   AssociadoPF,
   AssociadoPJ,
   EstadoCivil,
+  LogContato,
 ];
 
 class Database {
