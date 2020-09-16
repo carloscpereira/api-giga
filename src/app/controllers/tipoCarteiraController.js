@@ -22,6 +22,7 @@ class TipoCarteiraController {
       limit,
       offset: (page - 1) * limit,
       ...criteriaCarteira,
+      attributes: { exclude: ['img_doc_cobranca'] },
       include: [
         ...(columns.includes('modalidade_cobranca')
           ? [{ model: ModalidadeCobranca, as: 'modalidade_cobranca', ...criteriaModalidadeCobranca }]
