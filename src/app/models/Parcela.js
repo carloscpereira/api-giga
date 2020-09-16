@@ -358,7 +358,7 @@ export default class Parcela {
         -- Referentes a Boleto
         parcela.linhadigitavel                                                                    as boleto_linhadigitavel,
         parcela.codigobarras                                                                      as boleto_codigobarras,
-        parcela.nossonumero                                                                       as boleto_nossonumero,
+        SUBSTRING(parcela.nossonumero,1,17)                                                      as boleto_nossonumero,
         parcela.taxaboleto                                                                        as boleto_taxaboleto,
         parcela.taxamora                                                                          as boleto_taxamora,
 
@@ -481,7 +481,7 @@ export default class Parcela {
       }
 
       query += ` ORDER BY p.parcela_vencimento DESC, p.parcela_pagamento DESC, p.rf_nome ASC LIMIT ${limite} OFFSET ${offset}`;
-
+      console.log(query, params);
       const { rows } = await this.pool.query(query, params);
 
       return rows;
