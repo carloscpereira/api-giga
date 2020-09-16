@@ -2,7 +2,7 @@ import moment from 'moment';
 
 import Parcela from '../models/Sequelize/Parcela';
 import Lote from '../models/Sequelize/LotePagamento';
-import ParcelaDesconto from '../models/Sequelize/ParcelaAcrescimoDesconto';
+// import ParcelaDesconto from '../models/Sequelize/ParcelaAcrescimoDesconto';
 import FormaPagamento from '../models/Sequelize/FormaPagamento';
 
 class BaixaParcela {
@@ -124,35 +124,35 @@ class BaixaParcela {
       const valorTotal = dataFormaPagamento.map(({ valor }) => valor).reduce((ant, prox) => ant + prox, 0);
 
       if (valorTotal !== parcela.valor) {
-        const diffValor = parcela.valor_bruto - valorTotal;
+        // const diffValor = parcela.valor_bruto - valorTotal;
         // debug
         // await ParcelaDesconto.destroy({ where: { parcelaid: parcela.id } });
 
-        if (diffValor < 0) {
-          await ParcelaDesconto.create({
-            cmfid: 180,
-            parcelaid: parcela.id,
-            valor: diffValor * -1,
-            porcent: ((diffValor * -1) / parcela.valor_bruto) * 100,
-            tipomovimento: 'C',
-            dataaplicacao: moment(new Date()).format(),
-            pessoausuarioid: PessoaId || 1,
-            tipoincidenciasigla: 'B',
-            ordem: 1,
-          });
-        } else {
-          await ParcelaDesconto.create({
-            cmfid: 10,
-            parcelaid: parcela.id,
-            valor: diffValor,
-            porcent: (diffValor / parcela.valor_bruto) * 100,
-            tipomovimento: 'C',
-            dataaplicacao: moment(new Date()).format(),
-            pessoausuarioid: PessoaId || 1,
-            tipoincidenciasigla: 'B',
-            ordem: 1,
-          });
-        }
+        // if (diffValor < 0) {
+        //   await ParcelaDesconto.create({
+        //     cmfid: 180,
+        //     parcelaid: parcela.id,
+        //     valor: diffValor * -1,
+        //     porcent: ((diffValor * -1) / parcela.valor_bruto) * 100,
+        //     tipomovimento: 'C',
+        //     dataaplicacao: moment(new Date()).format(),
+        //     pessoausuarioid: PessoaId || 1,
+        //     tipoincidenciasigla: 'B',
+        //     ordem: 1,
+        //   });
+        // } else {
+        //   await ParcelaDesconto.create({
+        //     cmfid: 10,
+        //     parcelaid: parcela.id,
+        //     valor: diffValor,
+        //     porcent: (diffValor / parcela.valor_bruto) * 100,
+        //     tipomovimento: 'C',
+        //     dataaplicacao: moment(new Date()).format(),
+        //     pessoausuarioid: PessoaId || 1,
+        //     tipoincidenciasigla: 'B',
+        //     ordem: 1,
+        //   });
+        // }
 
         await parcela.update({ valor: valorTotal });
       }
@@ -224,7 +224,6 @@ class BaixaParcela {
 
       const firtLote = lotes.shift();
       const loteParcelas = await firtLote.getParcelas();
-      // sequelize.query('BEGIN');
 
       sequelize.query('ALTER TABLE parcelalote DISABLE TRIGGER trd_parcelalote');
       sequelize.query('ALTER TABLE parcelalote DISABLE TRIGGER triu_parcelalote');
@@ -249,11 +248,8 @@ class BaixaParcela {
       sequelize.query('ALTER TABLE lotepagamento ENABLE TRIGGER triu_lotepagamento');
       sequelize.query('ALTER TABLE formapagamento ENABLE TRIGGER trd_formapagamento');
 
-      // sequelize.query('COMMIT');
-
       return res.json({ error: null, data: parcela });
     } catch (error) {
-      // sequelize.query('ROLLBACK');
       sequelize.query('ALTER TABLE parcelalote ENABLE TRIGGER trd_parcelalote');
       sequelize.query('ALTER TABLE parcelalote ENABLE TRIGGER triu_parcelalote');
       sequelize.query('ALTER TABLE parcela ENABLE TRIGGER triu_parcela');
