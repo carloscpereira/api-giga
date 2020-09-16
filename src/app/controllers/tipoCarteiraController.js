@@ -1,15 +1,36 @@
 import queryStringConverter from 'sequelize-querystring-converter';
 
 import TipoCarteira from '../models/Sequelize/TipoCarteira';
+import ModalidadeCobranca from '../models/Sequelize/ModalidadeCobranca';
+import ModalidadePagamento from '../models/Sequelize/ModalidadePagamento';
 
 class TipoCarteiraController {
   async index(req, res) {
-    const { page = 1, limit = 30, ...query } = req.query;
+    const { page = 1, limit = 30, with: withColumn, filter = {} } = req.query;
 
-    const criteria = queryStringConverter.convert({
-      query: { limit, ...query, offset: (page - 1) * limit },
+    const columns = withColumn ? withColumn.split(',') : [];
+
+    const { carteira = {}, modalidade_cobranca = {}, modalidade_pagamento = {} } = filter;
+
+    const criteriaCarteira = queryStringConverter.convert({ query: carteira });
+    const criteriaModalidadeCobranca = queryStringConverter.convert({ query: modalidade_cobranca });
+    const criteriaModalidadePagamento = queryStringConverter.convert({ query: modalidade_pagamento });
+
+    console.log(criteriaCarteira);
+
+    const tipoCarteira = await TipoCarteira.findAll({
+      limit,
+      offset: (page - 1) * limit,
+      ...criteriaCarteira,
+      include: [
+        ...(columns.includes('modalidade_cobranca')
+          ? [{ model: ModalidadeCobranca, as: 'modalidade_cobranca', ...criteriaModalidadeCobranca }]
+          : []),
+        ...(columns.includes('modalidade_pagamento')
+          ? [{ model: ModalidadePagamento, as: 'modalidade_pagamento', ...criteriaModalidadePagamento }]
+          : []),
+      ],
     });
-    const tipoCarteira = await TipoCarteira.findAll(criteria);
     return res.json({ error: null, data: tipoCarteira });
   }
 
@@ -64,12 +85,8 @@ class TipoCarteiraController {
       ...(diafechamentoconsignataria ? { diafechamentoconsignataria } : {}),
       ...(tdc_in_documento_cobranca ? { tdc_in_documento_cobranca } : {}),
       ...(tdc_in_bloqueio_cadastro ? { tdc_in_bloqueio_cadastro } : {}),
-      ...(nu_prazo_inadimplencia_cobranca
-        ? { nu_prazo_inadimplencia_cobranca }
-        : {}),
-      ...(nu_prazo_tolerancia_autorizacao
-        ? { nu_prazo_tolerancia_autorizacao }
-        : {}),
+      ...(nu_prazo_inadimplencia_cobranca ? { nu_prazo_inadimplencia_cobranca } : {}),
+      ...(nu_prazo_tolerancia_autorizacao ? { nu_prazo_tolerancia_autorizacao } : {}),
       ...(nu_prazo_bloqueio_contrato ? { nu_prazo_bloqueio_contrato } : {}),
     };
 

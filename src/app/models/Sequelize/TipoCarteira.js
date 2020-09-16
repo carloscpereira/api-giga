@@ -30,4 +30,16 @@ export default class TipoCarteira extends Model {
 
     return this;
   }
+
+  static associate(models) {
+    this.hasOne(models.ModalidadeCobranca, {
+      foreignKey: 'tipodecarteiracobrancaid',
+      as: 'modalidade_cobranca',
+    });
+
+    this.belongsTo(models.ModalidadePagamento, {
+      foreignKey: 'modalidadepagamentoid',
+      as: 'modalidade_pagamento',
+    });
+  }
 }

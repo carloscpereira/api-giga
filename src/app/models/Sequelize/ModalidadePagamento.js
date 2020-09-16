@@ -13,4 +13,11 @@ export default class ModalidadePagamento extends Model {
 
     return this;
   }
+
+  static associate(models) {
+    this.hasMany(models.TipoCarteira, {
+      foreignKey: 'modalidadepagamentoid',
+      as: { singular: 'carteira', plural: 'carteiras' },
+    });
+  }
 }

@@ -27,6 +27,7 @@ import TipoContrato from '../app/models/Sequelize/TipoContrato';
 import AssociadoPF from '../app/models/Sequelize/AssociadoPF';
 import AssociadoPJ from '../app/models/Sequelize/AssociadoPJ';
 import EstadoCivil from '../app/models/Sequelize/EstadoCivil';
+import ModalidadeCobranca from '../app/models/Sequelize/ModalidadeCobranca';
 
 import LogContato from '../app/models/Sequelize/LogContato';
 
@@ -58,6 +59,7 @@ const models = [
   AssociadoPJ,
   EstadoCivil,
   LogContato,
+  ModalidadeCobranca,
 ];
 
 class Database {
