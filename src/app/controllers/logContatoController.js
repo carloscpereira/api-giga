@@ -1,8 +1,18 @@
+import queryStringConverter from 'sequelize-querystring-converter';
+
 import LogContato from '../models/Sequelize/LogContato';
 
 class LogContatoController {
   async index(req, res) {
-    const logs = await LogContato.findAll();
+    const { limit = 20, page = 1, ...query } = req.params;
+
+    const criteria = queryStringConverter.convert({ query });
+
+    const logs = await LogContato.findAll({
+      limit,
+      offset: (page - 1) * limit,
+      ...criteria,
+    });
 
     res.json({ error: null, data: logs });
   }
