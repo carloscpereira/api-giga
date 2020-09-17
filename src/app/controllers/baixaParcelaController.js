@@ -217,7 +217,7 @@ class BaixaParcela {
       const lotes = await parcela.getLotes();
 
       if (lotes.length === 0) {
-        await parcela.update({ statusgrupoid: 1 });
+        await parcela.update({ statusgrupoid: 1, valor: parcela.valor_bruto });
 
         return res.json({ error: null, data: parcela });
       }
@@ -234,11 +234,11 @@ class BaixaParcela {
       if (loteParcelas.length > 1) {
         await FormaPagamento.destroy({ where: { parcelaid: parcela.id } });
         await parcela.removeLotes([firtLote.id]);
-        await parcela.update({ statusgrupoid: 1, lop_dt_baixa: null });
+        await parcela.update({ statusgrupoid: 1, lop_dt_baixa: null, valor: parcela.valor_bruto });
       } else {
         await FormaPagamento.destroy({ where: { parcelaid: parcela.id } });
         await parcela.removeLotes([firtLote.id]);
-        await parcela.update({ statusgrupoid: 1, lop_dt_baixa: null });
+        await parcela.update({ statusgrupoid: 1, lop_dt_baixa: null, valor: parcela.valor_bruto });
         await Lote.destroy({ where: { id: firtLote.id } });
       }
 
