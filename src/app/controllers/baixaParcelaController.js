@@ -92,23 +92,25 @@ class BaixaParcela {
           Tid,
           Obs,
         }) => ({
-          ...(CartaoCredito ? { numerocartao: CartaoCredito.Numero } : {}),
-          ...(CartaoCredito
+          ...(CartaoCredito && CartaoCredito.Numero ? { numerocartao: CartaoCredito.Numero } : {}),
+          ...(CartaoCredito && CartaoCredito.Validade
             ? {
                 validadecartao: moment(CartaoCredito.Validade, 'mm/YYYY').format(),
               }
             : {}),
-          ...(CartaoCredito ? { tipocartaoid: CartaoCredito.TipoCartaoId } : {}),
-          ...(CartaoCredito ? { codigosegurancacartao: CartaoCredito.CodigoSeguranca } : {}),
-          ...(Consignado ? { numerodocumento: Consignado.Documento } : {}),
-          ...(Consignado ? { numeromatricula: Consignado.Matricula } : {}),
-          ...(Boleto ? { numeroboleto: Boleto.Numero } : {}),
-          ...(Cheque ? { nome_emitente: Cheque.Emitente } : {}),
-          ...(Cheque ? { contacheque: Cheque.Conta } : {}),
-          ...(Cheque ? { numerocheque: Cheque.Numero } : {}),
-          ...(Cheque ? { che_id_cheque: Cheque.ChequeId } : {}),
-          ...(Transferencia ? { contaid: Transferencia.ContaId } : {}),
-          ...(Transferencia ? { agenciaid: Transferencia.AgenciaId } : {}),
+          ...(CartaoCredito && CartaoCredito.TipoCartaoId ? { tipocartaoid: CartaoCredito.TipoCartaoId } : {}),
+          ...(CartaoCredito && CartaoCredito.CodigoSeguranca
+            ? { codigosegurancacartao: CartaoCredito.CodigoSeguranca }
+            : {}),
+          ...(Consignado && Consignado.Documento ? { numerodocumento: Consignado.Documento } : {}),
+          ...(Consignado && Consignado.Matricula ? { numeromatricula: Consignado.Matricula } : {}),
+          ...(Boleto && Boleto.Numero ? { numeroboleto: Boleto.Numero } : {}),
+          ...(Cheque && Cheque.Emitente ? { nome_emitente: Cheque.Emitente } : {}),
+          ...(Cheque && Cheque.Conta ? { contacheque: Cheque.Conta } : {}),
+          ...(Cheque && Cheque.Numero ? { numerocheque: Cheque.Numero } : {}),
+          ...(Cheque && Cheque.ChequeId ? { che_id_cheque: Cheque.ChequeId } : {}),
+          ...(Transferencia && Transferencia.ContaId ? { contaid: Transferencia.ContaId } : {}),
+          ...(Transferencia && Transferencia.AgenciaId ? { agenciaid: Transferencia.AgenciaId } : {}),
           parcelaid: parcela.id,
           numerotransacao: NumeroTransacao,
           tipodecarteiraid: Carteira,
