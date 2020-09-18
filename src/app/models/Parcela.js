@@ -399,6 +399,7 @@ export default class Parcela {
         cn_contrato.dataadesao                                                                    as contrato_adesao,
         cn_contrato.datacancelamento                                                              as contrato_cancelamento,
         contrato_status.descricao                                                                 as contrato_status,
+        cn_contrato.tipocontratoid                                                                as contrato_tipoid,
 
         -- Forma Pagamento
         formapagamento.valor                                                                      as formapamento_valor,
