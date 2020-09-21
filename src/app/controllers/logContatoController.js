@@ -4,7 +4,10 @@ import LogContato from '../models/Sequelize/LogContato';
 
 class LogContatoController {
   async index(req, res) {
+    // eslint-disable-next-line no-unused-vars
     const { limit = 20, page = 1, ...query } = req.params;
+
+    delete query.operator;
 
     const criteria = queryStringConverter.convert({ query });
 
