@@ -438,10 +438,21 @@ export default class Parcela {
                 FROM cn_ocorrenciacontrato
                 WHERE cn_ocorrenciacontrato.numerocontratoid = cn_contrato.id
                   AND cn_ocorrenciacontrato.obs ILIKE CONCAT('%' , parcela.id, '%' )) d)     AS ocorrencias,
+
         (SELECT array_to_json(array_agg(row_to_json(d)))
           FROM (SELECT *
                 FROM log_cartaocredito
-                WHERE log_cartaocredito.parcelaid = parcela.id) d)                                 AS logs_cartaocredito
+                WHERE log_cartaocredito.parcelaid = parcela.id) d)                                 AS logs_cartaocredito,
+
+        (SELECT array_to_json(array_agg(row_to_json(d)))
+                FROM (SELECT *
+                      FROM sys_log_contato
+                      WHERE sys_log_contato.parcela_id = parcela.id AND sys_log_contato.tipo_id=1) d)                                 AS logs_email,
+
+        (SELECT array_to_json(array_agg(row_to_json(d)))
+                FROM (SELECT *
+                      FROM sys_log_contato
+                      WHERE sys_log_contato.parcela_id = parcela.id AND sys_log_contato.tipo_id=2) d)                                 AS logs_sms
 
             FROM parcela
               INNER JOIN statusgrupo ON (parcela.statusgrupoid = statusgrupo.id)
@@ -474,7 +485,8 @@ export default class Parcela {
               LEFT JOIN modpagamento fp_modpagamento ON (fp_carteira.modalidadepagamentoid = fp_modpagamento.id)
               LEFT JOIN statusgrupo contrato_status ON (cn_contrato.statusid = contrato_status.id)
               LEFT JOIN tipocartao c_tipo ON (cartao.tipocartaoid = c_tipo.id)
-              LEFT JOIN lotepagamento ON (parcelalote.pal_id_lote_pagamento = lotepagamento.id)) AS p
+              LEFT JOIN lotepagamento ON (parcelalote.pal_id_lote_pagamento = lotepagamento.id)
+              ) AS p
       `;
 
       if (!!q && !!params) {
