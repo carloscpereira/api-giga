@@ -4,11 +4,11 @@ export default async (req, res, next) => {
   try {
     const schema = Yup.object().shape({
       tipo_id: Yup.number().integer().required(),
-      return_code: Yup.number().integer().required(),
-      body_request: Yup.string().required(),
-      response_request: Yup.string().required(),
-      parcela_id: Yup.number().integer().required(),
-      is_error: Yup.boolean().required(),
+      return_code: Yup.number().integer(),
+      body_request: Yup.string(),
+      response_request: Yup.string(),
+      parcela_id: Yup.number().integer(),
+      is_error: Yup.boolean(),
     });
 
     await schema.validate(req.body);
