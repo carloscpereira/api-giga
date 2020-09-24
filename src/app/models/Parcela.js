@@ -376,6 +376,7 @@ export default class Parcela {
 
         -- Referentes ao Endereco do Pagante
         sp_endereco.logradouro                                                                    as rf_endereco_logradouro,
+        sp_endereco.numero                                                                        as rf_endereco_numero,
         sp_endereco.bairro                                                                        as rf_endereco_bairro,
         sp_endereco.cidade                                                                        as rf_endereco_cidade,
         sp_endereco.estado                                                                        as rf_endereco_estado,
@@ -420,7 +421,7 @@ export default class Parcela {
         -- Transferencia
         formapagamento.numerotransacao                                                            as formapagamento_transacao,
         -- Boleto
-        formapagamento.numeroboleto                                                               as formapagamento_boleto,
+        formapagamento.numeroboleto                                                               as formapagamento_boleto_nossonumero,
         -- Carteira
         formapagamento.tipodecarteiraid                                                           as formapagamento_carteiraid,
         fp_carteira.descricao                                                                     as formapagamento_carteira,
