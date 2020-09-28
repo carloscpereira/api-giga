@@ -12,6 +12,7 @@ import pessoaRouter from './_pessoaRouter';
 import pessoaJuridicaRouter from './_pessoaJuridicaRouter';
 import pessoaFisicaRouter from './_pessoaFisicaRouter';
 import logContatoRouter from './_logContatoRouter';
+import boletoRouter from './_boletoRouter';
 
 const routes = Router();
 
@@ -26,5 +27,6 @@ routes.use('/pessoa-juridica', pessoaJuridicaRouter);
 routes.use('/pessoa', pessoaRouter);
 routes.use('/pessoa-fisica', pessoaFisicaRouter);
 routes.use('/system/log/contato', logContatoRouter);
+routes.use('/parcela', boletoRouter);
 
 export default routes;
