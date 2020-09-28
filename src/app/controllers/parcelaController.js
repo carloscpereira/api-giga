@@ -139,12 +139,9 @@ class ParcelaController {
       pcl_in_cobranca,
       id,
     };
+    const parcela = await ParcelaSeq.findByPk(id);
 
-    const response = await new Parcela(req.pool).update(data);
-
-    if (response && response.error) {
-      return res.status(response.error).json(response);
-    }
+    const response = await parcela.update(data);
 
     return res.json({ error: null, data: response });
   }

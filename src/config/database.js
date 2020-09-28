@@ -10,6 +10,8 @@ module.exports = {
         username: 'postgres',
         password: 'mypass',
         database: 'atemde',
+        omitNull: false,
+        benchmark: true,
         define: {
           timestamps: false,
           underscore: true,
@@ -23,6 +25,8 @@ module.exports = {
         username: 'postgres',
         password: 'mypass',
         database: 'atemde',
+        omitNull: false,
+        benchmark: true,
         define: {
           timestamps: false,
           underscore: true,
@@ -40,6 +44,8 @@ module.exports = {
         password: process.env.DB_PASS_ATEMDE,
         database: process.env.DB_DATABASE_ATEMDE,
         port: process.env.DB_PORT_ATEMDE,
+        omitNull: false,
+        benchmark: true,
         define: {
           timestamps: false,
           underscore: true,
@@ -53,6 +59,8 @@ module.exports = {
         password: process.env.DB_PASS_IDENTAL,
         database: process.env.DB_DATABASE_IDENTAL,
         port: process.env.DB_PORT_IDENTAL,
+        omitNull: false,
+        benchmark: true,
         define: {
           timestamps: false,
           underscore: true,
