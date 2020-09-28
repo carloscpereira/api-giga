@@ -16,11 +16,11 @@ class ParcelaController {
     // const parcelas = await querier.run();
     const { limit, page, perPage } = req.query;
 
-    const parcelas = await new Parcela(req.pool).newGet(
-      req.parsedQuery.query,
-      req.parsedQuery.values,
-      { limit, page, perPage }
-    );
+    const parcelas = await new Parcela(req.pool).newGet(req.parsedQuery.query, req.parsedQuery.values, {
+      limit,
+      page,
+      perPage,
+    });
 
     res.json({ error: null, data: parcelas });
   }
@@ -66,11 +66,11 @@ class ParcelaController {
       numerotransacao: Yup.number(),
       statusgrupoid: Yup.number().integer(),
       valor: Yup.number(),
-      linhadigitavel: Yup.string(),
-      codigobarras: Yup.string(),
-      taxaboleto: Yup.number(),
-      nossonumero: Yup.string(),
-      seqboleto: Yup.number().integer(),
+      linhadigitavel: Yup.string().nullable(),
+      codigobarras: Yup.string().nullable(),
+      taxaboleto: Yup.number().nullable(),
+      nossonumero: Yup.string().nullable(),
+      seqboleto: Yup.number().integer().nullable(),
       statusarquivo: Yup.boolean(),
       cobranca_cancelada: Yup.string(),
       valor_bruto: Yup.number(),
@@ -303,10 +303,7 @@ class ParcelaController {
     try {
       const { id } = req.params;
 
-      const parcela = await ParcelaSeq.update(
-        { pcl_in_cobranca: true },
-        { where: { id }, returning: true }
-      );
+      const parcela = await ParcelaSeq.update({ pcl_in_cobranca: true }, { where: { id }, returning: true });
 
       return res.json({ error: null, data: parcela });
     } catch (err) {
@@ -321,10 +318,7 @@ class ParcelaController {
     try {
       const { id } = req.params;
 
-      const parcela = await ParcelaSeq.update(
-        { pcl_in_cobranca: false },
-        { where: { id }, returning: true }
-      );
+      const parcela = await ParcelaSeq.update({ pcl_in_cobranca: false }, { where: { id }, returning: true });
 
       return res.json({ error: null, data: parcela });
     } catch (err) {
@@ -352,15 +346,11 @@ class ParcelaController {
         numerocartao: Yup.string().when('modPagamento', (modPagamento, field) =>
           modPagamento === 2 || modPagamento === 34 ? field.required() : field
         ),
-        numerodocumento: Yup.string().when(
-          'modPagamento',
-          (modPagamento, field) =>
-            modPagamento === 10 ? field.required() : field
+        numerodocumento: Yup.string().when('modPagamento', (modPagamento, field) =>
+          modPagamento === 10 ? field.required() : field
         ),
-        numeromatricula: Yup.string().when(
-          'modPagamento',
-          (modPagamento, field) =>
-            modPagamento === 10 ? field.required() : field
+        numeromatricula: Yup.string().when('modPagamento', (modPagamento, field) =>
+          modPagamento === 10 ? field.required() : field
         ),
         numerotransacao: Yup.string(),
         validadecartao: Yup.string()
@@ -391,13 +381,9 @@ class ParcelaController {
 
       console.log(req.body);
 
-      const carteira = await new TipoCarteira(req.pool).findPK(
-        req.body.tipodecarteiraid
-      );
+      const carteira = await new TipoCarteira(req.pool).findPK(req.body.tipodecarteiraid);
 
-      const modPagamento = carteira
-        ? parseInt(carteira.modalidadepagamentoid, 10)
-        : null;
+      const modPagamento = carteira ? parseInt(carteira.modalidadepagamentoid, 10) : null;
 
       await schema.validate({
         ...req.body,
@@ -442,8 +428,7 @@ class ParcelaController {
         return res.json({
           error: 401,
           data: {
-            message:
-              'Portion cannot be invoiced because it has already been invoiced',
+            message: 'Portion cannot be invoiced because it has already been invoiced',
           },
         });
       }
@@ -525,9 +510,7 @@ class ParcelaController {
           data: { message: 'Validation fails', errors: err.errors },
         });
       }
-      return res
-        .status(404)
-        .json({ error: 404, data: { message: 'Internal Server Error' } });
+      return res.status(404).json({ error: 404, data: { message: 'Internal Server Error' } });
     }
   }
 
@@ -537,48 +520,30 @@ class ParcelaController {
         Yup.object().shape({
           id: Yup.number().integer().required(),
           modPagamento: Yup.number().integer().required(),
-          numerocartao: Yup.string().when(
-            'modPagamento',
-            (modPagamento, field) =>
-              modPagamento === 2 || modPagamento === 34
-                ? field.required()
-                : field
+          numerocartao: Yup.string().when('modPagamento', (modPagamento, field) =>
+            modPagamento === 2 || modPagamento === 34 ? field.required() : field
           ),
 
-          numerocheque: Yup.string().when(
-            'modPagamento',
-            (modPagamento, field) =>
-              modPagamento === 1 ? field.required() : field
+          numerocheque: Yup.string().when('modPagamento', (modPagamento, field) =>
+            modPagamento === 1 ? field.required() : field
           ),
-          numerodocumento: Yup.string().when(
-            'modPagamento',
-            (modPagamento, field) =>
-              modPagamento === 10 ? field.required() : field
+          numerodocumento: Yup.string().when('modPagamento', (modPagamento, field) =>
+            modPagamento === 10 ? field.required() : field
           ),
-          numeromatricula: Yup.string().when(
-            'modPagamento',
-            (modPagamento, field) =>
-              modPagamento === 10 ? field.required() : field
+          numeromatricula: Yup.string().when('modPagamento', (modPagamento, field) =>
+            modPagamento === 10 ? field.required() : field
           ),
-          validadecartao: Yup.date().when(
-            'modPagamento',
-            (modPagamento, field) =>
-              modPagamento === 2 || modPagamento === 34
-                ? field.required()
-                : field
+          validadecartao: Yup.date().when('modPagamento', (modPagamento, field) =>
+            modPagamento === 2 || modPagamento === 34 ? field.required() : field
           ),
           numerotransacao: Yup.string(),
-          numeroboleto: Yup.string().when(
-            'modPagamento',
-            (modPagamento, field) =>
-              modPagamento === 7 ? field.required() : field
+          numeroboleto: Yup.string().when('modPagamento', (modPagamento, field) =>
+            modPagamento === 7 ? field.required() : field
           ),
           codigosegurancacartao: Yup.number()
             .integer()
             .when('modPagamento', (modPagamento, field) =>
-              modPagamento === 2 || modPagamento === 34
-                ? field.required()
-                : field
+              modPagamento === 2 || modPagamento === 34 ? field.required() : field
             ),
           obs: Yup.string(),
           numeroempresa: Yup.string(),
@@ -588,22 +553,14 @@ class ParcelaController {
           agenciaid: Yup.number().integer(),
           paymentid: Yup.string()
             .when('modPagamento', (modPagamento, field) =>
-              modPagamento === 2 || modPagamento === 34
-                ? field.required()
-                : field
+              modPagamento === 2 || modPagamento === 34 ? field.required() : field
             )
-            .when('lop_id_tipo_baixa', (tipoBaixa, field) =>
-              parseInt(tipoBaixa, 10) === 4 ? field.required : field
-            ),
+            .when('lop_id_tipo_baixa', (tipoBaixa, field) => (parseInt(tipoBaixa, 10) === 4 ? field.required : field)),
           tid: Yup.string()
             .when('modPagamento', (modPagamento, field) =>
-              modPagamento === 2 || modPagamento === 34
-                ? field.required()
-                : field
+              modPagamento === 2 || modPagamento === 34 ? field.required() : field
             )
-            .when('lop_id_tipo_baixa', (tipoBaixa, field) =>
-              parseInt(tipoBaixa, 10) === 4 ? field.required : field
-            ),
+            .when('lop_id_tipo_baixa', (tipoBaixa, field) => (parseInt(tipoBaixa, 10) === 4 ? field.required : field)),
         })
       ),
       pessoausuarioid: Yup.number().integer(),
@@ -622,12 +579,8 @@ class ParcelaController {
 
     req.body.parcelas = await Promise.all(
       req.body.parcelas.map(async (p) => {
-        const carteira = await new TipoCarteira(req.pool).findPK(
-          p.tipodecarteiraid
-        );
-        const modPagamento = carteira
-          ? parseInt(carteira.modalidadepagamentoid, 10)
-          : null;
+        const carteira = await new TipoCarteira(req.pool).findPK(p.tipodecarteiraid);
+        const modPagamento = carteira ? parseInt(carteira.modalidadepagamentoid, 10) : null;
         return { ...p, modPagamento };
       })
     );
@@ -649,13 +602,7 @@ class ParcelaController {
       }
     }
 
-    const {
-      parcelas,
-      lop_id_pessoa = 1,
-      lop_id_tipo_baixa = 4,
-      lop_in_tipo_movimento = 'C',
-      lote_id,
-    } = req.body;
+    const { parcelas, lop_id_pessoa = 1, lop_id_tipo_baixa = 4, lop_in_tipo_movimento = 'C', lote_id } = req.body;
 
     let lotePagamento;
     /**
@@ -697,8 +644,7 @@ class ParcelaController {
         if (parseInt(parcela.statusgrupoid, 10) === 2) {
           parcelaErr.push({
             id: p.id,
-            error:
-              'Portion cannot be invoiced because it has already been invoiced',
+            error: 'Portion cannot be invoiced because it has already been invoiced',
           });
           continue;
         }
