@@ -13,9 +13,15 @@ import pessoaJuridicaRouter from './_pessoaJuridicaRouter';
 import pessoaFisicaRouter from './_pessoaFisicaRouter';
 import logContatoRouter from './_logContatoRouter';
 import boletoRouter from './_boletoRouter';
+import redeCredenciadaRouter from './_redeCrededenciadaRouter';
+
+import { checkAuthorization } from '../app/middlewares';
 
 const routes = Router();
 
+routes.use('/rede-credenciada', redeCredenciadaRouter);
+
+routes.use(checkAuthorization);
 routes.use('/parcelas/log/cartao-credito', logCartaoCreditoRouter);
 routes.use('/ocorrencias', ocorrenciaRouter);
 routes.use('/lotes', loteRouter);
