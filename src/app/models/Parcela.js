@@ -296,6 +296,7 @@ export default class Parcela {
         RIGHT JOIN cartao ON (sp_dadospessoafisica.id = cartao.pessoaid)
         WHERE (parcela.datavencimento = current_date)
         AND (parcela.statusgrupoid = 1)
+        AND (parcela.nossonumero IS NULL)
         AND (cn_tipodecarteira.modalidadepagamentoid = 2 OR (titulo.modpagamentoid IS NOT NULL AND (titulo.modpagamentoid = 2 AND titulo.modpagamentoid = 34)))
         AND (cn_contrato.tipocontratoid = 5 AND cn_contrato.statusid = 8)
         AND (cartao.car_in_principal = true AND cartao.validadecartao > current_date)
