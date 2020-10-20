@@ -2,7 +2,7 @@ import moment from 'moment';
 
 import Parcela from '../models/Sequelize/Parcela';
 import Lote from '../models/Sequelize/LotePagamento';
-// import ParcelaDesconto from '../models/Sequelize/ParcelaAcrescimoDesconto';
+import ParcelaDesconto from '../models/Sequelize/ParcelaAcrescimoDesconto';
 import FormaPagamento from '../models/Sequelize/FormaPagamento';
 
 class BaixaParcela {
@@ -75,7 +75,7 @@ class BaixaParcela {
 
       if (!parcelaLote)
         await parcela.setLotes(lote, {
-          through: { pal_dt_pagamento: DataPagamento },
+          through: { pal_dt_pagamento: moment(DataPagamento, 'YYYY-MM-DD').format() },
         });
 
       const dataFormaPagamento = formaPagamento.map(
@@ -126,35 +126,35 @@ class BaixaParcela {
       const valorTotal = dataFormaPagamento.map(({ valor }) => valor).reduce((ant, prox) => ant + prox, 0);
 
       if (valorTotal !== parcela.valor) {
-        // const diffValor = parcela.valor_bruto - valorTotal;
-        // debug
-        // await ParcelaDesconto.destroy({ where: { parcelaid: parcela.id } });
+        const diffValor = parcela.valor_bruto - valorTotal;
 
-        // if (diffValor < 0) {
-        //   await ParcelaDesconto.create({
-        //     cmfid: 180,
-        //     parcelaid: parcela.id,
-        //     valor: diffValor * -1,
-        //     porcent: ((diffValor * -1) / parcela.valor_bruto) * 100,
-        //     tipomovimento: 'C',
-        //     dataaplicacao: moment(new Date()).format(),
-        //     pessoausuarioid: PessoaId || 1,
-        //     tipoincidenciasigla: 'B',
-        //     ordem: 1,
-        //   });
-        // } else {
-        //   await ParcelaDesconto.create({
-        //     cmfid: 10,
-        //     parcelaid: parcela.id,
-        //     valor: diffValor,
-        //     porcent: (diffValor / parcela.valor_bruto) * 100,
-        //     tipomovimento: 'C',
-        //     dataaplicacao: moment(new Date()).format(),
-        //     pessoausuarioid: PessoaId || 1,
-        //     tipoincidenciasigla: 'B',
-        //     ordem: 1,
-        //   });
-        // }
+        await ParcelaDesconto.destroy({ where: { parcelaid: parcela.id } });
+
+        if (diffValor < 0) {
+          await ParcelaDesconto.create({
+            cmfid: 180,
+            parcelaid: parcela.id,
+            valor: diffValor * -1,
+            porcent: ((diffValor * -1) / parcela.valor_bruto) * 100,
+            tipomovimento: 'C',
+            dataaplicacao: moment(new Date()).format(),
+            pessoausuarioid: PessoaId || 1,
+            tipoincidenciasigla: 'B',
+            ordem: 1,
+          });
+        } else {
+          await ParcelaDesconto.create({
+            cmfid: 10,
+            parcelaid: parcela.id,
+            valor: diffValor,
+            porcent: (diffValor / parcela.valor_bruto) * 100,
+            tipomovimento: 'C',
+            dataaplicacao: moment(new Date()).format(),
+            pessoausuarioid: PessoaId || 1,
+            tipoincidenciasigla: 'B',
+            ordem: 1,
+          });
+        }
 
         await parcela.update({ valor: valorTotal });
       }
