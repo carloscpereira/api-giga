@@ -29,7 +29,7 @@ export default async (req, res, next) => {
                   'Invalid date format. Valid format for this field is MM/YYYY where the month must be between 1 and 12 and year with four digits',
                 excludeEmptyString: false,
               }),
-              CodigoSeguranca: Yup.string().min(3).max(4),
+              CodigoSeguranca: Yup.string(),
               TipoCartaoId: Yup.number().integer(),
             })
               .notRequired()
