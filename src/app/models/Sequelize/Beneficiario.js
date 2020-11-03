@@ -33,6 +33,13 @@ export default class Beneficiario extends Model {
         motivocancelamentoid: Sequelize.INTEGER,
         codplanoegresso: Sequelize.STRING,
         datareativacaobeneficiario: Sequelize.TIME,
+        versaoplano: {
+          type: Sequelize.VIRTUAL,
+          get() {
+            // console.log(this);
+            return 1;
+          },
+        },
         planoid: Sequelize.INTEGER,
         versaoplanoid: Sequelize.INTEGER,
         corretoraid: Sequelize.INTEGER,
@@ -53,6 +60,16 @@ export default class Beneficiario extends Model {
   }
 
   static associate(models) {
+    this.belongsTo(models.Plano, {
+      foreignKey: 'planoid',
+      as: 'plano',
+    });
+
+    this.belongsTo(models.VersaoPlano, {
+      foreignKey: 'versaoplanoid',
+      as: 'versao-plano',
+    });
+
     this.belongsTo(models.Contrato, {
       foreignKey: 'contratoid',
       as: 'contrato',
@@ -67,7 +84,5 @@ export default class Beneficiario extends Model {
       foreignKey: 'grupofamiliarid',
       as: 'grupofamiliar',
     });
-
-    this.belongsTo(models.Plano, { foreignKey: 'planoid', as: 'plano' });
   }
 }
