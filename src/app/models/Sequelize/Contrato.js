@@ -9,6 +9,12 @@ export default class Contrato extends Model {
         numeroproposta: Sequelize.STRING,
         operadoraid: Sequelize.BIGINT,
         statusid: Sequelize.BIGINT,
+        status: {
+          type: Sequelize.VIRTUAL,
+          get() {
+            return this.infoStatus?.descricao;
+          },
+        },
         dataadesao: Sequelize.DATE,
         datacancelamento: Sequelize.DATE,
         dataregistrosistema: Sequelize.DATE,
@@ -21,13 +27,43 @@ export default class Contrato extends Model {
         prazolimitebloqueio: Sequelize.INTEGER,
         obs: Sequelize.STRING,
         tipocontratoid: Sequelize.INTEGER,
+        tipocontrato: {
+          type: Sequelize.VIRTUAL,
+          get() {
+            return this.infoContrato?.descricao;
+          },
+        },
         tipotabelausoid: Sequelize.INTEGER,
+        tipotabelauso: {
+          type: Sequelize.VIRTUAL,
+          get() {
+            return this.infoTabelaUso?.descricao;
+          },
+        },
         descontotabelauso: Sequelize.DOUBLE,
         chaveex: Sequelize.INTEGER,
         tipodecarteiraid: Sequelize.INTEGER,
+        tipodecarteira: {
+          type: Sequelize.VIRTUAL,
+          get() {
+            return this.infoCarteira?.descricao;
+          },
+        },
         databloqueio: Sequelize.DATE,
         motivoadesaoid: Sequelize.INTEGER,
+        motivoadesao: {
+          type: Sequelize.VIRTUAL,
+          get() {
+            return this.infoAdesao?.descricao;
+          },
+        },
         motivocancelamentoid: Sequelize.INTEGER,
+        motivocancelamento: {
+          type: Sequelize.VIRTUAL,
+          get() {
+            return this.infoCancelamento?.descricao;
+          },
+        },
         datareativacao: Sequelize.DATE,
         bloqueadopesquisa: Sequelize.BOOLEAN,
         localid: Sequelize.INTEGER,
@@ -64,7 +100,7 @@ export default class Contrato extends Model {
     });
     this.belongsTo(models.TipoContrato, {
       foreignKey: 'tipocontratoid',
-      as: 'tipocontrato',
+      as: 'infoContrato',
     });
     this.belongsToMany(models.Pessoa, {
       through: models.AssociadoPJ,
@@ -97,6 +133,26 @@ export default class Contrato extends Model {
     this.belongsTo(models.PessoaJuridica, {
       foreignKey: 'operadoraid',
       as: 'operadora',
+    });
+    this.belongsTo(models.TipoCarteira, {
+      foreignKey: 'tipodecarteiraid',
+      as: 'infoCarteira',
+    });
+    this.belongsTo(models.Status, {
+      foreignKey: 'statusid',
+      as: 'infoStatus',
+    });
+    this.belongsTo(models.TipoTabelaUso, {
+      foreignKey: 'tipotabelausoid',
+      as: 'infoTabelaUso',
+    });
+    this.belongsTo(models.TipoOcorrencia, {
+      foreignKey: 'motivoadesaoid',
+      as: 'infoAdesao',
+    });
+    this.belongsTo(models.TipoOcorrencia, {
+      foreignKey: 'motivocancelamentoid',
+      as: 'infoCancelamento',
     });
   }
 }
