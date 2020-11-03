@@ -62,6 +62,13 @@ export default class Pessoa extends Model {
       otherKey: 'vinculoid',
     });
 
+    this.belongsToMany(models.Contrato, {
+      through: models.AssociadoPJ,
+      as: { singular: 'contratopj', plural: 'contratospj' },
+      foreignKey: 'responsavelfinanceiroid',
+      otherKey: 'id',
+    });
+
     this.hasOne(models.PessoaFisica, {
       foreignKey: 'id',
       otherKey: 'id',
@@ -99,5 +106,28 @@ export default class Pessoa extends Model {
         singular: 'email',
       },
     });
+
+    this.hasMany(models.Beneficiario, {
+      foreignKey: 'pessoabeneficiarioid',
+      as: {
+        plural: 'beneficiarios',
+        singular: 'beneficiario',
+      },
+    });
+
+    this.belongsToMany(models.GrupoFamiliar, {
+      through: models.Beneficiario,
+      foreignKey: 'pessoabeneficiarioid',
+      otherKey: 'grupofamiliarid',
+      as: 'grupofamiliar',
+    });
+
+    // this.hasMany(models.CentroCusto, {
+    //   foreignKey: 'empresaid',
+    //   as: {
+    //     singular: 'centrocusto',
+    //     plural: 'centrocustos',
+    //   },
+    // });
   }
 }
