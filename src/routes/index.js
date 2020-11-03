@@ -14,6 +14,21 @@ import pessoaFisicaRouter from './_pessoaFisicaRouter';
 import logContatoRouter from './_logContatoRouter';
 import boletoRouter from './_boletoRouter';
 import redeCredenciadaRouter from './_redeCrededenciadaRouter';
+import vinculoRouter from './_vinculoRouter';
+import centroCustoRouter from './_centroCustoRouter';
+import agenciaRouter from './_agenciaRouter';
+import bancoRouter from './_bancoRouter';
+import departamentoRouter from './_departamentoRouter';
+import setorRouter from './_setorRouter';
+import produtoRouter from './_produtoRouter';
+import planoRouter from './_planoRouter';
+import versaoPlanoRouter from './_versaoPlanoRouter';
+import areaCoberturaRouter from './_areaCoberturaRouter';
+import participacaoFinanceiraRouter from './_participacaoFinanceiraRouter';
+import regraVigenciaRouter from './_regraVigenciaRouter';
+import tipoAreaAbrangenciaRouter from './_tipoAreaAbrangenciaRouter';
+import tipoContratacaoRouter from './_tipoContratacaoRouter';
+import tipoContratoRouter from './_tipoContratoRouter';
 
 import { checkAuthorization } from '../app/middlewares';
 
@@ -21,7 +36,7 @@ const routes = Router();
 
 routes.use('/rede-credenciada', redeCredenciadaRouter);
 
-routes.use(checkAuthorization);
+if (process.env.NODE_ENV !== 'development') routes.use(checkAuthorization);
 routes.use('/parcelas/log/cartao-credito', logCartaoCreditoRouter);
 routes.use('/ocorrencias', ocorrenciaRouter);
 routes.use('/lotes', loteRouter);
@@ -34,5 +49,20 @@ routes.use('/pessoa', pessoaRouter);
 routes.use('/pessoa-fisica', pessoaFisicaRouter);
 routes.use('/system/log/contato', logContatoRouter);
 routes.use('/parcelas', boletoRouter);
+routes.use('/vinculos', vinculoRouter);
+routes.use('/centro-resultados', centroCustoRouter);
+routes.use('/bancos', bancoRouter);
+routes.use('/agencias', agenciaRouter);
+routes.use('/departamentos', departamentoRouter);
+routes.use('/produtos', produtoRouter);
+routes.use('/setores', setorRouter);
+routes.use('/planos', planoRouter);
+routes.use('/versoes-planos', versaoPlanoRouter);
+routes.use('/participacao-financeira', participacaoFinanceiraRouter);
+routes.use('/regras-vigencias', regraVigenciaRouter);
+routes.use('/areas-cobertura', areaCoberturaRouter);
+routes.use('/tipos-area-abrangencia', tipoAreaAbrangenciaRouter);
+routes.use('/tipos-contratacoes', tipoContratacaoRouter);
+routes.use('/tipos-contratos', tipoContratoRouter);
 
 export default routes;
