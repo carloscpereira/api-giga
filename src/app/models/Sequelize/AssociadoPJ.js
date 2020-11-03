@@ -5,6 +5,7 @@ export default class AssociadoPJ extends Model {
   static init(sequelize) {
     super.init(
       {
+        id: { type: Sequelize.BIGINT, primaryKey: true },
         responsavelfinanceiroid: Sequelize.STRING,
         corretoravendedorid: Sequelize.BIGINT,
         valorcontrato: Sequelize.BIGINT,
