@@ -94,5 +94,9 @@ export default class Contrato extends Model {
         singular: 'beneficiario',
       },
     });
+    this.belongsTo(models.PessoaJuridica, {
+      foreignKey: 'operadoraid',
+      as: 'operadora',
+    });
   }
 }

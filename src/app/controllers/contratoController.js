@@ -3,6 +3,7 @@ import queryStringConverter from 'sequelize-querystring-converter';
 import { Op } from 'sequelize';
 import Contrato from '../models/Sequelize/Contrato';
 import Pessoa from '../models/Sequelize/Pessoa';
+import PessoaJuridica from '../models/Sequelize/PessoaJuridica';
 import GrupoFamiliar from '../models/Sequelize/GrupoFamiliar';
 import Beneficiario from '../models/Sequelize/Beneficiario';
 
@@ -20,6 +21,7 @@ class ContratoController {
       limit,
       offset,
       include: [
+        { model: PessoaJuridica, as: 'operadora', attributes: ['id', 'nomefantasia', 'razaosocial', 'cnpj'] },
         { model: Pessoa, as: 'responsavelpf' },
         { model: Pessoa, as: 'responsavelpj' },
         {
