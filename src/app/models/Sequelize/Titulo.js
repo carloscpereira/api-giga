@@ -38,7 +38,7 @@ export default class Titulo extends Model {
   }
 
   static associate(models) {
-    this.hasMany(models.Parcela, { foreignKey: 'tituloid', as: 'parcela' });
+    this.hasMany(models.Parcela, { foreignKey: 'tituloid', as: { singular: 'parcela', plural: 'parcelas' } });
     this.belongsTo(models.Contrato, {
       foreignKey: 'numerocontratoid',
       as: 'contrato',
