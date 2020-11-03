@@ -48,6 +48,9 @@ import TipoAreaAbrangencia from '../app/models/Sequelize/TipoAreaAbrangencia';
 import TipoContratacao from '../app/models/Sequelize/TipoContratacao';
 import VersaoPlano from '../app/models/Sequelize/VersaoPlano';
 import RegraVigenciaContrato from '../app/models/Sequelize/RegraVigenciaContrato';
+import Status from '../app/models/Sequelize/Status';
+import TipoTabelaUso from '../app/models/Sequelize/TipoTabelaUso';
+import TipoOcorrencia from '../app/models/Sequelize/TipoOcorrencia';
 // import databaseConfig from '../config/database';
 
 const models = [
@@ -94,6 +97,9 @@ const models = [
   TipoContratacao,
   VersaoPlano,
   RegraVigenciaContrato,
+  Status,
+  TipoTabelaUso,
+  TipoOcorrencia,
 ];
 
 class Database {
