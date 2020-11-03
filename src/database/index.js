@@ -31,6 +31,23 @@ import ModalidadeCobranca from '../app/models/Sequelize/ModalidadeCobranca';
 
 import LogContato from '../app/models/Sequelize/LogContato';
 
+import Beneficiario from '../app/models/Sequelize/Beneficiario';
+import GrupoFamiliar from '../app/models/Sequelize/GrupoFamiliar';
+import AtributoVinculo from '../app/models/Sequelize/AtributoVinculo';
+import Plano from '../app/models/Sequelize/Plano';
+import CentroCusto from '../app/models/Sequelize/CentroCusto';
+import Setor from '../app/models/Sequelize/Setor';
+import Departamento from '../app/models/Sequelize/Departamento';
+import Banco from '../app/models/Sequelize/Banco';
+import Agencia from '../app/models/Sequelize/Agencia';
+import AreaCobertura from '../app/models/Sequelize/AreaCobertura';
+import ParticipacaoFinanceira from '../app/models/Sequelize/ParticipacaoFinanceira';
+import Produto from '../app/models/Sequelize/Produto';
+import SegmentacaoAssistencial from '../app/models/Sequelize/SegmentacaoAssistencial';
+import TipoAreaAbrangencia from '../app/models/Sequelize/TipoAreaAbrangencia';
+import TipoContratacao from '../app/models/Sequelize/TipoContratacao';
+import VersaoPlano from '../app/models/Sequelize/VersaoPlano';
+import RegraVigenciaContrato from '../app/models/Sequelize/RegraVigenciaContrato';
 // import databaseConfig from '../config/database';
 
 const models = [
@@ -60,6 +77,23 @@ const models = [
   EstadoCivil,
   LogContato,
   ModalidadeCobranca,
+  Beneficiario,
+  GrupoFamiliar,
+  Plano,
+  AtributoVinculo,
+  CentroCusto,
+  Setor,
+  Departamento,
+  Banco,
+  Agencia,
+  AreaCobertura,
+  ParticipacaoFinanceira,
+  Produto,
+  SegmentacaoAssistencial,
+  TipoAreaAbrangencia,
+  TipoContratacao,
+  VersaoPlano,
+  RegraVigenciaContrato,
 ];
 
 class Database {
