@@ -26,18 +26,28 @@ export default class GrupoFamiliar extends Model {
     //   through: models.AssociadoPF,
     // });
 
-    this.belongsTo(models.Beneficiario, { foreignKey: 'responsavelgrupoid', as: 'responsavel' });
-
-    this.hasMany(models.Beneficiario, {
-      foreignKey: 'pessoabeneficiarioid',
-      as: { plural: 'beneficiarios', singular: 'beneficiario' },
-    });
-
-    this.belongsToMany(models.Pessoa, {
+    // this.belongsTo(models.Beneficiario, { foreignKey: 'responsavelgrupoid', as: 'responsavel' });
+    this.belongsToMany(models.PessoaFisica, {
       through: models.Beneficiario,
       otherKey: 'pessoabeneficiarioid',
       foreignKey: 'grupofamiliarid',
-      as: { singular: 'pessoa', plural: 'pessoas' },
+      sourceKey: 'grupo',
+      as: { singular: 'responsavel', plural: 'responsaveis' },
+    });
+
+    // this.hasMany(models.Beneficiario, {
+    //   foreignKey: 'pessoabeneficiarioid',
+    //   as: { plural: 'beneficiarios', singular: 'beneficiario' },
+    // });
+
+    this.belongsToMany(models.PessoaFisica, {
+      through: {
+        model: models.Beneficiario,
+      },
+      otherKey: 'pessoabeneficiarioid',
+      foreignKey: 'grupofamiliarid',
+      sourceKey: 'grupo',
+      as: 'beneficiarios',
     });
   }
 }
