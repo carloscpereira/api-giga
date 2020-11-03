@@ -17,7 +17,7 @@ export default class Vinculo extends Model {
   }
 
   static associate(models) {
-    this.belongsToMany(models.Vinculo, {
+    this.belongsToMany(models.Pessoa, {
       through: models.PessoaVinculo,
       as: { singular: 'pessoa', plural: 'pessoas' },
       foreignKey: 'vinculoid',
