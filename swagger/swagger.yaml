@@ -423,6 +423,34 @@ paths:
               schema:
                 type: object
 
+  /vinculos/{operator}:
+    parameters:
+      - in: 'path'
+        name: 'operator'
+        required: true
+        description: 'Nome da operadora em minúsculo'
+        schema:
+          type: 'string'
+          enum: ['idental', 'atemde']
+      - in: 'header'
+        name: 'AppAuthorization'
+        required: true
+        description: Chave de autorização da aplicação
+        schema:
+          type: string
+    get:
+      description: 'Retorna todos vinculos de uma determinada operadora'
+      summary: 'Vinculos da operadora'
+      tags:
+        - Vinculos
+      responses:
+        200:
+          description: 'Requisição realizada com sucesso'
+          content:
+            application/json:
+              schema:
+                type: object
+
   /ocorrencias/{operator}:
     parameters:
       - in: 'path'
@@ -981,7 +1009,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Errors500'
-
   /tipo-carteira/{operator}/{tipoCarteiraId}:
     parameters:
       - in: 'path'
@@ -1641,6 +1668,230 @@ components:
           type: string
           format: date-time
           readOnly: true
+    TelefoneSchema:
+      type: object
+      properties:
+        Numero:
+          type: string
+        Ramal:
+          type: string
+        TipoTelefone:
+          type: integer
+        Principal:
+          type: boolean
+          default: false
+    EmailSchema:
+      type: object
+      properties:
+        Email:
+          type: string
+        TipoEmail:
+          type: integer
+        Principal:
+          type: boolean
+          default: false
+    EnderecoSchema:
+      type: object
+      properties:
+        Logradouro:
+          type: string
+        Bairro:
+          type: string
+        Estado:
+          type: string
+        Complemento:
+          type: string
+        Numero:
+          type: string
+        Principal:
+          type: boolean
+          default: false
+        Telefones:
+          type: array
+          items:
+            $ref: '#/components/schemas/TelefoneSchema'
+    PessoaJuridicaSchema:
+      type: object
+      properties:
+        RazaoSocial:
+          type: string
+        NomeFantasia:
+          type: string
+        InscricaoEstadual:
+          type: string
+        InscricaoMunicipal:
+          type: string
+        CNPJ:
+          type: string
+          maximum: 14
+    PessoaFisicaSchema:
+      type: object
+      properties:
+        Nome:
+          type: string
+        RG:
+          type: string
+        CPF:
+          type: string
+        DataNascimento:
+          type: string
+          format: date
+        Sexo:
+          type: string
+          enum: ['M', 'F']
+        EstadoCivil:
+          type: string
+        OrgaoEmissor:
+          type: string
+        NomedaMae:
+          type: string
+        Nacionalidade:
+          type: string
+    ContratoStore:
+      type: object
+      properties:
+        TipoContrato:
+          type: string
+          enum: ['5', '9']
+        MotivoAdesao:
+          type: number
+          default: 268
+        RenovacaoAutomatica:
+          type: boolean
+          default: false
+        DataAdesao:
+          type: string
+          format: date-time
+        Valor:
+          type: number
+        ValorDesconto:
+          type: number
+          default: 0
+        PrazoVigencia:
+          type: string
+          enum: ['BIENAL', 'ANUAL', 'DEZ MESES']
+          default: 'BIENAL'
+        Plano:
+          type: object
+          properties:
+            ID:
+              type: integer
+            Versao:
+              type: integer
+        Convenio:
+          type: string
+          enum: ['Pessoa Fisica', 'Empresa', 'Municipio', 'Estado', 'Federal']
+          default: 'Pessoa Fisica'
+        Titular:
+          $ref: '#/components/schemas/PessoaFisicaSchema'
+        Beneficiarios:
+          type: array
+          items:
+            $ref: '#/components/schemas/PessoaFisicaSchema'
+        GrupoFamiliar:
+          type: array
+          items:
+            type: object
+            properties:
+              Plano:
+                type: object
+                properties:
+                  ID:
+                    type: integer
+                  Versao:
+                    type: integer
+              Beneficiarios:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PessoaFisicaSchema'
+        FormaPagamento:
+          type: object
+          properties:
+            TipoCarteira:
+              type: number
+            DiaVencimentoMes:
+              type: number
+              minimum: 1
+              maximum: 29
+              default: 10
+            CartaoCredito:
+              type: object
+              properties:
+                Numero:
+                  type: string
+                CodigoSeguranca:
+                  type: string
+                TipoCartao:
+                  type: integer
+                Validade:
+                  type: string
+                Titular:
+                  type: string
+        ResponsavelFinanceiro:
+          type: object
+          properties:
+            TipoPessoa:
+              type: string
+              enum: ['F', 'J']
+            Nome:
+              type: string
+              description: Obrigatório Apenas para tipo de pessoa física
+            RazaoSocial:
+              type: string
+              description: Obrigatório Apenas para tipo de pessoa juridica
+            NomeFantasia:
+              type: string
+              description: Obrigatório Apenas para tipo de pessoa juridica
+            InscricaoEstadual:
+              type: string
+              description: Obrigatório Apenas para tipo de pessoa juridica
+            InscricaoMunicipal:
+              type: string
+              description: Obrigatório Apenas para tipo de pessoa juridica
+            RG:
+              type: string
+              description: Obrigatório Apenas para tipo de pessoa fisica
+            CPF:
+              type: string
+              description: Obrigatório Apenas para tipo de pessoa fisica
+            CNPJ:
+              type: string
+              description: Obrigatório Apenas para tipo de pessoa fisica
+            DataNascimento:
+              type: string
+              format: date
+              description: Obrigatório Apenas para tipo de pessoa fisica
+            Sexo:
+              type: string
+              enum: ['M', 'F']
+              description: Obrigatório Apenas para tipo de pessoa fisica
+            EstadoCivil:
+              type: string
+              description: Obrigatório Apenas para tipo de pessoa fisica
+            OrgaoEmissor:
+              type: string
+              description: Obrigatório Apenas para tipo de pessoa fisica
+            NomedaMae:
+              type: string
+              description: Obrigatório Apenas para tipo de pessoa fisica
+            Nacionalidade:
+              type: string
+              description: Obrigatório Apenas para tipo de pessoa fisica
+            Enderecos:
+              type: array
+              items:
+                $ref: '#/components/schemas/EnderecoSchema'
+            Emails:
+              type: array
+              items:
+                $ref: '#/components/schemas/EmailSchema'
+            Telefones:
+              type: array
+              items:
+                $ref: '#/components/schemas/TelefoneSchema'
+            CentroCusto:
+              $ref: '#/components/schemas/PessoaJuridicaSchema'
+
     Errors400:
       type: object
       properties:
@@ -1658,6 +1909,7 @@ components:
               items:
                 type: string
                 example: 'field is a required field'
+
     Errors401:
       type: object
       properties:
