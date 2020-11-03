@@ -1,5 +1,5 @@
 import queryStringConverter from 'sequelize-querystring-converter';
-import sequelize, { Op } from 'sequelize';
+// import sequelize, { Op } from 'sequelize';
 
 import Pessoa from '../models/Sequelize/Pessoa';
 import Vinculo from '../models/Sequelize/Vinculo';
@@ -11,13 +11,7 @@ import EstadoCivil from '../models/Sequelize/EstadoCivil';
 
 class PessoaFisicaController {
   async index(req, res) {
-    const {
-      page = 1,
-      limit = 20,
-      with: includes,
-      filter = {},
-      ...query
-    } = req.query;
+    const { page = 1, limit = 20, with: includes, filter = {}, ...query } = req.query;
 
     const columns = includes ? includes.split(',') : [];
 
@@ -64,9 +58,7 @@ class PessoaFisicaController {
               },
             ]
           : []),
-        ...(columns.includes('emails')
-          ? [{ model: Email, as: 'emails', required: false, ...criteriaEmail }]
-          : []),
+        ...(columns.includes('emails') ? [{ model: Email, as: 'emails', required: false, ...criteriaEmail }] : []),
         ...(columns.includes('telefones')
           ? [
               {
@@ -83,50 +75,50 @@ class PessoaFisicaController {
     return res.json({ error: null, data: pessoas });
   }
 
-  async store(req, res) {
-    const transaction = await sequelize.transaction();
+  // async store(req, res) {
+  //   const transaction = await sequelize.transaction();
 
-    try {
-      const {
-        Nome,
-        Rg,
-        Cpf,
-        DataNascimento,
-        Sexo,
-        EstadoCivil,
-        EstadoCivilId,
-        OrgaoEmissor,
-        Vinculos,
-        Enderecos,
-        Telefones,
-        Emails,
-        TiposContrato,
-      } = req.body;
+  //   try {
+  //     const {
+  //       Nome,
+  //       Rg,
+  //       Cpf,
+  //       DataNascimento,
+  //       Sexo,
+  //       EstadoCivil,
+  //       EstadoCivilId,
+  //       OrgaoEmissor,
+  //       Vinculos,
+  //       Enderecos,
+  //       Telefones,
+  //       Emails,
+  //       TiposContrato,
+  //     } = req.body;
 
-      const vinculos = await Vinculo.findAll({
-        where: { id: { [Op.in]: Vinculos } },
-      });
+  //     const vinculos = await Vinculo.findAll({
+  //       where: { id: { [Op.in]: Vinculos } },
+  //     });
 
-      const enderecos = Enderecos.map(({}) => ({}));
-      const telefones = Telefones.map(({}) => ({}));
-      const emails = Emails.map(
-        ({ Descricao, TipoEmailId = 3, isPrincipal = false }) => ({
-          descricao: Descricao,
-          tipoemailid: TipoEmailId,
-          ema_in_principal: isPrincipal,
-          vinculoid: 4,
-        })
-      );
+  //     const enderecos = Enderecos.map(({}) => ({}));
+  //     const telefones = Telefones.map(({}) => ({}));
+  //     const emails = Emails.map(
+  //       ({ Descricao, TipoEmailId = 3, isPrincipal = false }) => ({
+  //         descricao: Descricao,
+  //         tipoemailid: TipoEmailId,
+  //         ema_in_principal: isPrincipal,
+  //         vinculoid: 4,
+  //       })
+  //     );
 
-      await P;
+  //     await P;
 
-      return res.end('ok');
-    } catch (error) {
-      return res
-        .status(500)
-        .json({ erro: 500, data: { message: 'Error in transaction' } });
-    }
-  }
+  //     return res.end('ok');
+  //   } catch (error) {
+  //     return res
+  //       .status(500)
+  //       .json({ erro: 500, data: { message: 'Error in transaction' } });
+  //   }
+  // }
 }
 
 export default new PessoaFisicaController();

@@ -116,7 +116,7 @@ class ContratoController {
     // const contrato = await Contrato.create(data);
     const contrato = await CriarContratoService.execute(req);
 
-    return res.json({ ok: 'ok' });
+    return res.json({ contrato });
   }
 
   async update(req, res) {
