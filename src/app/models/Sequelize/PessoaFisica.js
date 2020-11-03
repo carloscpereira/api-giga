@@ -44,5 +44,11 @@ export default class PessoaFisica extends Model {
       foreignKey: 'estadocivilid',
       as: 'estadocivil',
     });
+    this.belongsToMany(models.GrupoFamiliar, {
+      through: models.Beneficiario,
+      foreignKey: 'pessoabeneficiarioid',
+      otherKey: 'grupofamiliarid',
+      as: 'gruposfamiliar',
+    });
   }
 }
