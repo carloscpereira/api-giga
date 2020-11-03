@@ -5,6 +5,7 @@ export default class AssociadoPF extends Model {
   static init(sequelize) {
     super.init(
       {
+        id: { type: Sequelize.BIGINT, primaryKey: true },
         responsavelfinanceiroid: Sequelize.STRING,
         corretoravendedorid: Sequelize.BIGINT,
         planoid: Sequelize.BIGINT,
