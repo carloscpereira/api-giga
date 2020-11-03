@@ -35,5 +35,12 @@ export default class PessoaJuridica extends Model {
       foreignKey: 'id',
       constraints: false,
     });
+    // this.hasMany(models.CentroCusto, {
+    //   foreignKey: 'empresaid',
+    //   as: {
+    //     singular: 'centrocusto',
+    //     plural: 'centrocustos',
+    //   },
+    // });
   }
 }
