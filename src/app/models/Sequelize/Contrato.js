@@ -12,7 +12,7 @@ export default class Contrato extends Model {
         status: {
           type: Sequelize.VIRTUAL,
           get() {
-            return this.infoStatus?.descricao;
+            return this.infoStatus ? this.infoStatus.descricao : undefined;
           },
         },
         dataadesao: Sequelize.DATE,
@@ -30,14 +30,14 @@ export default class Contrato extends Model {
         tipocontrato: {
           type: Sequelize.VIRTUAL,
           get() {
-            return this.infoContrato?.descricao;
+            return this.infoContrato ? this.infoContrato.descricao : undefined;
           },
         },
         tipotabelausoid: Sequelize.INTEGER,
         tipotabelauso: {
           type: Sequelize.VIRTUAL,
           get() {
-            return this.infoTabelaUso?.descricao;
+            return this.infoTabelaUso ? this.infoTabelaUso.descricao : undefined;
           },
         },
         descontotabelauso: Sequelize.DOUBLE,
@@ -46,7 +46,7 @@ export default class Contrato extends Model {
         tipodecarteira: {
           type: Sequelize.VIRTUAL,
           get() {
-            return this.infoCarteira?.descricao;
+            return this.infoCarteira ? this.infoCarteira.descricao : undefined;
           },
         },
         databloqueio: Sequelize.DATE,
@@ -54,14 +54,14 @@ export default class Contrato extends Model {
         motivoadesao: {
           type: Sequelize.VIRTUAL,
           get() {
-            return this.infoAdesao?.descricao;
+            return this.infoAdesao ? this.infoAdesao.descricao : undefined;
           },
         },
         motivocancelamentoid: Sequelize.INTEGER,
         motivocancelamento: {
           type: Sequelize.VIRTUAL,
           get() {
-            return this.infoCancelamento?.descricao;
+            return this.infoCancelamento ? this.infoCancelamento.descricao : undefined;
           },
         },
         datareativacao: Sequelize.DATE,
