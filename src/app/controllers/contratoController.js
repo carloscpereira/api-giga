@@ -3,9 +3,14 @@ import queryStringConverter from 'sequelize-querystring-converter';
 import { Op } from 'sequelize';
 import Contrato from '../models/Sequelize/Contrato';
 import Pessoa from '../models/Sequelize/Pessoa';
+import TipoContrato from '../models/Sequelize/TipoContrato';
 import PessoaJuridica from '../models/Sequelize/PessoaJuridica';
+import TipoTabelaUso from '../models/Sequelize/TipoTabelaUso';
+import TipoOcorrencia from '../models/Sequelize/TipoOcorrencia';
+import PessoaFisica from '../models/Sequelize/PessoaFisica';
 import GrupoFamiliar from '../models/Sequelize/GrupoFamiliar';
-import Beneficiario from '../models/Sequelize/Beneficiario';
+import Status from '../models/Sequelize/Status';
+import TipoCarteira from '../models/Sequelize/TipoCarteira';
 
 import CriarContratoService from '../services/CriaContratoService';
 
@@ -20,22 +25,69 @@ class ContratoController {
       ...criteria,
       limit,
       offset,
+      attributes: { exclude: ['infoStatus'] },
       include: [
         { model: PessoaJuridica, as: 'operadora', attributes: ['id', 'nomefantasia', 'razaosocial', 'cnpj'] },
         { model: Pessoa, as: 'responsavelpf' },
         { model: Pessoa, as: 'responsavelpj' },
+        { model: Status, as: 'infoStatus', attributes: ['descricao'] },
+        { model: TipoCarteira, as: 'infoCarteira', attributes: ['descricao'] },
+        { model: TipoContrato, as: 'infoContrato', attributes: ['descricao'] },
+        { model: TipoTabelaUso, as: 'infoTabelaUso', attributes: ['descricao'] },
+        { model: TipoOcorrencia, as: 'infoAdesao', attributes: ['descricao'] },
+        { model: TipoOcorrencia, as: 'infoCancelamento', attributes: ['descricao'] },
         {
           model: GrupoFamiliar,
           as: 'gruposfamiliar',
           include: [
-            { model: Beneficiario, as: 'beneficiarios' },
-            { model: Beneficiario, as: 'responsavel' },
+            {
+              model: PessoaFisica,
+              as: 'beneficiarios',
+              attributes: { exclude: ['alteracao', 'secretariaid', 'usuario', 'status', 'tipodadosid'] },
+              through: {
+                as: 'dados',
+                attributes: [
+                  'dataadesao',
+                  'ativo',
+                  'datadesativacao',
+                  'tipobeneficiarioid',
+                  'versaoplanoid',
+                  'planoid',
+                  'tipobeneficiarioid',
+                  'tipocarteiraid',
+                  'valor',
+                  'descontovalor',
+                  'descontoporcent',
+                ],
+              },
+            },
+
+            {
+              model: PessoaFisica,
+              as: 'responsaveis',
+              attributes: { exclude: ['alteracao', 'secretariaid', 'usuario', 'status', 'tipodadosid'] },
+              through: {
+                as: 'dados',
+                attributes: [
+                  'dataadesao',
+                  'ativo',
+                  'datadesativacao',
+                  'tipobeneficiarioid',
+                  'versaoplanoid',
+                  'planoid',
+                  'tipobeneficiarioid',
+                  'tipocarteiraid',
+                  'valor',
+                  'descontovalor',
+                  'descontoporcent',
+                ],
+              },
+            },
           ],
         },
       ],
       transaction,
     });
-
     await transaction.rollback();
 
     return res.json({ error: null, data: contratos });
