@@ -60,14 +60,11 @@ export default class Contrato extends Model {
   static associate(models) {
     this.hasMany(models.Titulo, {
       foreignKey: 'numerocontratoid',
-      as: 'titulo',
+      as: { sigle: 'titulo', plural: 'titulos' },
     });
     this.belongsTo(models.TipoContrato, {
       foreignKey: 'tipocontratoid',
-      as: {
-        singular: 'tipocontrato',
-        plural: 'tiposcontrato',
-      },
+      as: 'tipocontrato',
     });
     this.belongsToMany(models.Pessoa, {
       through: models.AssociadoPJ,
@@ -75,28 +72,26 @@ export default class Contrato extends Model {
       otherKey: 'responsavelfinanceiroid',
       constraints: false,
       as: 'responsavelpj',
-      scope: {
-        include: {
-          model: models.Vinculo,
-          as: 'vinculos',
-          where: {
-            tipopessoa: 'J',
-          },
-          requires: true,
-        },
-      },
     });
-    console.log(models.TipoContrato);
     this.belongsToMany(models.Pessoa, {
       through: models.AssociadoPF,
       foreignKey: 'id',
       otherKey: 'responsavelfinanceiroid',
       constraints: false,
       as: 'responsavelpf',
-      scope: {
-        where: {
-          tipocontratoid: 5,
-        },
+    });
+    this.hasMany(models.GrupoFamiliar, {
+      foreignKey: 'contratoid',
+      as: {
+        plural: 'gruposfamiliar',
+        singular: 'grupofamiliar',
+      },
+    });
+    this.hasMany(models.Beneficiario, {
+      foreignKey: 'contratoid',
+      as: {
+        plural: 'beneficiarios',
+        singular: 'beneficiario',
       },
     });
   }
