@@ -4,7 +4,7 @@ import SetorController from '../app/controllers/setorController';
 
 import { checkOperator } from '../app/middlewares';
 
-const setorRouter = Router();
+const setorRouter = new Router();
 
 setorRouter.get('/:operator/', checkOperator, SetorController.index);
 setorRouter.post('/:operator/', checkOperator, SetorController.create);

@@ -4,7 +4,7 @@ import CentroCustoController from '../app/controllers/centroCustoController';
 
 import { checkOperator } from '../app/middlewares';
 
-const centroCustoRouter = Router();
+const centroCustoRouter = new Router();
 
 centroCustoRouter.get('/:operator/', checkOperator, CentroCustoController.index);
 

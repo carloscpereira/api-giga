@@ -4,7 +4,7 @@ import ParticipacaoFinanceira from '../app/controllers/participacaoFinanceiraCon
 
 import { checkOperator } from '../app/middlewares';
 
-const agenciaRouter = Router();
+const agenciaRouter = new Router();
 
 agenciaRouter.get('/:operator/', checkOperator, ParticipacaoFinanceira.index);
 // agenciaRouter.post('/:operator/', checkOperator, ParticipacaoFinanceira.create);

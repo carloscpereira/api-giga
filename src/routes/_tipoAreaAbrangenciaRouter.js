@@ -4,7 +4,7 @@ import TipoAreaAbrangencia from '../app/controllers/tipoAreaAbrangenciaControlle
 
 import { checkOperator } from '../app/middlewares';
 
-const agenciaRouter = Router();
+const agenciaRouter = new Router();
 
 agenciaRouter.get('/:operator/', checkOperator, TipoAreaAbrangencia.index);
 // agenciaRouter.post('/:operator/', checkOperator, TipoAreaAbrangencia.create);

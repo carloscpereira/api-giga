@@ -4,7 +4,7 @@ import DepartamentoController from '../app/controllers/departamentoController';
 
 import { checkOperator } from '../app/middlewares';
 
-const departamentoRouter = Router();
+const departamentoRouter = new Router();
 
 departamentoRouter.get('/:operator/', checkOperator, DepartamentoController.index);
 departamentoRouter.post('/:operator/', checkOperator, DepartamentoController.create);

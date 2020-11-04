@@ -4,7 +4,7 @@ import PlanoController from '../app/controllers/planoController';
 
 import { checkOperator } from '../app/middlewares';
 
-const planoRouter = Router();
+const planoRouter = new Router();
 
 planoRouter.get('/:operator/', checkOperator, PlanoController.index);
 planoRouter.post('/:operator/', checkOperator, PlanoController.create);

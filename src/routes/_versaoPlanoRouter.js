@@ -4,7 +4,7 @@ import VersaoPlanoController from '../app/controllers/versaoPlanoController';
 
 import { checkOperator } from '../app/middlewares';
 
-const versaoPlanoRouter = Router();
+const versaoPlanoRouter = new Router();
 
 versaoPlanoRouter.get('/:operator/', checkOperator, VersaoPlanoController.index);
 versaoPlanoRouter.post('/:operator/', checkOperator, VersaoPlanoController.create);

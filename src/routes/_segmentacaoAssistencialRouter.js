@@ -4,7 +4,7 @@ import SegmentacaoAssistencialController from '../app/controllers/segmentacaoAss
 
 import { checkOperator } from '../app/middlewares';
 
-const segmentacaoAssistencialRouter = Router();
+const segmentacaoAssistencialRouter = new Router();
 
 segmentacaoAssistencialRouter.get('/:operator/', checkOperator, SegmentacaoAssistencialController.index);
 // segmentacaoAssistencialRouter.post('/:operator/', checkOperator, SegmentacaoAssistencialController.create);

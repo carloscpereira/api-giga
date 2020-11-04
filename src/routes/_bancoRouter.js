@@ -4,7 +4,7 @@ import BancoController from '../app/controllers/bancoController';
 
 import { checkOperator } from '../app/middlewares';
 
-const bancoRouter = Router();
+const bancoRouter = new Router();
 
 bancoRouter.get('/:operator/', checkOperator, BancoController.index);
 bancoRouter.post('/:operator/', checkOperator, BancoController.create);

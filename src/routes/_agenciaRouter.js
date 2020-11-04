@@ -4,7 +4,7 @@ import AreaCobertura from '../app/controllers/areaCoberturaController';
 
 import { checkOperator } from '../app/middlewares';
 
-const agenciaRouter = Router();
+const agenciaRouter = new Router();
 
 agenciaRouter.get('/:operator/', checkOperator, AreaCobertura.index);
 // agenciaRouter.post('/:operator/', checkOperator, AreaCobertura.create);

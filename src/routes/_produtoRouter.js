@@ -4,7 +4,7 @@ import ProdutoController from '../app/controllers/produtoController';
 
 import { checkOperator } from '../app/middlewares';
 
-const produtoRouter = Router();
+const produtoRouter = new Router();
 
 produtoRouter.get('/:operator/', checkOperator, ProdutoController.index);
 produtoRouter.post('/:operator/', checkOperator, ProdutoController.create);

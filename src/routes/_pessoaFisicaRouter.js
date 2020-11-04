@@ -13,6 +13,6 @@ import PessoaFisicaController from '../app/controllers/pessoaFisicaController';
 const routes = new Router();
 
 routes.get('/:operator', checkOperator, PessoaFisicaController.index);
-routes.post('/:operator', checkOperator, PessoaFisicaController.store);
+// routes.post('/:operator', checkOperator, PessoaFisicaController.store);
 
 module.exports = routes;

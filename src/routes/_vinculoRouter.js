@@ -4,7 +4,7 @@ import VinculoController from '../app/controllers/vinculoController';
 
 import { checkOperator } from '../app/middlewares';
 
-const vinculoRouter = Router();
+const vinculoRouter = new Router();
 
 vinculoRouter.get('/:operator/', checkOperator, VinculoController.index);
 vinculoRouter.post('/:operator/', checkOperator, VinculoController.create);

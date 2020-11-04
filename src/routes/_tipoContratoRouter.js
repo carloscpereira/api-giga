@@ -4,7 +4,7 @@ import TipoContrato from '../app/controllers/tipoContratoController';
 
 import { checkOperator } from '../app/middlewares';
 
-const agenciaRouter = Router();
+const agenciaRouter = new Router();
 
 agenciaRouter.get('/:operator/', checkOperator, TipoContrato.index);
 // agenciaRouter.post('/:operator/', checkOperator, TipoContrato.create);

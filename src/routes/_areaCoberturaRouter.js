@@ -4,7 +4,7 @@ import AgenciaController from '../app/controllers/agenciaController';
 
 import { checkOperator } from '../app/middlewares';
 
-const agenciaRouter = Router();
+const agenciaRouter = new Router();
 
 agenciaRouter.get('/:operator/', checkOperator, AgenciaController.index);
 agenciaRouter.post('/:operator/', checkOperator, AgenciaController.create);
