@@ -51,6 +51,7 @@ import RegraVigenciaContrato from '../app/models/Sequelize/RegraVigenciaContrato
 import Status from '../app/models/Sequelize/Status';
 import TipoTabelaUso from '../app/models/Sequelize/TipoTabelaUso';
 import TipoOcorrencia from '../app/models/Sequelize/TipoOcorrencia';
+import TipoBeneficiario from '../app/models/Sequelize/TipoBeneficiario';
 // import databaseConfig from '../config/database';
 
 const models = [
@@ -100,6 +101,7 @@ const models = [
   Status,
   TipoTabelaUso,
   TipoOcorrencia,
+  TipoBeneficiario,
 ];
 
 class Database {
