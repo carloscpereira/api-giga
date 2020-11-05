@@ -11,7 +11,7 @@ class BancoController {
 
     console.log(criteria);
 
-    const bancos = await Banco.findAll({ ...criteria, include: [{ model: Banco, as: 'banco' }] });
+    const bancos = await Banco.findAll({ ...criteria });
     return res.json({ error: null, data: bancos });
   }
 
