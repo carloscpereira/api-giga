@@ -23,5 +23,12 @@ export default class Vinculo extends Model {
       foreignKey: 'vinculoid',
       otherKey: 'pessoaid',
     });
+
+    this.belongsToMany(models.TipoContrato, {
+      through: models.TipoContratoVinculo,
+      as: { singular: 'tipocontrato', plural: 'tipocontratos' },
+      foreignKey: 'vinculoid',
+      otherKey: 'tiposcontratoid',
+    });
   }
 }
