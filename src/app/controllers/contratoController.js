@@ -10,6 +10,8 @@ import TipoOcorrencia from '../models/Sequelize/TipoOcorrencia';
 import PessoaFisica from '../models/Sequelize/PessoaFisica';
 import GrupoFamiliar from '../models/Sequelize/GrupoFamiliar';
 import Status from '../models/Sequelize/Status';
+import Parcela from '../models/Sequelize/Parcela';
+import Titulo from '../models/Sequelize/Titulo';
 import TipoCarteira from '../models/Sequelize/TipoCarteira';
 
 import CriarContratoService from '../services/CriaContratoService';
@@ -116,7 +118,14 @@ class ContratoController {
     // const contrato = await Contrato.create(data);
     const contrato = await CriarContratoService.execute(req);
 
-    return res.json({ contrato });
+    const responseContrato = await Contrato.findOne({
+      where: {
+        id: contrato.id,
+      },
+      include: [{ model: Titulo, as: 'titulos', include: [{ model: Parcela, as: 'parcelas' }] }],
+    });
+
+    return res.json({ error: null, data: responseContrato });
   }
 
   async update(req, res) {
