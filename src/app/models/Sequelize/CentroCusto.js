@@ -18,10 +18,10 @@ export default class CentroCusto extends Model {
         search: {
           type: Sequelize.VIRTUAL,
           get() {
-            const departamento = this.departamento ? this.departamento.descricao.trim() : '';
-            const setor = this.setor ? this.setor.descricao.trim() : '';
-            const razaoSocial = this.empresa ? this.empresa.razaosocial.trim() : '';
-            const nomeFantasia = this.empresa ? this.empresa.nomefantasia.trim() : '';
+            const departamento = this.departamento && this.departamento ? this.departamento.descricao.trim() : '';
+            const setor = this.setor && this.setor.descricao ? this.setor.descricao.trim() : '';
+            const razaoSocial = this.empresa && this.empresa.razaosocial ? this.empresa.razaosocial.trim() : '';
+            const nomeFantasia = this.empresa && this.empresa.nomefantasia ? this.empresa.nomefantasia.trim() : '';
 
             return `${razaoSocial || ''} (${nomeFantasia || ''}) - ${departamento || ''} - ${setor || ''}`;
           },
