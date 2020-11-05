@@ -9,14 +9,17 @@ import Telefone from '../models/Sequelize/Telefone';
 import Email from '../models/Sequelize/Email';
 import Endereco from '../models/Sequelize/Endereco';
 import CentroCusto from '../models/Sequelize/CentroCusto';
+import Produto from '../models/Sequelize/Produto';
+import TipoBeneficiario from '../models/Sequelize/TipoBeneficiario';
 
 import Parcela from '../models/Sequelize/Parcela';
 import TipoCarteira from '../models/Sequelize/TipoCarteira';
 
+import GeraCarteira from '../helpers/GerarCarteira';
+
 import AdicionarVinculoService from './AdicionarVinculoService';
 
 import CriaPessoaFisicaService from './CriaPessoaFisicaService';
-import CriaPessoaJuridicaService from './CriaPessoaJuridicaService';
 
 const bv = {
   PESSOA_FISICA: 4,
@@ -57,6 +60,54 @@ export default class CriaContratoService {
           CriarContratoEmpresa(body);
           return true;
         default: {
+          const produto = await Produto.findOne({
+            where: {
+              id: body.Produto,
+              pro_id_tipo_contrato: body.TipoContrato,
+            },
+          });
+
+          if (!produto)
+            throw new Error('Produto selecionado não encontrado ou está indisponível para o tipo contrato selecionado');
+
+          const centroCusto = body.ResponsavelFinanceiro.CentroCusto
+            ? await CentroCusto.findByPk(body.ResponsavelFinanceiro.CentroCusto)
+            : null;
+
+          if (!centroCusto && body.Convenio !== 'Pessoa Fisica')
+            throw new Error('Centro Custo informado não encontrado');
+
+          /**
+           * Validando vendedor
+           */
+          let vendedor;
+
+          if (body.Vendedor) {
+            const [row] = await sequelize.query(
+              `
+            SELECT sp_dadospessoafisica.id    AS vendedorid,
+                    sp_dadospessoafisica.nome AS nome,
+                    cn_corretorpf.id          AS corretoraid
+            FROM   sp_dadospessoafisica
+                    INNER JOIN cn_grupocorretores
+                            ON cn_grupocorretores.corretorvendedor = sp_dadospessoafisica.id
+                    INNER JOIN cn_corretorpf
+                            ON cn_corretorpf.corretorapjid =
+                              cn_grupocorretores.corretorpessoaj
+            WHERE  (cn_grupocorretores.corretorvendedor IS NOT NULL)
+                    AND (sp_dadospessoafisica.id = :vendedorid)
+            ORDER  BY sp_dadospessoafisica.nome
+            `,
+              {
+                type: QueryTypes.SELECT,
+                replacements: { vendedorid: body.Vendedor },
+              }
+            );
+
+            if (!row) throw new Error('Vendedor não encontrado em nosso banco de dados');
+
+            vendedor = row;
+          }
           /**
            * Cria o responsavel financeiro
            */
@@ -142,56 +193,6 @@ export default class CriaContratoService {
             responsavelFinanceiro.addEmails(emails, { transaction: t });
           }
 
-          let centrocusto = null;
-
-          if (body.Convenio === 'Municipio' || body.Convenio === 'Estado') {
-            if (!body.CentroCusto) throw new Error('É necessário informar um Centro Custo para esse tipo de contrato');
-
-            const [empresaCentroCusto] = await CriaPessoaJuridicaService.execute({
-              cnpj: body.CentroCusto.CNPJ,
-              inscricaoestadual: body.CentroCusto.InscricaoEstadual,
-              inscricaomunicipal: body.CentroCusto.IncricaoMunicipal,
-              nomefantasia: body.CentroCusto.NomeFantasia,
-              razaosocial: body.CentroCusto.RazaoSocial,
-              sequelize,
-              transaction: t,
-            });
-
-            const verifySetor = await sequelize.query('SELECT * FROM sp_setor WHERE id = :setorid', {
-              type: QueryTypes.SELECT,
-              replacements: { setorid: body.CentroCusto.SetorID },
-            });
-
-            const verifyDepartamento = await sequelize.query(
-              'SELECT * FROM sp_departamento WHERE id = :departamentoid',
-              {
-                type: QueryTypes.SELECT,
-                replacements: { departamentoid: body.CentroCusto.DepartamentoID },
-              }
-            );
-
-            if (!verifySetor) throw new Error('Código de Setor Centro Custo inválido');
-            if (!verifyDepartamento) throw new Error('Código de Departamento Centro Custo inválido');
-
-            const [cc] = await CentroCusto.findOrCreate({
-              where: {
-                empresaid: empresaCentroCusto.id,
-                setorid: body.CentroCusto.SetorID,
-                departamentoid: body.CentroCusto.DepartamentoID,
-              },
-              transaction: t,
-              defaults: {
-                departamentoid: body.CentroCusto.DepartamentoID,
-                setorid: body.CentroCusto.SetorID,
-                empresaid: empresaCentroCusto.id,
-                localid: 1,
-                assuntoid: 1,
-              },
-            });
-
-            centrocusto = cc;
-          }
-
           /**
            * Seleciona id do contrato através do Nextval
            */
@@ -239,7 +240,7 @@ export default class CriaContratoService {
               prazolimitebloqueio: infoVigencia.prazobloqueio,
               obs: body.Observacao,
               tipocontratoid: 5,
-              ...(centrocusto ? { centrocustoid: centrocusto } : {}),
+              ...(centroCusto ? { centrocustoid: centroCusto.id } : {}),
               tipodecarteiraid: body.TipoCarteira,
               motivoadesaoid: body.MotivoAdesao,
               con_in_renovacao_auto: body.RenovacaoAutomatica,
@@ -250,8 +251,17 @@ export default class CriaContratoService {
             { transaction: t }
           );
 
-          const [{ valor }] = await sequelize.query(
-            `
+          const beneficiarios = [];
+
+          const beneficiarioTitular = body.Beneficiarios.find((ben) => ben.Titular);
+
+          if (!beneficiarioTitular) throw new Error('É necessário ter um beneficiário titular');
+
+          // eslint-disable-next-line no-restricted-syntax
+          for (const beneficiario of body.Beneficiarios) {
+            // eslint-disable-next-line no-await-in-loop
+            const [valor] = await sequelize.query(
+              `
           SELECT cn_planotipobeneficiario.valor
           FROM   cn_planotipobeneficiario
                  INNER JOIN cn_tabelaprecoplano
@@ -267,43 +277,19 @@ export default class CriaContratoService {
                              )
                              AND ( cn_tabelaprecoplano.dtvalidadefinal IS NULL ) ) )
           `,
-            {
-              type: QueryTypes.SELECT,
-              replacements: {
-                P_ID_TIPOBENEFICIARIO: 4,
-                P_ID_PLANO: body.Plano.ID,
-                P_ID_VERSAO: body.Plano.Versao,
-                P_DT_ADESAO_BENEF: body.DataAdesao,
-              },
-            }
-          );
+              {
+                type: QueryTypes.SELECT,
+                replacements: {
+                  P_ID_TIPOBENEFICIARIO: beneficiario.Titular ? bv.TITULAR : bv[beneficiario.Vinculo],
+                  P_ID_PLANO: produto.planoid,
+                  P_ID_VERSAO: produto.versaoid,
+                  P_DT_ADESAO_BENEF: body.DataAdesao,
+                },
+              }
+            );
 
-          /**
-           * Vincula responsável Financeiro a Contrato
-           */
-          await contrato.setResponsavelpfs(responsavelFinanceiro, {
-            through: {
-              planoid: body.Plano.ID,
-              versaoplanoid: body.Plano.Versao,
-              diavencimento: body.FormaPagamento.DiaVencimentoMes,
-              tipodecarteiraid: body.TipoCarteira,
-              qtdparcela: infoVigencia.mesesvigencia,
-              valorcontrato: valor * body.Beneficiarios.length * infoVigencia.mesesvigencia,
-              valormes: body.Valor * body.Beneficiarios.length,
-              valorliquido: body.Valor * body.Beneficiarios.length * infoVigencia.mesesvigencia,
-              valordesconto: (body.Valor - valor) * body.Beneficiarios.length * infoVigencia.mesesvigencia,
-            },
-            transaction: t,
-          });
+            console.log(valor);
 
-          const beneficiarios = [];
-
-          const beneficiarioTitular = body.Beneficiarios.find((ben) => ben.Principal);
-
-          if (!beneficiarioTitular) throw new Error('É necessário ter um beneficiário titular');
-
-          // eslint-disable-next-line no-restricted-syntax
-          for (const beneficiario of body.Beneficiarios) {
             // eslint-disable-next-line no-await-in-loop
             const [pessoa] = await CriaPessoaFisicaService.execute({
               usuario: 'N',
@@ -324,9 +310,7 @@ export default class CriaContratoService {
             await AdicionarVinculoService.execute({
               atributos: {
                 ...beneficiario,
-                ...(beneficiario.Titular || !beneficiarioTitular.RG
-                  ? {}
-                  : { RgDoBeneficiarioTitular: beneficiarioTitular.RG }),
+                ...(!beneficiarioTitular.RG ? {} : { RgDoBeneficiarioTitular: beneficiarioTitular.RG }),
               },
               pessoa,
               sequelize,
@@ -386,8 +370,67 @@ export default class CriaContratoService {
               await pessoa.addEmails(emails, { transaction: t });
             }
 
-            beneficiarios.push({ pessoa, vinculo: beneficiario.Titular ? bv.TITULAR : bv[beneficiario.Vinculo] });
+            beneficiarios.push({
+              pessoa,
+              vinculo: beneficiario.Titular ? bv.TITULAR : bv[beneficiario.Vinculo],
+              valor: valor ? valor.valor : null,
+              valorLiquido: beneficiario.Valor,
+            });
           }
+
+          const [{ valor: defaultValor }] = await sequelize.query(
+            `
+        SELECT cn_planotipobeneficiario.valor
+        FROM   cn_planotipobeneficiario
+               INNER JOIN cn_tabelaprecoplano
+                       ON cn_planotipobeneficiario.tabelaprecoplanoid =
+                          cn_tabelaprecoplano.id
+        WHERE  ( cn_planotipobeneficiario.tipobeneficiarioid = :P_ID_TIPOBENEFICIARIO )
+               AND ( cn_tabelaprecoplano.planoid = :P_ID_PLANO )
+               AND ( cn_tabelaprecoplano.versaoid = :P_ID_VERSAO )
+               AND ( ( ( cn_tabelaprecoplano.dtvalidadeinicial <= :P_DT_ADESAO_BENEF )
+                       AND ( cn_tabelaprecoplano.dtvalidadefinal >= :P_DT_ADESAO_BENEF )
+                     )
+                      OR ( ( cn_tabelaprecoplano.dtvalidadeinicial <= :P_DT_ADESAO_BENEF
+                           )
+                           AND ( cn_tabelaprecoplano.dtvalidadefinal IS NULL ) ) )
+        `,
+            {
+              type: QueryTypes.SELECT,
+              replacements: {
+                P_ID_TIPOBENEFICIARIO: 4,
+                P_ID_PLANO: produto.planoid,
+                P_ID_VERSAO: produto.versaoid,
+                P_DT_ADESAO_BENEF: body.DataAdesao,
+              },
+            }
+          );
+
+          const valorContratobruto = beneficiarios.reduce((ant, pos) => {
+            console.log('ant: ', ant);
+            console.log('pos: ', pos.valor || defaultValor);
+            return ant + (pos.valor || defaultValor);
+          }, 0);
+
+          const valorContratoLiquido = beneficiarios.reduce(
+            (ant, pos) => ant + (pos.valorLiquido || pos.valor || defaultValor),
+            0
+          );
+
+          await contrato.setResponsavelpfs(responsavelFinanceiro, {
+            through: {
+              planoid: produto.planoid,
+              versaoplanoid: produto.versaoid,
+              diavencimento: body.FormaPagamento.DiaVencimentoMes,
+              tipodecarteiraid: body.TipoCarteira,
+              qtdparcela: infoVigencia.mesesvigencia,
+              valorcontrato: valorContratobruto * infoVigencia.mesesvigencia,
+              valormes: valorContratoLiquido,
+              valorliquido: valorContratoLiquido * infoVigencia.mesesvigencia,
+              valordesconto: valorContratobruto - valorContratoLiquido * infoVigencia.mesesvigencia,
+            },
+            transaction: t,
+          });
 
           const grupoFamiliar = await contrato.createGrupofamiliar(
             { responsavelgrupoid: responsavelFinanceiro.id },
@@ -399,21 +442,47 @@ export default class CriaContratoService {
           // eslint-disable-next-line no-restricted-syntax
           for (const ben of beneficiarios) {
             // eslint-disable-next-line no-await-in-loop
+            const tipoBeneficiario = await TipoBeneficiario.findOne({ where: { codigo: ben.vinculo } });
+
+            // eslint-disable-next-line no-await-in-loop
+            const [{ sequencia }] = await sequelize.query(
+              `
+              SELECT ( Max(cn_beneficiario.sequencia) + 1 ) AS sequencia
+                FROM   cn_beneficiario
+                      INNER JOIN cn_associadopf
+                              ON cn_associadopf.id = cn_beneficiario.contratoid
+                GROUP  BY cn_beneficiario.planoid,
+                          cn_beneficiario.tipobeneficiarioid
+                HAVING ( cn_beneficiario.planoid = :plano )
+                      AND ( cn_beneficiario.tipobeneficiarioid = :tipo )
+              `,
+              { replacements: { plano: produto.planoid, tipo: tipoBeneficiario.id }, type: QueryTypes.SELECT }
+            );
+
+            const valor = ben.valor || defaultValor;
+            // eslint-disable-next-line no-await-in-loop
             await grupoFamiliar.addPessoa(ben.pessoa, {
               transaction: t,
               through: {
-                tipobeneficiarioid: ben.vinculo,
+                contratoid: contrato.numerocontrato,
+                tipobeneficiarioid: tipoBeneficiario.id,
                 dataregistrosistema: new Date(),
                 dataadesao: body.DataAdesao,
                 valor,
-                numerocarteira: '?',
+                numerocarteira: GeraCarteira({
+                  operadora: operadoraid,
+                  sequencia,
+                  tipoBeneficiario: tipoBeneficiario.id,
+                }),
+                via: 'A',
+                sequencia,
                 ativo: 1,
                 responsavelgrupo: pessoaBeneficiarioTitular.pessoa.id,
-                descontovalor: body.Valor ? valor - body.Valor : 0,
-                descontoporcent: body.Valor ? (body.Valor * 100) / valor : 0,
+                descontovalor: ben.valorLiquido ? valor - ben.valorLiquido : 0,
+                descontoporcent: ben.valorLiquido ? ((valor - ben.valorLiquido) * 100) / valor : 0,
                 motivoadesaoid: body.MotivoAdesao || 268,
-                planoid: body.Plano.ID,
-                versaoplanoid: body.Plano.Versao,
+                planoid: produto.planoid,
+                versaoplanoid: produto.versaoid,
                 tipocarteiraid: body.FormaPagamento.TipoCarteira,
                 ben_in_requerente: false,
                 ben_in_cobertura_parcial_tmp: false,
@@ -425,9 +494,9 @@ export default class CriaContratoService {
             });
           }
 
-          await grupoFamiliar.addPessoas(beneficiarios, {
-            transaction: t,
-          });
+          // await grupoFamiliar.addPessoas(beneficiarios, {
+          //   transaction: t,
+          // });
 
           /**
            * Modalidade de Pagamento
@@ -460,10 +529,10 @@ export default class CriaContratoService {
               statusid: 1,
               numerocontratoid: contrato.id,
               numerodocumento: contrato.numerocontrato,
-              valor: body.Valor * body.Beneficiarios.length * infoVigencia.mesesvigencia,
+              valor: valorContratoLiquido * infoVigencia.mesesvigencia,
               numerototalparcelas: infoVigencia.mesesvigencia,
               numerodiavencimento: body.FormaPagamento.DiaVencimentoMes,
-              ...(centrocusto ? { centrocustoid: centrocusto } : {}),
+              ...(centroCusto ? { centrocustoid: centroCusto.id } : {}),
               datavencimento: moment(body.DataAdesao)
                 .add(infoVigencia.mesesvigencia + 1, 'months')
                 .format(),
@@ -481,12 +550,12 @@ export default class CriaContratoService {
             { transaction: t }
           );
 
-          const parcelas = [];
-
           for (let i = 1; i <= infoVigencia.mesesvigencia; i += 1) {
-            parcelas.push(
-              new Parcela({
+            // eslint-disable-next-line no-await-in-loop
+            await Parcela.create(
+              {
                 pessoausuarioid: 1,
+                tituloid: titulo.id,
                 tipodocumentoid: 1,
                 numerodocumento: i.toString().padStart(2, '0'),
                 numero: i,
@@ -495,18 +564,15 @@ export default class CriaContratoService {
                   .format(),
                 datacadastramento: new Date(),
                 statusgrupoid: 1,
-                valor: body.Valor * body.Beneficiarios.length,
-                valor_bruto: body.Valor * body.Beneficiarios.length,
+                valor: valorContratoLiquido,
+                valor_bruto: valorContratoLiquido,
                 pcl_in_cobranca: false,
-              })
+              },
+              { transaction: t }
             );
           }
 
-          await titulo.addParcelas(parcelas, { transaction: t });
-
-          console.log(titulo);
-
-          await t.rollback();
+          await t.commit();
 
           return contrato;
         }
