@@ -109,12 +109,26 @@ export default class Contrato extends Model {
       constraints: false,
       as: 'responsavelpj',
     });
+    this.belongsToMany(models.PessoaJuridica, {
+      through: models.AssociadoPJ,
+      foreignKey: 'id',
+      otherKey: 'responsavelfinanceiroid',
+      constraints: false,
+      as: 'responsavel_pessoajuridica',
+    });
     this.belongsToMany(models.Pessoa, {
       through: models.AssociadoPF,
       foreignKey: 'id',
       otherKey: 'responsavelfinanceiroid',
       constraints: false,
-      as: { singular: 'responsavelpf', plural: 'responsavelpfs' },
+      as: 'responsavelpf',
+    });
+    this.belongsToMany(models.PessoaFisica, {
+      through: models.AssociadoPF,
+      foreignKey: 'id',
+      otherKey: 'responsavelfinanceiroid',
+      constraints: false,
+      as: 'responsavel_pessoafisica',
     });
     this.hasMany(models.GrupoFamiliar, {
       foreignKey: 'contratoid',
