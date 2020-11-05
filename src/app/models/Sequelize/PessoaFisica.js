@@ -35,20 +35,53 @@ export default class PessoaFisica extends Model {
   }
 
   static associate(models) {
+    this.belongsToMany(models.Contrato, {
+      through: models.AssociadoPF,
+      as: { singular: 'contrato', plural: 'contratos' },
+      foreignKey: 'responsavelfinanceiroid',
+      otherKey: 'id',
+    });
+
     this.belongsTo(models.Pessoa, {
-      as: { singular: 'pessoa', plural: 'pessoas' },
+      as: 'pessoa',
       foreignKey: 'id',
       constraints: false,
     });
+
     this.belongsTo(models.EstadoCivil, {
       foreignKey: 'estadocivilid',
       as: 'estadocivil',
     });
+
     this.belongsToMany(models.GrupoFamiliar, {
       through: models.Beneficiario,
       foreignKey: 'pessoabeneficiarioid',
       otherKey: 'grupofamiliarid',
       as: 'gruposfamiliar',
+    });
+
+    this.hasMany(models.Telefone, {
+      foreignKey: 'dadosid',
+      as: {
+        singular: 'telefone',
+        plural: 'telefones',
+      },
+    });
+
+    this.hasMany(models.Endereco, {
+      foreignKey: 'dadosid',
+      as: {
+        singular: 'endereco',
+        plural: 'enderecos',
+      },
+    });
+
+    this.hasMany(models.Email, {
+      foreignKey: 'dadosid',
+      as: {
+        plural: 'emails',
+        singular: 'email',
+      },
     });
   }
 }
