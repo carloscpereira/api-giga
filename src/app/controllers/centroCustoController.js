@@ -9,9 +9,9 @@ import PessoaJuridica from '../models/Sequelize/PessoaJuridica';
 
 class CentroCustoController {
   async index(req, res) {
-    const { page = 1, limit = 20, ...query } = req.query;
+    const { page = 1, limit = 20, search: querySearch, ...query } = req.query;
     const criteria = queryStringConverter.convert({
-      query: { limit, ...query, offset: (page - 1) * limit },
+      query: { ...(querySearch ? {} : { offset: (page - 1) * limit, limit }), ...query },
     });
 
     console.log(criteria);
@@ -24,7 +24,16 @@ class CentroCustoController {
         { model: Departamento, as: 'departamento', attributes: ['id', 'descricao'] },
       ],
     });
-    return res.json({ error: null, data: centroCustos });
+
+    const filter = querySearch
+      ? centroCustos.filter(({ search }) => {
+          const reg = new RegExp(querySearch, 'ig');
+          // console.log(search);
+          return !!search.match(reg);
+        })
+      : null;
+
+    return res.json({ error: null, data: querySearch ? filter : centroCustos });
   }
 
   async show(req, res) {
