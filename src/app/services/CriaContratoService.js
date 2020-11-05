@@ -468,6 +468,8 @@ export default class CriaContratoService {
                 tipobeneficiarioid: tipoBeneficiario.id,
                 dataregistrosistema: new Date(),
                 dataadesao: body.DataAdesao,
+                ...(vendedor ? { corretoraid: vendedor.corretoraid } : {}),
+                ...(vendedor ? { vendedorid: vendedor.vendedorid } : {}),
                 valor,
                 numerocarteira: GeraCarteira({
                   operadora: operadoraid,
