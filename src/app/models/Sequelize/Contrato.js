@@ -114,7 +114,7 @@ export default class Contrato extends Model {
       foreignKey: 'id',
       otherKey: 'responsavelfinanceiroid',
       constraints: false,
-      as: 'responsavelpf',
+      as: { singular: 'responsavelpf', plural: 'responsavelpfs' },
     });
     this.hasMany(models.GrupoFamiliar, {
       foreignKey: 'contratoid',
