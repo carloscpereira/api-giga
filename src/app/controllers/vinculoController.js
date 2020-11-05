@@ -1,14 +1,18 @@
 import queryStringConverter from 'sequelize-querystring-converter';
 import Vinculo from '../models/Sequelize/Vinculo';
+import TipoContrato from '../models/Sequelize/TipoContrato';
 
 class VinculoController {
   async index(req, res) {
-    const { page = 1, limit = 20, ...query } = req.query;
+    const { page = 1, limit = 20, tipocontrato, ...query } = req.query;
     const criteria = queryStringConverter.convert({
       query: { limit, ...query, offset: (page - 1) * limit },
     });
 
-    const vinculos = await Vinculo.findAll(criteria);
+    const vinculos = await Vinculo.findAll({
+      ...criteria,
+      include: [{ model: TipoContrato, as: 'tipocontratos', attributes: [], where: { id: tipocontrato } }],
+    });
     return res.json({ error: null, data: vinculos });
   }
 
