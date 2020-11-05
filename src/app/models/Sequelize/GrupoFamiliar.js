@@ -40,6 +40,16 @@ export default class GrupoFamiliar extends Model {
     //   as: { plural: 'beneficiarios', singular: 'beneficiario' },
     // });
 
+    this.belongsToMany(models.Pessoa, {
+      through: {
+        model: models.Beneficiario,
+      },
+      otherKey: 'pessoabeneficiarioid',
+      foreignKey: 'grupofamiliarid',
+      sourceKey: 'grupo',
+      as: 'pessoa',
+    });
+
     this.belongsToMany(models.PessoaFisica, {
       through: {
         model: models.Beneficiario,
