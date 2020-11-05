@@ -417,7 +417,7 @@ export default class CriaContratoService {
             0
           );
 
-          await contrato.setResponsavelpfs(responsavelFinanceiro, {
+          await contrato.setResponsavelpf(responsavelFinanceiro, {
             through: {
               planoid: produto.planoid,
               versaoplanoid: produto.versaoid,
