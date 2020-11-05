@@ -13,9 +13,51 @@ import RegraVigenciaContrato from '../models/Sequelize/RegraVigenciaContrato';
 
 class ProdutoController {
   async index(req, res) {
-    const { page = 1, limit = 20, ...query } = req.query;
+    const {
+      page = 1,
+      limit = 20,
+      plano = {},
+      versao_plano = {},
+      segmentacao_assistencial = {},
+      participacao_financeira = {},
+      tipo_contratacao = {},
+      tipo_area_abrangencia = {},
+      area_cobertura = {},
+      tipo_contrato = {},
+      regra_vigencia = {},
+      ...query
+    } = req.query;
+
     const criteria = queryStringConverter.convert({
       query: { limit, ...query, offset: (page - 1) * limit },
+    });
+
+    const criteriaPlano = queryStringConverter.convert({
+      query: plano,
+    });
+    const criteriaVersaoPlano = queryStringConverter.convert({
+      query: versao_plano,
+    });
+    const criteriaSegmentacaoAssistencial = queryStringConverter.convert({
+      query: segmentacao_assistencial,
+    });
+    const criteriaParticipacaoFinanceira = queryStringConverter.convert({
+      query: participacao_financeira,
+    });
+    const criteriaTipoAreaAbrangencia = queryStringConverter.convert({
+      query: tipo_area_abrangencia,
+    });
+    const criteriaAreaCobertura = queryStringConverter.convert({
+      query: area_cobertura,
+    });
+    const criteriaTipoContrato = queryStringConverter.convert({
+      query: tipo_contrato,
+    });
+    const criteriaRegraVigencia = queryStringConverter.convert({
+      query: regra_vigencia,
+    });
+    const criteriaTipoContratacao = queryStringConverter.convert({
+      query: tipo_contratacao,
     });
 
     console.log(criteria);
@@ -36,15 +78,30 @@ class ProdutoController {
         ],
       },
       include: [
-        { model: Plano, as: 'plano', attributes: ['id', 'descricao'] },
-        { model: VersaoPlano, as: 'versao_plano', attributes: ['id', 'descricao'] },
-        { model: SegmentacaoAssistencial, as: 'segmentacao_assistencial', attributes: ['id', 'descricao'] },
-        { model: ParticipacaoFinanceira, as: 'participacao_financeira', attributes: ['id', 'descricao'] },
-        { model: TipoContratacao, as: 'tipo_contratacao', attributes: ['id', 'descricao'] },
-        { model: TipoAreaAbrangencia, as: 'tipo_area_abrangencia', attributes: ['id', 'descricao'] },
-        { model: AreaCobertura, as: 'area_cobertura', attributes: ['id', 'descricao'] },
-        { model: TipoContrato, as: 'tipo_contrato', attributes: ['id', 'descricao'] },
-        { model: RegraVigenciaContrato, as: 'regra_vigencia' },
+        { model: Plano, as: 'plano', attributes: ['id', 'descricao'], ...criteriaPlano },
+        { model: VersaoPlano, as: 'versao_plano', attributes: ['id', 'descricao'], ...criteriaVersaoPlano },
+        {
+          model: SegmentacaoAssistencial,
+          as: 'segmentacao_assistencial',
+          attributes: ['id', 'descricao'],
+          ...criteriaSegmentacaoAssistencial,
+        },
+        {
+          model: ParticipacaoFinanceira,
+          as: 'participacao_financeira',
+          attributes: ['id', 'descricao'],
+          ...criteriaParticipacaoFinanceira,
+        },
+        { model: TipoContratacao, as: 'tipo_contratacao', attributes: ['id', 'descricao'], ...criteriaTipoContratacao },
+        {
+          model: TipoAreaAbrangencia,
+          as: 'tipo_area_abrangencia',
+          attributes: ['id', 'descricao'],
+          ...criteriaTipoAreaAbrangencia,
+        },
+        { model: AreaCobertura, as: 'area_cobertura', attributes: ['id', 'descricao'], ...criteriaAreaCobertura },
+        { model: TipoContrato, as: 'tipo_contrato', attributes: ['id', 'descricao'], ...criteriaTipoContrato },
+        { model: RegraVigenciaContrato, as: 'regra_vigencia', ...criteriaRegraVigencia },
       ],
     });
     return res.json({ error: null, data: produtos });
