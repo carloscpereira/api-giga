@@ -30,8 +30,8 @@ class ContratoController {
       attributes: { exclude: ['infoStatus'] },
       include: [
         { model: PessoaJuridica, as: 'operadora', attributes: ['id', 'nomefantasia', 'razaosocial', 'cnpj'] },
-        { model: Pessoa, as: 'responsavelpf' },
-        { model: Pessoa, as: 'responsavelpj' },
+        { model: PessoaFisica, as: 'responsavel_pessoafisica' },
+        { model: PessoaJuridica, as: 'responsavel_pessoajuridica' },
         { model: Status, as: 'infoStatus', attributes: ['descricao'] },
         { model: TipoCarteira, as: 'infoCarteira', attributes: ['descricao'] },
         { model: TipoContrato, as: 'infoContrato', attributes: ['descricao'] },
