@@ -26,52 +26,66 @@ export default async (req, res, next) => {
       Telefones: Yup.array().ensure().compact().of(telefoneSchema),
     });
 
-    const pessoaFisicaSchema = Yup.object().shape({
+    const beneficiarioSchema = Yup.object().shape({
       Nome: Yup.string().transform(function transformValue(value) {
         return this.isType(value) && value !== null ? value.toUpperCase() : value;
       }),
+      Valor: Yup.number(),
+      Titular: Yup.boolean().default(false),
       RG: Yup.string().min(7).max(14).required(),
       CPF: Yup.string().length(11).required(),
       DataNascimento: Yup.date().required(),
       Sexo: Yup.string().matches(/M|F/).required(),
       EstadoCivil: Yup.string().required(),
       OrgaoEmissor: Yup.string().required(),
-      NomedaMae: Yup.string().required(),
       Nacionalidade: Yup.string().required(),
+      Enderecos: Yup.array().of(enderecoSchema),
+      Emails: Yup.array().ensure().compact().of(emailSchema),
+      Telefones: Yup.array().ensure().compact().of(telefoneSchema),
     });
 
-    const pessoaJuridicaSchema = Yup.object().shape({
-      RazaoSocial: Yup.string()
-        .required()
-        .transform(function transformValue(value) {
-          return this.isType(value) && value !== null ? value.toUpperCase() : value;
-        }),
-      NomeFantasia: Yup.string()
-        .required()
-        .transform(function transformValue(value) {
-          return this.isType(value) && value !== null ? value.toUpperCase() : value;
-        }),
-      InscricaoEstadual: Yup.string().required(),
-      IncricaoMunicipal: Yup.string().required(),
-      CNPJ: Yup.string().length(14).required(),
-    });
+    // const pessoaFisicaSchema = Yup.object().shape({
+    //   Nome: Yup.string().transform(function transformValue(value) {
+    //     return this.isType(value) && value !== null ? value.toUpperCase() : value;
+    //   }),
+    //   RG: Yup.string().min(7).max(14).required(),
+    //   CPF: Yup.string().length(11).required(),
+    //   DataNascimento: Yup.date().required(),
+    //   Sexo: Yup.string().matches(/M|F/).required(),
+    //   EstadoCivil: Yup.string().required(),
+    //   OrgaoEmissor: Yup.string().required(),
+    //   NomedaMae: Yup.string().required(),
+    //   Nacionalidade: Yup.string().required(),
+    // });
+
+    // const pessoaJuridicaSchema = Yup.object().shape({
+    //   RazaoSocial: Yup.string()
+    //     .required()
+    //     .transform(function transformValue(value) {
+    //       return this.isType(value) && value !== null ? value.toUpperCase() : value;
+    //     }),
+    //   NomeFantasia: Yup.string()
+    //     .required()
+    //     .transform(function transformValue(value) {
+    //       return this.isType(value) && value !== null ? value.toUpperCase() : value;
+    //     }),
+    //   InscricaoEstadual: Yup.string().required(),
+    //   IncricaoMunicipal: Yup.string().required(),
+    //   CNPJ: Yup.string().length(14).required(),
+    // });
 
     const schema = Yup.object().shape({
       TipoContrato: Yup.string().matches(/5|9/).required(),
       MotivoAdesao: Yup.number().default(268),
       RenovacaoAutomatica: Yup.boolean().default(false),
       DataAdesao: Yup.date().default(new Date()),
-      Valor: Yup.number().required(),
-      ValorDesconto: Yup.number().default(0),
+      Vendedor: Yup.number(),
       PrazoVigencia: Yup.string()
         .matches(/BIENAL|ANUAL|DEZ MESES/)
         .default('BIENAL'),
-      Plano: Yup.object()
-        .shape({
-          ID: Yup.number().integer().required(),
-          Versao: Yup.number().integer().required(),
-        })
-        .when('TipoContrato', (validator, s) => (validator === '5' ? s.required() : s.nullable().default(null))),
+      Produto: Yup.number().when('TipoContrato', (validator, s) =>
+        validator === '5' ? s.required() : s.nullable().default(null)
+      ),
       Convenio: Yup.string()
         .matches(/Pessoa Fisica|Empresa|Municipio|Estado|Federal/)
         .default('Pessoa Fisica'),
@@ -106,20 +120,11 @@ export default async (req, res, next) => {
         Enderecos: Yup.array().of(enderecoSchema),
         Emails: Yup.array().ensure().compact().of(emailSchema),
         Telefones: Yup.array().ensure().compact().of(telefoneSchema),
-        CentroCusto: Yup.lazy((value) => {
-          switch (typeof value) {
-            case 'object':
-              return pessoaJuridicaSchema.when('$convenio', (c, s) =>
-                c !== 'Pessoa Fisica' && c !== 'Empresa' ? s.required() : s
-              );
-            default:
-              return Yup.string().when('$convenio', (c, s) =>
-                c !== 'Pessoa Fisica' && c !== 'Empresa' ? s.required() : s
-              );
-          }
-        }),
+        CentroCusto: Yup.number().when('$convenio', (c, s) =>
+          c !== 'Pessoa Fisica' && c !== 'Empresa' ? s.required() : s
+        ),
       }),
-      Titular: pessoaFisicaSchema,
+      // Titular: beneficiarioSchema,
       FormaPagamento: Yup.object().shape({
         TipoCarteira: Yup.number().integer().required(),
         DiaVencimentoMes: Yup.number().integer().default(10),
@@ -135,7 +140,13 @@ export default async (req, res, next) => {
           .default(null)
           .nullable(),
       }),
-      Beneficiarios: Yup.array().of(pessoaFisicaSchema),
+      Beneficiarios: Yup.array()
+        .of(beneficiarioSchema)
+        .test('has-holder', 'O grupo de beneficiários precisa de apenas um titular', (value) => {
+          const titular = value.filter((b) => b.Titular);
+
+          return titular.length === 1;
+        }),
       GrupoFamiliar: Yup.array()
         .ensure()
         .compact()
@@ -143,11 +154,14 @@ export default async (req, res, next) => {
         .of(
           Yup.object()
             .shape({
-              Plano: Yup.object().shape({
-                ID: Yup.number().integer().required(),
-                Versao: Yup.number().integer().required(),
-              }),
-              Beneficiarios: Yup.array().of(pessoaFisicaSchema),
+              Produto: Yup.number().required(),
+              Beneficiarios: Yup.array()
+                .of(beneficiarioSchema)
+                .test('has-holder', 'O grupo de beneficiários precisa de apenas um titular', (value) => {
+                  const titular = value.filter((b) => b.Titular);
+
+                  return titular.length === 1;
+                }),
             })
             .notRequired()
             .nullable()
@@ -163,7 +177,6 @@ export default async (req, res, next) => {
 
     req.formValidation = schema.cast(req.body);
     console.log(schema.cast(req.body));
-    // return res.send('ok');
     return next();
   } catch (error) {
     if (error instanceof Yup.ValidationError) {
