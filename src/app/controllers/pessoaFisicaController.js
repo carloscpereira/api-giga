@@ -1,5 +1,5 @@
 import queryStringConverter from 'sequelize-querystring-converter';
-// import sequelize, { Op } from 'sequelize';
+import { Op } from 'sequelize';
 
 import Pessoa from '../models/Sequelize/Pessoa';
 import Vinculo from '../models/Sequelize/Vinculo';
@@ -8,45 +8,48 @@ import Telefone from '../models/Sequelize/Telefone';
 import Email from '../models/Sequelize/Email';
 import Endereco from '../models/Sequelize/Endereco';
 import EstadoCivil from '../models/Sequelize/EstadoCivil';
+import Contrato from '../models/Sequelize/Contrato';
+import GrupoFamiliar from '../models/Sequelize/GrupoFamiliar';
 
 class PessoaFisicaController {
   async index(req, res) {
-    const { page = 1, limit = 20, with: includes, filter = {}, ...query } = req.query;
+    const { page = 1, limit = 20, with: includes, filter = {}, nome, ...query } = req.query;
 
     const columns = includes ? includes.split(',') : [];
 
     const { telefone = {}, endereco = {}, email = {} } = filter;
 
-    const criteria = queryStringConverter.convert({
+    let criteria = queryStringConverter.convert({
       query: { limit, ...query, offset: (page - 1) * limit },
     });
+    criteria = {
+      ...criteria,
+      where: {
+        ...(nome ? { nome: { [Op.iLike]: `%${nome}%` } } : {}),
+        ...criteria.where,
+      },
+    };
+    console.log(query);
+    console.log(criteria);
 
     const criteriaTelefone = queryStringConverter.convert({ query: telefone });
     const criteriaEndereco = queryStringConverter.convert({ query: endereco });
     const criteriaEmail = queryStringConverter.convert({ query: email });
-    const pessoas = await Pessoa.findAll({
+    const pessoas = await PessoaFisica.findAll({
       ...criteria,
       include: [
         {
-          model: PessoaFisica,
-          attributes: {
-            exclude: ['id'],
-          },
-          as: 'dadospessoafisica',
-          required: true,
-          include: {
-            model: EstadoCivil,
-            as: 'estadocivil',
-            attributes: ['descricao'],
-          },
+          model: EstadoCivil,
+          as: 'estadocivil',
+          attributes: ['descricao'],
         },
         {
-          model: Vinculo,
-          as: 'vinculos',
-          through: {
-            attributes: [],
-          },
-          attributes: ['id', 'descricao'],
+          model: GrupoFamiliar,
+          as: 'gruposfamiliar',
+        },
+        {
+          model: Contrato,
+          as: 'contratos',
         },
         ...(columns.includes('enderecos')
           ? [
