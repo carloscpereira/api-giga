@@ -11,7 +11,14 @@ class VinculoController {
 
     const vinculos = await Vinculo.findAll({
       ...criteria,
-      include: [{ model: TipoContrato, as: 'tipocontratos', attributes: [], where: { id: tipocontrato } }],
+      include: [
+        {
+          model: TipoContrato,
+          as: 'tipocontratos',
+          attributes: [],
+          where: { ...(tipocontrato ? { id: tipocontrato } : {}) },
+        },
+      ],
     });
     return res.json({ error: null, data: vinculos });
   }
