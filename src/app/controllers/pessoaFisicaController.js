@@ -1,8 +1,6 @@
 import queryStringConverter from 'sequelize-querystring-converter';
 import { Op } from 'sequelize';
 
-import Pessoa from '../models/Sequelize/Pessoa';
-import Vinculo from '../models/Sequelize/Vinculo';
 import PessoaFisica from '../models/Sequelize/PessoaFisica';
 import Telefone from '../models/Sequelize/Telefone';
 import Email from '../models/Sequelize/Email';
