@@ -11,7 +11,7 @@ class BancoController {
 
     console.log(criteria);
 
-    const bancos = await Banco.findAll({ ...criteria });
+    const bancos = await Banco.findAll({ ...criteria, attributes: { exclude: ['logomarca_boleto'] } });
     return res.json({ error: null, data: bancos });
   }
 
