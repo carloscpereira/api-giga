@@ -12,7 +12,10 @@ class AgenciaController {
 
     console.log(criteria);
 
-    const agencias = await Agencia.findAll({ ...criteria, include: [{ model: Banco, as: 'banco' }] });
+    const agencias = await Agencia.findAll({
+      ...criteria,
+      include: [{ model: Banco, as: 'banco', attributes: { exclude: ['logomarca_boleto'] } }],
+    });
     return res.json({ error: null, data: agencias });
   }
 
