@@ -171,8 +171,8 @@ export default async (req, res, next) => {
     });
 
     await schema.validate(req.body, { abortEarly: false, context: { convenio: req.body.Convenio || 'Pessoa Fisica' } });
-    console.log(req.body.Convenio);
-    if (req.body.Convenio && req.body.Convenio !== 'Pessoa Fisica' && !req.body.CentroCusto) {
+
+    if (req.body.Convenio && req.body.Convenio !== 'Pessoa Fisica' && !req.body.ResponsavelFinanceiro.CentroCusto) {
       throw new Error('É preciso informar um centro custo');
     }
 
