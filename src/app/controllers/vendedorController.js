@@ -8,7 +8,7 @@ class VinculoController {
 
     corretora = corretora || vendedor || 0;
     vendedor = vendedor || corretora || 0;
-    const cpfvendedor = vendedor?.toString() || corretora?.toString() || 0;
+    const cpfvendedor = vendedor?.toString() || corretora?.toString() || '0';
 
     const vendedores = await sequelize.query(
       `
@@ -25,14 +25,19 @@ class VinculoController {
       WHERE  ( cn_grupocorretores.corretorvendedor IS NOT NULL )
            ${
              corretora || vendedor
-               ? 'AND ( cn_corretorpf.id = :corretoraid OR sp_dadospessoafisica.id = :vendedorid OR sp_dadospessoafisica.cpf = :cpfvendedor  )'
+               ? 'AND ( cn_corretorpf.id = :corretoraid OR sp_dadospessoafisica.id = :vendedorid OR sp_dadospessoafisica.cpf = :cpfvendedor OR sp_dadospessoafisica.nome ILIKE :nomevendedor  )'
                : ''
            }
       ORDER  BY sp_dadospessoafisica.nome
   `,
       {
         type: QueryTypes.SELECT,
-        replacements: { vendedorid: vendedor, corretoraid: corretora, cpfvendedor },
+        replacements: {
+          vendedorid: Number.parseInt(vendedor) || 0,
+          corretoraid: Number.parseInt(corretora) || 0,
+          cpfvendedor,
+          nomevendedor: `%${cpfvendedor}%`,
+        },
       }
     );
 
