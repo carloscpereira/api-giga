@@ -35,6 +35,9 @@ const bv = {
   MAE: 21,
   AGREGADO: 22,
   OUTROS: 22,
+  SERVIDOR_PUBLICO_ESTADUAL: 26,
+  SERVIDOR_PUBLICO_MUNICIPAL: 27,
+  SERVIDOR_PUBLICO_FEDERAL: 28,
 };
 
 const mp = {
@@ -141,6 +144,36 @@ export default class CriaContratoService {
             sequelize,
             transaction: t,
           });
+
+          if (body.Convenio === 'Municipio') {
+            await AdicionarVinculoService.execute({
+              pessoa: responsavelFinanceiro,
+              vinculo: bv.SERVIDOR_PUBLICO_MUNICIPAL,
+              atributos: body.ResponsavelFinanceiro,
+              sequelize,
+              transaction: t,
+            });
+          }
+
+          if (body.Convenio === 'Estado') {
+            await AdicionarVinculoService.execute({
+              pessoa: responsavelFinanceiro,
+              vinculo: bv.SERVIDOR_PUBLICO_ESTADUAL,
+              atributos: body.ResponsavelFinanceiro,
+              sequelize,
+              transaction: t,
+            });
+          }
+
+          if (body.Convenio === 'Federal') {
+            await AdicionarVinculoService.execute({
+              pessoa: responsavelFinanceiro,
+              vinculo: bv.SERVIDOR_PUBLICO_FEDERAL,
+              atributos: body.ResponsavelFinanceiro,
+              sequelize,
+              transaction: t,
+            });
+          }
 
           if (body.ResponsavelFinanceiro.Enderecos) {
             const enderecos = body.ResponsavelFinanceiro.map(
