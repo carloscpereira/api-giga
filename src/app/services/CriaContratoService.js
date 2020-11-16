@@ -73,9 +73,7 @@ export default class CriaContratoService {
           if (!produto)
             throw new Error('Produto selecionado não encontrado ou está indisponível para o tipo contrato selecionado');
 
-          const centroCusto = body.ResponsavelFinanceiro.CentroCusto
-            ? await CentroCusto.findByPk(body.ResponsavelFinanceiro.CentroCusto)
-            : null;
+          const centroCusto = body.CentroCusto ? await CentroCusto.findByPk(body.CentroCusto) : null;
 
           if (!centroCusto && body.Convenio !== 'Pessoa Fisica')
             throw new Error('Centro Custo informado não encontrado');
