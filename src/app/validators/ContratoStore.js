@@ -90,6 +90,9 @@ export default async (req, res, next) => {
       Convenio: Yup.string()
         .matches(/Pessoa Fisica|Empresa|Municipio|Estado|Federal/)
         .default('Pessoa Fisica'),
+      CentroCusto: Yup.number().when('$convenio', (c, s) =>
+        c !== 'Pessoa Fisica' && c !== 'Empresa' ? s.required() : s
+      ),
       ResponsavelFinanceiro: Yup.object().shape({
         TipoPessoa: Yup.string().matches(/F|J/).required(),
         Nome: Yup.string()
@@ -121,9 +124,6 @@ export default async (req, res, next) => {
         Enderecos: Yup.array().of(enderecoSchema),
         Emails: Yup.array().ensure().compact().of(emailSchema),
         Telefones: Yup.array().ensure().compact().of(telefoneSchema),
-        CentroCusto: Yup.number().when('$convenio', (c, s) =>
-          c !== 'Pessoa Fisica' && c !== 'Empresa' ? s.required() : s
-        ),
       }),
       // Titular: beneficiarioSchema,
       FormaPagamento: Yup.object().shape({
@@ -172,7 +172,7 @@ export default async (req, res, next) => {
 
     await schema.validate(req.body, { abortEarly: false, context: { convenio: req.body.Convenio || 'Pessoa Fisica' } });
 
-    if (req.body.Convenio && req.body.Convenio !== 'Pessoa Fisica' && !req.body.ResponsavelFinanceiro.CentroCusto) {
+    if (req.body.Convenio && req.body.Convenio !== 'Pessoa Fisica' && !req.body.CentroCusto) {
       throw new Error('É preciso informar um centro custo');
     }
 
