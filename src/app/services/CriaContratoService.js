@@ -1,5 +1,5 @@
 /* eslint-disable default-case */
-import { QueryTypes } from 'sequelize';
+import { QueryTypes, Op } from 'sequelize';
 import moment from 'moment';
 
 import Contrato from '../models/Sequelize/Contrato';
@@ -174,7 +174,7 @@ export default class CriaContratoService {
           }
 
           if (body.ResponsavelFinanceiro.Enderecos) {
-            const enderecos = body.ResponsavelFinanceiro.map(
+            const enderecos = body.ResponsavelFinanceiro.Enderecos.map(
               (endereco) =>
                 new Endereco({
                   logradouro: endereco.Logradouro,
@@ -535,7 +535,11 @@ export default class CriaContratoService {
            * Modalidade de Pagamento
            */
           const modPagamento = await ModalidadePagamento.findOne({
-            where: { descricao: mp[body.FormaPagamento.Modalidade] },
+            where: {
+              descricao: {
+                [Op.iLike]: mp[body.FormaPagamento.Modalidade],
+              },
+            },
           });
 
           if (!modPagamento || !body.FormaPagamento.Modalidade) {

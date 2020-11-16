@@ -119,7 +119,7 @@ export default async (req, res, next) => {
         Sexo: Yup.string().matches(/M|F/).when('TipoPessoa', { is: 'F', then: Yup.string().required() }),
         EstadoCivil: Yup.string().when('TipoPessoa', { is: 'F', then: Yup.string() }),
         OrgaoEmissor: Yup.string().when('TipoPessoa', { is: 'F', then: Yup.string().required() }),
-        NomedaMae: Yup.string().when('TipoPessoa', { is: 'F', then: Yup.string().required() }),
+        // NomedaMae: Yup.string().when('TipoPessoa', { is: 'F', then: Yup.string().required() }),
         Nacionalidade: Yup.string().when('TipoPessoa', { is: 'F', then: Yup.string().required() }),
         Enderecos: Yup.array().of(enderecoSchema),
         Emails: Yup.array().ensure().compact().of(emailSchema),
