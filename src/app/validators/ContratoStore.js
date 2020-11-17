@@ -145,13 +145,13 @@ export default async (req, res, next) => {
         Conta: Yup.object()
           .shape({
             TipoConta: Yup.number().integer().required(),
-            Operacao: Yup.string(),
+            Operacao: Yup.string().nullable(),
             Agencia: Yup.number().integer().required(),
             Digito: Yup.string().required(),
             Numero: Yup.string().required(),
             Principal: Yup.boolean().default(true),
           })
-          .when('Modalidade', (validator, s) => (validator === 3 ? s.required : s.nullable().default(null))),
+          .when('Modalidade', (validator, s) => (validator === 3 ? s.required() : s.nullable().default(null))),
       }),
       Beneficiarios: Yup.array()
         .of(beneficiarioSchema)
