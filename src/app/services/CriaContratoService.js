@@ -127,6 +127,8 @@ export default class CriaContratoService {
             transaction: t,
           });
 
+          await responsavelFinanceiro.addTiposcontrato([body.TipoContrato], { transaction: t });
+
           await AdicionarVinculoService.execute({
             pessoa: responsavelFinanceiro,
             vinculo: bv.PESSOA_FISICA,
@@ -174,65 +176,81 @@ export default class CriaContratoService {
           }
 
           if (body.ResponsavelFinanceiro.Enderecos) {
-            const enderecos = body.ResponsavelFinanceiro.Enderecos.map(
-              (endereco) =>
-                new Endereco({
-                  logradouro: endereco.Logradouro,
-                  bairro: endereco.Bairro,
-                  cidade: endereco.Cidade,
-                  estado: endereco.Estado,
-                  complemento: endereco.Complemento,
-                  numero: endereco.Numero,
-                  cep: endereco.Cep,
-                  tipoenderecoid: endereco.TipoEndereco || 1,
-                  end_in_principal: endereco.Principal,
-                  vinculoid: bv.REPONSAVEL_FINANCEIRO,
-                })
+            await Promise.all(
+              body.ResponsavelFinanceiro.Enderecos.map((endereco) =>
+                // eslint-disable-next-line no-await-in-loop
+                // eslint-disable-next-line no-return-await
+                Endereco.create(
+                  {
+                    logradouro: endereco.Logradouro,
+                    bairro: endereco.Bairro,
+                    cidade: endereco.Cidade,
+                    estado: endereco.Estado,
+                    complemento: endereco.Complemento,
+                    numero: endereco.Numero,
+                    cep: endereco.Cep,
+                    dadosid: responsavelFinanceiro.id,
+                    tipoenderecoid: endereco.TipoEndereco || 1,
+                    end_in_principal: endereco.Principal,
+                    vinculoid: bv.REPONSAVEL_FINANCEIRO,
+                  },
+                  { transaction: t }
+                )
+              )
             );
 
-            // eslint-disable-next-line no-await-in-loop
-            await responsavelFinanceiro.addEnderecos(enderecos, { transaction: t });
+            // await responsavelFinanceiro.setEnderecos(enderecos, { transaction: t });
           }
 
           if (body.ResponsavelFinanceiro.Telefones) {
-            const telefones = body.ResponsavelFinanceiro.Telefones.map(
-              (tel) =>
-                new Telefone({
-                  numero: tel.Numero,
-                  ramal: tel.Ramal,
-                  tel_in_principal: tel.Principal,
-                  vinculoid: bv.REPONSAVEL_FINANCEIRO,
-                  tipotelefoneid: tel.TipoTelefone || 3,
-                })
+            await Promise.all(
+              body.ResponsavelFinanceiro.Telefones.map((tel) =>
+                Telefone.create(
+                  {
+                    numero: tel.Numero,
+                    ramal: tel.Ramal,
+                    tel_in_principal: tel.Principal,
+                    vinculoid: bv.REPONSAVEL_FINANCEIRO,
+                    dadosid: responsavelFinanceiro.id,
+                    tipotelefoneid: tel.TipoTelefone || 3,
+                  },
+                  { transaction: t }
+                )
+              )
             );
 
             // eslint-disable-next-line no-await-in-loop
-            await responsavelFinanceiro.addTelefones(telefones, { transaction: t });
+            // await responsavelFinanceiro.addTelefones(telefones, { transaction: t });
           }
 
           if (body.ResponsavelFinanceiro.Emails) {
-            const emails = body.ResponsavelFinanceiro.Emails.map(
-              (email) =>
-                new Email({
-                  descricao: email.Email,
-                  ema_in_principal: email.Principal,
-                  tipoemailid: email.TipoEmail || 3,
-                  vinculoid: bv.REPONSAVEL_FINANCEIRO,
-                })
+            Promise.all(
+              body.ResponsavelFinanceiro.Emails.map((email) =>
+                Email.create(
+                  {
+                    descricao: email.Email,
+                    ema_in_principal: email.Principal,
+                    tipoemailid: email.TipoEmail || 3,
+                    dadosid: responsavelFinanceiro.id,
+                    vinculoid: bv.REPONSAVEL_FINANCEIRO,
+                  },
+                  { transaction: t }
+                )
+              )
             );
 
-            responsavelFinanceiro.addEmails(emails, { transaction: t });
+            // responsavelFinanceiro.addEmails(emails, { transaction: t });
           }
 
           /**
            * Seleciona id do contrato através do Nextval
            */
-          let contratoid = await sequelize.query("SELECT NEXTVAL('cn_contrato_id_seq') as id", {
+          const [{ id: contratoid }] = await sequelize.query("SELECT NEXTVAL('cn_contrato_id_seq') as id", {
             type: QueryTypes.SELECT,
             transaction: t,
           });
 
-          contratoid = contratoid.shift().id;
+          // contratoid = contratoid.shift().id;
 
           /**
            * Seleciona a regra de Vigencia do Contrato
@@ -350,55 +368,73 @@ export default class CriaContratoService {
             });
 
             if (beneficiario.Enderecos) {
-              const enderecos = beneficiario.Enderecos.map(
-                (endereco) =>
-                  new Endereco({
-                    logradouro: endereco.Logradouro,
-                    bairro: endereco.Bairro,
-                    cidade: endereco.Cidade,
-                    estado: endereco.Estado,
-                    complemento: endereco.Complemento,
-                    numero: endereco.Numero,
-                    cep: endereco.Cep,
-                    tipoenderecoid: endereco.TipoEndereco || 1,
-                    end_in_principal: endereco.Principal,
-                    vinculoid: beneficiario.Titular ? bv.TITULAR : bv[beneficiario.Vinculo],
-                  })
+              // eslint-disable-next-line no-await-in-loop
+              await Promise.all(
+                beneficiario.Enderecos.map((endereco) =>
+                  Endereco.create(
+                    {
+                      logradouro: endereco.Logradouro,
+                      bairro: endereco.Bairro,
+                      cidade: endereco.Cidade,
+                      estado: endereco.Estado,
+                      complemento: endereco.Complemento,
+
+                      numero: endereco.Numero,
+                      cep: endereco.Cep,
+                      tipoenderecoid: endereco.TipoEndereco || 1,
+                      end_in_principal: endereco.Principal,
+                      vinculoid: beneficiario.Titular ? bv.TITULAR : bv[beneficiario.Vinculo],
+                      dadosid: pessoa.id,
+                    },
+                    { transaction: t }
+                  )
+                )
               );
 
               // eslint-disable-next-line no-await-in-loop
-              await pessoa.addEnderecos(enderecos, { transaction: t });
+              // await pessoa.addEnderecos(enderecos, { transaction: t });
             }
 
             if (beneficiario.Telefones) {
-              const telefones = beneficiario.Telefones.map(
-                (tel) =>
-                  new Telefone({
-                    numero: tel.Numero,
-                    ramal: tel.Ramal,
-                    tel_in_principal: tel.Principal,
-                    vinculoid: beneficiario.Titular ? bv.TITULAR : bv[beneficiario.Vinculo],
-                    tipotelefoneid: tel.TipoTelefone || 3,
-                  })
+              // eslint-disable-next-line no-await-in-loop
+              await Promise.all(
+                beneficiario.Telefones.map((tel) =>
+                  Telefone.create(
+                    {
+                      numero: tel.Numero,
+                      ramal: tel.Ramal,
+                      tel_in_principal: tel.Principal,
+                      vinculoid: beneficiario.Titular ? bv.TITULAR : bv[beneficiario.Vinculo],
+                      tipotelefoneid: tel.TipoTelefone || 3,
+                      dadosid: pessoa.id,
+                    },
+                    { transaction: t }
+                  )
+                )
               );
 
               // eslint-disable-next-line no-await-in-loop
-              await pessoa.addTelefones(telefones, { transaction: t });
+              // await pessoa.addTelefones(telefones, { transaction: t });
             }
 
             if (beneficiario.Emails) {
-              const emails = beneficiario.Emails.map(
-                (email) =>
-                  new Email({
-                    descricao: email.Email,
-                    ema_in_principal: email.Principal,
-                    tipoemailid: email.TipoEmail || 3,
-                    vinculoid: beneficiario.Titular ? bv.TITULAR : bv[beneficiario.Vinculo],
-                  })
+              // eslint-disable-next-line no-await-in-loop
+              await Promise.all(
+                beneficiario.Emails.map((email) =>
+                  Email.create(
+                    {
+                      descricao: email.Email,
+                      ema_in_principal: email.Principal,
+                      tipoemailid: email.TipoEmail || 3,
+                      vinculoid: beneficiario.Titular ? bv.TITULAR : bv[beneficiario.Vinculo],
+                      dadosid: pessoa.id,
+                    },
+                    { transaction: t }
+                  )
+                )
               );
 
-              // eslint-disable-next-line no-await-in-loop
-              await pessoa.addEmails(emails, { transaction: t });
+              // await pessoa.addEmails(emails, { transaction: t });
             }
 
             beneficiarios.push({
@@ -447,12 +483,13 @@ export default class CriaContratoService {
             (ant, pos) => ant + (pos.valorLiquido || pos.valor || defaultValor),
             0
           );
-
+          console.log(moment(body.FormaPagamento.DiaVencimentoMes, 'DD').format());
           await contrato.setResponsavelpf(responsavelFinanceiro, {
             through: {
               planoid: produto.planoid,
               versaoplanoid: produto.versaoid,
               diavencimento: body.FormaPagamento.DiaVencimentoMes,
+              datavencimento: moment(body.FormaPagamento.DiaVencimentoMes, 'DD').format(),
               tipodecarteiraid: body.TipoCarteira,
               qtdparcela: infoVigencia.mesesvigencia,
               valorcontrato: valorContratobruto * infoVigencia.mesesvigencia,
@@ -609,7 +646,7 @@ export default class CriaContratoService {
             );
           }
 
-          await t.commit();
+          await t.roolback();
 
           return contrato;
         }
