@@ -5,7 +5,7 @@ export default class Conta extends Model {
   static init(sequelize) {
     super.init(
       {
-        numero: Sequelize.BIGINT,
+        numero: Sequelize.STRING,
         tipocontaid: Sequelize.BIGINT,
         obs: Sequelize.TEXT,
         agenciaid: Sequelize.BIGINT,

@@ -140,18 +140,18 @@ export default async (req, res, next) => {
             Principal: Yup.boolean().default(true),
           })
           .when('Modalidade', (validator, s) =>
-            validator === '2' || validator === '34' ? s.required() : s.nullable().default(null)
+            validator === 2 || validator === 34 ? s.required() : s.nullable().default(null)
           ),
         Conta: Yup.object()
           .shape({
             TipoConta: Yup.number().integer().required(),
             Operacao: Yup.string(),
             Agencia: Yup.number().integer().required(),
-            Digito: Yup.number().integer().required(),
-            Numero: Yup.number().integer().required(),
+            Digito: Yup.number().string().required(),
+            Numero: Yup.number().string().required(),
             Principal: Yup.boolean().default(true),
           })
-          .when('Modalidade', (validator, s) => (validator === '3' ? s.required : s.nullable().default(null))),
+          .when('Modalidade', (validator, s) => (validator === 3 ? s.required : s.nullable().default(null))),
       }),
       Beneficiarios: Yup.array()
         .of(beneficiarioSchema)
