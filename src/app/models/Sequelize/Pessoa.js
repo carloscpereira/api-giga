@@ -122,6 +122,13 @@ export default class Pessoa extends Model {
       as: 'grupofamiliar',
     });
 
+    this.belongsToMany(models.TipoContrato, {
+      through: models.TipoContratoPessoa,
+      foreignKey: 'pessoaid',
+      otherKey: 'tiposcontratoid',
+      as: 'tiposcontrato',
+    });
+
     // this.hasMany(models.CentroCusto, {
     //   foreignKey: 'empresaid',
     //   as: {

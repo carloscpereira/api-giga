@@ -22,5 +22,11 @@ export default class TipoContrato extends Model {
       as: { singular: 'contrato', plural: 'contratos' },
       foreignKey: 'tipocontratoid',
     });
+    this.belongsToMany(models.Pessoa, {
+      through: models.TipoContratoPessoa,
+      otherKey: 'pessoaid',
+      foreignKey: 'tiposcontratoid',
+      as: 'pessoas',
+    });
   }
 }
