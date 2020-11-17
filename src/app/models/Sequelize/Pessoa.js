@@ -136,6 +136,16 @@ export default class Pessoa extends Model {
       as: { singular: 'organograma', plural: 'organogramas' },
     });
 
+    this.hasMany(models.CartaoCredito, {
+      foreignKey: 'pessoaid',
+      as: { plural: 'cartoes', singular: 'cartao' },
+    });
+
+    this.hasMany(models.Conta, {
+      foreignKey: 'pessoaid',
+      as: { plural: 'contas', singular: 'conta' },
+    });
+
     // this.hasMany(models.CentroCusto, {
     //   foreignKey: 'empresaid',
     //   as: {

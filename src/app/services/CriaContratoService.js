@@ -5,9 +5,9 @@ import moment from 'moment';
 import Contrato from '../models/Sequelize/Contrato';
 import Titulo from '../models/Sequelize/Titulo';
 import ModalidadePagamento from '../models/Sequelize/ModalidadePagamento';
-import Telefone from '../models/Sequelize/Telefone';
-import Email from '../models/Sequelize/Email';
-import Endereco from '../models/Sequelize/Endereco';
+// import Telefone from '../models/Sequelize/Telefone';
+// import Email from '../models/Sequelize/Email';
+// import Endereco from '../models/Sequelize/Endereco';
 import CentroCusto from '../models/Sequelize/CentroCusto';
 import Produto from '../models/Sequelize/Produto';
 import TipoBeneficiario from '../models/Sequelize/TipoBeneficiario';
@@ -20,6 +20,12 @@ import GeraCarteira from '../helpers/GerarCarteira';
 import AdicionarVinculoService from './AdicionarVinculoService';
 
 import CriaPessoaFisicaService from './CriaPessoaFisicaService';
+
+import AdicionarEmailService from './AdicionarEmailService';
+import AdicionarEnderecoService from './AdicionarEnderecoService';
+import AdicionarTelefoneService from './AdicionarTelefoneService';
+import AdicionarCartaoCreditoService from './AdicionarCartaoCreditoService';
+import AdicionarContaService from './AdicionarContaService';
 
 const bv = {
   PESSOA_FISICA: 4,
@@ -130,7 +136,7 @@ export default class CriaContratoService {
           });
           await responsavelFinanceiro.addOrganogramas(centroCusto, { transaction: t });
 
-          await responsavelFinanceiro.addTiposcontrato([body.TipoContrato], { transaction: t });
+          await responsavelFinanceiro.setTiposcontrato([body.TipoContrato], { transaction: t });
 
           await AdicionarVinculoService.execute({
             pessoa: responsavelFinanceiro,
@@ -183,22 +189,21 @@ export default class CriaContratoService {
               body.ResponsavelFinanceiro.Enderecos.map((endereco) =>
                 // eslint-disable-next-line no-await-in-loop
                 // eslint-disable-next-line no-return-await
-                Endereco.create(
-                  {
-                    logradouro: endereco.Logradouro,
-                    bairro: endereco.Bairro,
-                    cidade: endereco.Cidade,
-                    estado: endereco.Estado,
-                    complemento: endereco.Complemento,
-                    numero: endereco.Numero,
-                    cep: endereco.Cep,
-                    dadosid: responsavelFinanceiro.id,
-                    tipoenderecoid: endereco.TipoEndereco || 1,
-                    end_in_principal: endereco.Principal,
-                    vinculoid: bv.REPONSAVEL_FINANCEIRO,
-                  },
-                  { transaction: t }
-                )
+                AdicionarEnderecoService.execute({
+                  bairro: endereco.Bairro,
+                  cidade: endereco.Cidade,
+                  estado: endereco.Estado,
+                  logradouro: endereco.Logradouro,
+                  complemento: endereco.Complemento,
+                  numero: endereco.Numero,
+                  cep: endereco.Cep,
+                  end_in_principal: endereco.Principal,
+                  pessoa: responsavelFinanceiro,
+                  sequelize,
+                  tipoenderecoid: endereco.TipoEndereco || 1,
+                  vinculoid: bv.REPONSAVEL_FINANCEIRO,
+                  transaction: t,
+                })
               )
             );
 
@@ -208,17 +213,16 @@ export default class CriaContratoService {
           if (body.ResponsavelFinanceiro.Telefones) {
             await Promise.all(
               body.ResponsavelFinanceiro.Telefones.map((tel) =>
-                Telefone.create(
-                  {
-                    numero: tel.Numero,
-                    ramal: tel.Ramal,
-                    tel_in_principal: tel.Principal,
-                    vinculoid: bv.REPONSAVEL_FINANCEIRO,
-                    dadosid: responsavelFinanceiro.id,
-                    tipotelefoneid: tel.TipoTelefone || 3,
-                  },
-                  { transaction: t }
-                )
+                AdicionarTelefoneService.execute({
+                  numero: tel.Numero,
+                  ramal: tel.Ramal,
+                  tel_in_principal: tel.Principal,
+                  vinculoid: bv.REPONSAVEL_FINANCEIRO,
+                  tipotelefoneid: tel.TipoTelefone || 3,
+                  pessoa: responsavelFinanceiro,
+                  sequelize,
+                  transaction: t,
+                })
               )
             );
 
@@ -229,20 +233,49 @@ export default class CriaContratoService {
           if (body.ResponsavelFinanceiro.Emails) {
             Promise.all(
               body.ResponsavelFinanceiro.Emails.map((email) =>
-                Email.create(
-                  {
-                    descricao: email.Email,
-                    ema_in_principal: email.Principal,
-                    tipoemailid: email.TipoEmail || 3,
-                    dadosid: responsavelFinanceiro.id,
-                    vinculoid: bv.REPONSAVEL_FINANCEIRO,
-                  },
-                  { transaction: t }
-                )
+                AdicionarEmailService.execute({
+                  ema_in_principal: email.Principal,
+                  dadosid: responsavelFinanceiro.id,
+                  vinculoid: bv.REPONSAVEL_FINANCEIRO,
+                  pessoa: responsavelFinanceiro,
+                  email: email.Email,
+                  sequelize,
+                  tipoemail: email.TipoEmail || 3,
+                  transaction: t,
+                })
               )
             );
 
             // responsavelFinanceiro.addEmails(emails, { transaction: t });
+          }
+
+          if (body.FormaPagamento.CartaoCredito) {
+            await AdicionarCartaoCreditoService.execute({
+              pessoa: responsavelFinanceiro,
+              transaction: t,
+              sequelize,
+              car_in_principal: body.FormaPagamento.CartaoCredito.Principal,
+              codigosegurancacartao: body.FormaPagamento.CartaoCredito.CodigoSeguranca,
+              diadevencimento: body.FormaPagamento.CartaoCredito.DiaVencimento,
+              nome_titular: body.FormaPagamento.CartaoCredito.Titular,
+              numerocartao: body.FormaPagamento.CartaoCredito.Numero,
+              tipocartaoid: body.FormaPagamento.CartaoCredito.TipoCartao,
+              validadecartao: body.FormaPagamento.CartaoCredito.Validade,
+            });
+          }
+
+          if (body.FormaPagamento.Conta) {
+            await AdicionarContaService.execute({
+              pessoa: responsavelFinanceiro,
+              transaction: t,
+              sequelize,
+              con_in_principal: body.FormaPagamento.Conta.Principal,
+              agenciaid: body.FormaPagamento.Conta.Agencia,
+              digito: body.FormaPagamento.Conta.Digito,
+              numero: body.FormaPagamento.Conta.Numero,
+              operacao: body.FormaPagamento.Conta.Operacao,
+              tipocontaid: body.FormaPagamento.Conta.TipoConta,
+            });
           }
 
           /**
@@ -280,7 +313,7 @@ export default class CriaContratoService {
               id: contratoid,
               numerocontrato: contratoid.toString().padStart(10, '0'),
               operadoraid,
-              statusid: 6,
+              statusid: 8,
               dataadesao: body.DataAdesao,
               datainicialvigencia: body.DataAdesao,
               datafinalvigencia: moment(body.DataAdesao).add(infoVigencia.mesesvigencia, 'months').format(),
@@ -377,23 +410,21 @@ export default class CriaContratoService {
               // eslint-disable-next-line no-await-in-loop
               await Promise.all(
                 beneficiario.Enderecos.map((endereco) =>
-                  Endereco.create(
-                    {
-                      logradouro: endereco.Logradouro,
-                      bairro: endereco.Bairro,
-                      cidade: endereco.Cidade,
-                      estado: endereco.Estado,
-                      complemento: endereco.Complemento,
-
-                      numero: endereco.Numero,
-                      cep: endereco.Cep,
-                      tipoenderecoid: endereco.TipoEndereco || 1,
-                      end_in_principal: endereco.Principal,
-                      vinculoid: beneficiario.Titular ? bv.TITULAR : bv[beneficiario.Vinculo],
-                      dadosid: pessoa.id,
-                    },
-                    { transaction: t }
-                  )
+                  AdicionarEnderecoService.execute({
+                    logradouro: endereco.Logradouro,
+                    bairro: endereco.Bairro,
+                    cidade: endereco.Cidade,
+                    estado: endereco.Estado,
+                    complemento: endereco.Complemento,
+                    numero: endereco.Numero,
+                    cep: endereco.Cep,
+                    tipoenderecoid: endereco.TipoEndereco || 1,
+                    end_in_principal: endereco.Principal,
+                    vinculoid: beneficiario.Titular ? bv.TITULAR : bv[beneficiario.Vinculo],
+                    pessoa,
+                    sequelize,
+                    transaction: t,
+                  })
                 )
               );
 
@@ -405,17 +436,16 @@ export default class CriaContratoService {
               // eslint-disable-next-line no-await-in-loop
               await Promise.all(
                 beneficiario.Telefones.map((tel) =>
-                  Telefone.create(
-                    {
-                      numero: tel.Numero,
-                      ramal: tel.Ramal,
-                      tel_in_principal: tel.Principal,
-                      vinculoid: beneficiario.Titular ? bv.TITULAR : bv[beneficiario.Vinculo],
-                      tipotelefoneid: tel.TipoTelefone || 3,
-                      dadosid: pessoa.id,
-                    },
-                    { transaction: t }
-                  )
+                  AdicionarTelefoneService.execute({
+                    numero: tel.Numero,
+                    ramal: tel.Ramal,
+                    tel_in_principal: tel.Principal,
+                    vinculoid: beneficiario.Titular ? bv.TITULAR : bv[beneficiario.Vinculo],
+                    tipotelefoneid: tel.TipoTelefone || 3,
+                    pessoa,
+                    sequelize,
+                    transaction: t,
+                  })
                 )
               );
 
@@ -427,16 +457,15 @@ export default class CriaContratoService {
               // eslint-disable-next-line no-await-in-loop
               await Promise.all(
                 beneficiario.Emails.map((email) =>
-                  Email.create(
-                    {
-                      descricao: email.Email,
-                      ema_in_principal: email.Principal,
-                      tipoemailid: email.TipoEmail || 3,
-                      vinculoid: beneficiario.Titular ? bv.TITULAR : bv[beneficiario.Vinculo],
-                      dadosid: pessoa.id,
-                    },
-                    { transaction: t }
-                  )
+                  AdicionarEmailService.execute({
+                    ema_in_principal: email.Principal,
+                    vinculoid: beneficiario.Titular ? bv.TITULAR : bv[beneficiario.Vinculo],
+                    email: email.Email,
+                    pessoa,
+                    sequelize,
+                    tipoemail: email.TipoEmail || 3,
+                    transaction: t,
+                  })
                 )
               );
 

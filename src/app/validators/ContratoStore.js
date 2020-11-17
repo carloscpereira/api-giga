@@ -129,6 +129,7 @@ export default async (req, res, next) => {
       FormaPagamento: Yup.object().shape({
         TipoCarteira: Yup.number().integer().required(),
         DiaVencimentoMes: Yup.number().integer().default(10),
+        Modalidade: Yup.number().integer().required(),
         CartaoCredito: Yup.object()
           .shape({
             Numero: Yup.string().required(),
@@ -136,10 +137,21 @@ export default async (req, res, next) => {
             TipoCartao: Yup.number().integer().required(),
             Validade: Yup.date().required(),
             Titular: Yup.string().required(),
+            Principal: Yup.boolean().default(true),
           })
-          .notRequired()
-          .default(null)
-          .nullable(),
+          .when('Modalidade', (validator, s) =>
+            validator === '2' || validator === '34' ? s.required() : s.nullable().default(null)
+          ),
+        Conta: Yup.object()
+          .shape({
+            TipoConta: Yup.number().integer().required(),
+            Operacao: Yup.string(),
+            Agencia: Yup.number().integer().required(),
+            Digito: Yup.number().integer().required(),
+            Numero: Yup.number().integer().required(),
+            Principal: Yup.boolean().default(true),
+          })
+          .when('Modalidade', (validator, s) => (validator === '3' ? s.required : s.nullable().default(null))),
       }),
       Beneficiarios: Yup.array()
         .of(beneficiarioSchema)
