@@ -483,7 +483,7 @@ export default class CriaContratoService {
             (ant, pos) => ant + (pos.valorLiquido || pos.valor || defaultValor),
             0
           );
-          console.log(moment(body.FormaPagamento.DiaVencimentoMes, 'DD').format());
+
           await contrato.setResponsavelpf(responsavelFinanceiro, {
             through: {
               planoid: produto.planoid,
@@ -646,7 +646,7 @@ export default class CriaContratoService {
             );
           }
 
-          await t.roolback();
+          await t.commit();
 
           return contrato;
         }
