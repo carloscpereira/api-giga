@@ -272,7 +272,7 @@ export default class CriaContratoService {
               obs: body.Observacao,
               tipocontratoid: 5,
               ...(centroCusto ? { centrocustoid: centroCusto.id } : {}),
-              tipodecarteiraid: body.TipoCarteira,
+              tipodecarteiraid: body.FormaPagamento.TipoCarteira,
               motivoadesaoid: body.MotivoAdesao,
               con_in_renovacao_auto: body.RenovacaoAutomatica,
               importado: 'N',
