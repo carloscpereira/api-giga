@@ -54,6 +54,7 @@ import TipoOcorrencia from '../app/models/Sequelize/TipoOcorrencia';
 import TipoBeneficiario from '../app/models/Sequelize/TipoBeneficiario';
 import TipoContratoVinculo from '../app/models/Sequelize/TipoContratoVinculo';
 import TipoContratoPessoa from '../app/models/Sequelize/TipoContratoPessoa';
+import PessoaOrganograma from '../app/models/Sequelize/PessoaOrganograma';
 // import databaseConfig from '../config/database';
 
 const models = [
@@ -106,6 +107,7 @@ const models = [
   TipoBeneficiario,
   TipoContratoVinculo,
   TipoContratoPessoa,
+  PessoaOrganograma,
 ];
 
 class Database {

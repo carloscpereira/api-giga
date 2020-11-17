@@ -48,5 +48,12 @@ export default class CentroCusto extends Model {
       foreignKey: 'departamentoid',
       as: 'departamento',
     });
+
+    this.belongsToMany(models.Pessoa, {
+      through: models.PessoaOrganograma,
+      otherKey: 'pessoaid',
+      foreignKey: 'organogramaid',
+      as: 'pessoa',
+    });
   }
 }

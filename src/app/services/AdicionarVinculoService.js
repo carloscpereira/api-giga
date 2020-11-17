@@ -75,7 +75,6 @@ export default class AdicinarVinculoPFService {
       if (propertyErrors.length > 0) throw new Error(propertyErrors);
 
       await pessoa.addVinculos([vinculoGet], { transaction });
-
       // eslint-disable-next-line no-restricted-syntax
       for (const atributo of atributosVinculo) {
         if (atributos[snakeToPascal(atributo.descricaocampo)]) {
@@ -85,7 +84,7 @@ export default class AdicinarVinculoPFService {
               pessoaid: pessoa.id,
               vinculoid: vinculoGet.id,
               campo: atributo.id,
-              descricaocampo: atributos[snakeToPascal(atributo.descricaocampo)],
+              dadocampo: atributos[snakeToPascal(atributo.descricaocampo)],
             },
             { transaction }
           );

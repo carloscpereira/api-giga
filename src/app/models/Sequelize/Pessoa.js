@@ -129,6 +129,13 @@ export default class Pessoa extends Model {
       as: 'tiposcontrato',
     });
 
+    this.belongsToMany(models.CentroCusto, {
+      through: models.PessoaOrganograma,
+      foreignKey: 'pessoaid',
+      otherKey: 'organogramaid',
+      as: { singular: 'organograma', plural: 'organogramas' },
+    });
+
     // this.hasMany(models.CentroCusto, {
     //   foreignKey: 'empresaid',
     //   as: {

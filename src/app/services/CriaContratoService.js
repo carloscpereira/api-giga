@@ -73,7 +73,9 @@ export default class CriaContratoService {
           if (!produto)
             throw new Error('Produto selecionado não encontrado ou está indisponível para o tipo contrato selecionado');
 
-          const centroCusto = body.CentroCusto ? await CentroCusto.findByPk(body.CentroCusto) : null;
+          const centroCusto = body.CentroCusto
+            ? await CentroCusto.findByPk(body.CentroCusto)
+            : await CentroCusto.findByPk(194);
 
           if (!centroCusto && body.Convenio !== 'Pessoa Fisica')
             throw new Error('Centro Custo informado não encontrado');
@@ -126,6 +128,7 @@ export default class CriaContratoService {
             sequelize,
             transaction: t,
           });
+          await responsavelFinanceiro.addOrganogramas(centroCusto, { transaction: t });
 
           await responsavelFinanceiro.addTiposcontrato([body.TipoContrato], { transaction: t });
 
@@ -354,6 +357,9 @@ export default class CriaContratoService {
               sequelize,
               transaction: t,
             });
+
+            // eslint-disable-next-line no-await-in-loop
+            await pessoa.addOrganogramas([centroCusto], { transaction: t });
 
             // eslint-disable-next-line no-await-in-loop
             await AdicionarVinculoService.execute({
