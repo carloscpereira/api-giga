@@ -147,8 +147,8 @@ export default async (req, res, next) => {
             TipoConta: Yup.number().integer().required(),
             Operacao: Yup.string(),
             Agencia: Yup.number().integer().required(),
-            Digito: Yup.number().string().required(),
-            Numero: Yup.number().string().required(),
+            Digito: Yup.string().required(),
+            Numero: Yup.string().required(),
             Principal: Yup.boolean().default(true),
           })
           .when('Modalidade', (validator, s) => (validator === 3 ? s.required : s.nullable().default(null))),
