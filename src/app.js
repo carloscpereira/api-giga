@@ -65,9 +65,10 @@ class App {
       console.log(err);
       const errors = await new Youch(err, req).toJSON();
 
-      if (process.env.NODE_ENV !== 'production') return res.status(500).json(errors);
+      return res.status(500).json(errors);
+      // if (process.env.NODE_ENV !== 'production') return res.status(500).json(errors);
 
-      return res.status(500).json({ error: 500, data: { message: 'Internal Server Error' } });
+      // return res.status(500).json({ error: 500, data: { message: 'Internal Server Error' } });
     });
   }
 }
