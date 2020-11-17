@@ -18,7 +18,7 @@ export default class Conta extends Model {
       },
       {
         sequelize,
-        tableName: 'cartao',
+        tableName: 'conta',
       }
     );
 
