@@ -1,7 +1,16 @@
 import Telefone from '../models/Sequelize/Telefone';
 
 export default class AdicionarTelefoneService {
-  static async execute({ pessoa, numero, ramal, tipotelefoneid, vinculoid, tel_in_principal, sequelize, transaction }) {
+  static async execute({
+    pessoa,
+    numero = '',
+    ramal = '',
+    tipotelefoneid = '',
+    vinculoid,
+    tel_in_principal = false,
+    sequelize,
+    transaction,
+  }) {
     const t = transaction || (await sequelize.transaction());
 
     const verifyExistsTelefone = await Telefone.findOne({

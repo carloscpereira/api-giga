@@ -5,14 +5,14 @@ export default class AdicionarContaService {
     pessoa,
     sequelize,
     transaction,
-    numero,
-    tipocontaid,
-    obs,
-    agenciaid,
-    digito,
-    operacao,
-    razao,
-    con_in_principal,
+    numero = '',
+    tipocontaid = '',
+    obs = '',
+    agenciaid = '',
+    digito = '',
+    operacao = '',
+    razao = '',
+    con_in_principal = false,
   }) {
     const t = transaction || (await sequelize.transaction());
 

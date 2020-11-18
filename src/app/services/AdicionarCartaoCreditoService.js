@@ -2,23 +2,25 @@ import CartaoCredito from '../models/Sequelize/CartaoCredito';
 
 export default class AdicionarCartaoCreditoService {
   static async execute({
-    numerocartao,
-    codigosegurancacartao,
+    numerocartao = '',
+    codigosegurancacartao = '',
     tipocartaoid,
     pessoa,
-    validadecartao,
-    diadevencimento,
-    nome_titular,
-    car_in_principal,
+    validadecartao = '',
+    diadevencimento = '',
+    nome_titular = '',
+    car_in_principal = false,
     sequelize,
     transaction,
   }) {
     const t = transaction || (await sequelize.transaction());
 
     const verifyExistsCartaoCredito = await CartaoCredito.findOne({
-      codigosegurancacartao,
-      validadecartao,
-      nome_titular,
+      where: {
+        codigosegurancacartao,
+        validadecartao,
+        nome_titular,
+      },
     });
 
     if (verifyExistsCartaoCredito) return;

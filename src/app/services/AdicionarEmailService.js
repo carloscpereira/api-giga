@@ -3,7 +3,7 @@ import { Op } from 'sequelize';
 import Email from '../models/Sequelize/Email';
 
 export default class AdicionarEmailService {
-  static async execute({ pessoa, email, ema_in_principal, vinculoid, tipoemail, sequelize, transaction }) {
+  static async execute({ pessoa, email = '', ema_in_principal, vinculoid, tipoemail, sequelize, transaction }) {
     const t = transaction || (await sequelize.transaction());
 
     const verifyExistsEmail = await Email.findOne({
