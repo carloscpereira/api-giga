@@ -1,38 +1,37 @@
-import { Op } from 'sequelize';
-
 import Endereco from '../models/Sequelize/Endereco';
 
 export default class AdicionarEnderecoService {
   static async execute({
     pessoa,
-    tipoenderecoid,
-    logradouro,
-    bairro,
-    cidade,
-    estado,
-    cep,
-    complemento,
+    tipoenderecoid = '',
+    logradouro = '',
+    bairro = '',
+    cidade = '',
+    estado = '',
+    cep = '',
+    complemento = '',
     vinculoid,
-    numero,
-    end_in_principal,
+    numero = '',
+    end_in_principal = false,
     sequelize,
     transaction,
   }) {
     const t = transaction || (await sequelize.transaction());
 
     const verifyExistsEndereco = await Endereco.findOne({
-      [Op.or]: [
-        { logradouro },
-        { bairro },
-        { cidade },
-        { estado },
-        { cep },
-        { complemento },
-        { vinculoid },
-        { numero },
-      ],
+      where: {
+        logradouro,
+        bairro,
+        cidade,
+        estado,
+        cep,
+        complemento,
+        vinculoid,
+        numero,
+        dadosid: pessoa.id,
+      },
     });
-
+    console.log(verifyExistsEndereco);
     if (verifyExistsEndereco) return;
 
     if (end_in_principal) {

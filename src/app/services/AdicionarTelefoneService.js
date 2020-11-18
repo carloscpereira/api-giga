@@ -1,5 +1,3 @@
-import { Op } from 'sequelize';
-
 import Telefone from '../models/Sequelize/Telefone';
 
 export default class AdicionarTelefoneService {
@@ -7,7 +5,10 @@ export default class AdicionarTelefoneService {
     const t = transaction || (await sequelize.transaction());
 
     const verifyExistsTelefone = await Telefone.findOne({
-      [Op.or]: [{ numero }, { ramal }],
+      where: {
+        numero,
+        ramal,
+      },
     });
 
     if (verifyExistsTelefone) return;

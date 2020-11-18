@@ -7,8 +7,10 @@ export default class AdicionarEmailService {
     const t = transaction || (await sequelize.transaction());
 
     const verifyExistsEmail = await Email.findOne({
-      descricao: {
-        [Op.iLike]: `%${email}%`,
+      where: {
+        descricao: {
+          [Op.iLike]: `%${email}%`,
+        },
       },
     });
 

@@ -17,12 +17,14 @@ export default class AdicionarContaService {
     const t = transaction || (await sequelize.transaction());
 
     const verifyExistsConta = await Conta.findOne({
-      numero,
-      agenciaid,
-      tipocontaid,
-      digito,
-      operacao,
-      pessoaid: pessoa.id,
+      where: {
+        numero,
+        agenciaid,
+        tipocontaid,
+        digito,
+        operacao,
+        pessoaid: pessoa.id,
+      },
     });
 
     if (verifyExistsConta) return;
