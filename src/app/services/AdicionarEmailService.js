@@ -11,6 +11,7 @@ export default class AdicionarEmailService {
         descricao: {
           [Op.iLike]: `%${email}%`,
         },
+        dadosid: pessoa.id,
       },
     });
 

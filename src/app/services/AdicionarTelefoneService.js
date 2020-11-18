@@ -17,6 +17,7 @@ export default class AdicionarTelefoneService {
       where: {
         numero,
         ramal,
+        dadosid: pessoa.id,
       },
     });
 
