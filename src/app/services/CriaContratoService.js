@@ -528,7 +528,7 @@ export default class CriaContratoService {
               qtdparcela: infoVigencia.mesesvigencia,
               valorcontrato: valorContratobruto * infoVigencia.mesesvigencia,
               valormes: valorContratoLiquido,
-              valorliquido: valorContratoLiquido * infoVigencia.mesesvigencia,
+              valorliquido: valorContratoLiquido,
               valordesconto: (valorContratobruto - valorContratoLiquido) * infoVigencia.mesesvigencia,
             },
             transaction: t,
