@@ -14,7 +14,9 @@ export default class AdicionarEmailService {
       },
     });
 
-    if (verifyExistsEmail) return;
+    if (verifyExistsEmail) {
+      await verifyExistsEmail.destroy({ transaction: t });
+    }
 
     if (ema_in_principal) {
       const verifyEmailPrincipal = await Email.findOne({

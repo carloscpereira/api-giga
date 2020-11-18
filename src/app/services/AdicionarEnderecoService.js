@@ -31,7 +31,6 @@ export default class AdicionarEnderecoService {
         estado,
         cep,
         complemento,
-        vinculoid,
         numero,
         dadosid: pessoa.id,
       },
@@ -45,7 +44,9 @@ export default class AdicionarEnderecoService {
 
     if (!findCidade) throw new Error('Cidade não encontrada');
 
-    if (verifyExistsEndereco) return;
+    if (verifyExistsEndereco) {
+      await verifyExistsEndereco.destroy({ transaction: t });
+    }
 
     if (end_in_principal) {
       const verifyEnderecoPrincipal = await Endereco.findOne({

@@ -48,7 +48,7 @@ export default class AdicinarVinculoPFService {
       if (!vinculo) throw new Error('Vinculo não encontrado');
 
       if (await pessoa.hasVinculos(vinculoGet)) {
-        await AtributoVinculo.destroy({ where: { vinculo: vinculoGet.id, pessoaid: pessoa.id }, transaction });
+        await AtributoVinculo.destroy({ where: { vinculoid: vinculoGet.id, pessoaid: pessoa.id }, transaction });
         await pessoa.removeVinculos([vinculoGet], { transaction });
       }
 

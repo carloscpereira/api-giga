@@ -20,7 +20,9 @@ export default class AdicionarTelefoneService {
       },
     });
 
-    if (verifyExistsTelefone) return;
+    if (verifyExistsTelefone) {
+      await verifyExistsTelefone.destroy({ transaction: t });
+    }
 
     if (tel_in_principal) {
       const verifyTelefonePrincipal = await Telefone.findOne({

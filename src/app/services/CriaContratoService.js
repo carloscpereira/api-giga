@@ -649,11 +649,13 @@ export default class CriaContratoService {
               numerototalparcelas: infoVigencia.mesesvigencia,
               numerodiavencimento: body.FormaPagamento.DiaVencimentoMes,
               ...(centroCusto ? { centrocustoid: centroCusto.id } : {}),
-              datavencimento: moment(body.DataAdesao)
+              datavencimento: moment(moment(body.FormaPagamento.DiaVencimentoMes, 'DD').format())
                 .add(infoVigencia.mesesvigencia + 1, 'months')
                 .format(),
               dataperiodoinicial: body.DataAdesao,
-              dataperiodofinal: moment(body.DataAdesao).add(infoVigencia.mesesvigencia, 'months').format(),
+              dataperiodofinal: moment(moment(body.FormaPagamento.DiaVencimentoMes, 'DD').format())
+                .add(infoVigencia.mesesvigencia, 'months')
+                .format(),
               datacadastro: new Date(),
               tipopessoa: 'F',
               pessoaid: responsavelFinanceiro.id,
@@ -675,7 +677,7 @@ export default class CriaContratoService {
                 tipodocumentoid: 1,
                 numerodocumento: i.toString().padStart(2, '0'),
                 numero: i,
-                datavencimento: moment(body.DataAdesao)
+                datavencimento: moment(moment(body.FormaPagamento.DiaVencimentoMes, 'DD').format())
                   .add(i - 1, 'months')
                   .format(),
                 datacadastramento: new Date(),
