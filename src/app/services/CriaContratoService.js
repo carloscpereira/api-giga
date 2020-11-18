@@ -1,5 +1,5 @@
 /* eslint-disable default-case */
-import { QueryTypes, Op } from 'sequelize';
+import { QueryTypes } from 'sequelize';
 import moment from 'moment';
 
 import Contrato from '../models/Sequelize/Contrato';
@@ -44,19 +44,6 @@ const bv = {
   SERVIDOR_PUBLICO_ESTADUAL: 26,
   SERVIDOR_PUBLICO_MUNICIPAL: 27,
   SERVIDOR_PUBLICO_FEDERAL: 28,
-};
-
-const mp = {
-  1: 'CHEQUE',
-  2: 'CARTÃO DE CRÉDITO',
-  3: 'DÉBITO EM CONTA',
-  4: 'ESPÉCIE',
-  5: 'BOLETO BANCÁRIO',
-  6: 'CONSIGNATARIA',
-  7: 'PAGAMENTO ELETRÔNICO',
-  8: 'COMISSÃO',
-  9: 'CARTAO DE CREDITO AVULSO',
-  10: 'DEPOSITO',
 };
 
 export default class CriaContratoService {
@@ -620,14 +607,12 @@ export default class CriaContratoService {
            */
           const modPagamento = await ModalidadePagamento.findOne({
             where: {
-              descricao: {
-                [Op.iLike]: mp[body.FormaPagamento.Modalidade],
-              },
+              id: body.FormaPagamento.Modalidade,
             },
           });
 
           if (!modPagamento || !body.FormaPagamento.Modalidade) {
-            throw new Error('É necessário informar uma modalidade de pagamento em FomraPagamento.Modalidade');
+            throw new Error('É necessário informar uma modalidade de pagamento em FormaPagamento.Modalidade');
           }
 
           const verifyCarteira = await TipoCarteira.findOne({

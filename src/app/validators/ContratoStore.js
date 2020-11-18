@@ -45,36 +45,6 @@ export default async (req, res, next) => {
       Telefones: Yup.array().ensure().compact().of(telefoneSchema),
     });
 
-    // const pessoaFisicaSchema = Yup.object().shape({
-    //   Nome: Yup.string().transform(function transformValue(value) {
-    //     return this.isType(value) && value !== null ? value.toUpperCase() : value;
-    //   }),
-    //   RG: Yup.string().min(7).max(14).required(),
-    //   CPF: Yup.string().length(11).required(),
-    //   DataNascimento: Yup.date().required(),
-    //   Sexo: Yup.string().matches(/M|F/).required(),
-    //   EstadoCivil: Yup.string().required(),
-    //   OrgaoEmissor: Yup.string().required(),
-    //   NomedaMae: Yup.string().required(),
-    //   Nacionalidade: Yup.string().required(),
-    // });
-
-    // const pessoaJuridicaSchema = Yup.object().shape({
-    //   RazaoSocial: Yup.string()
-    //     .required()
-    //     .transform(function transformValue(value) {
-    //       return this.isType(value) && value !== null ? value.toUpperCase() : value;
-    //     }),
-    //   NomeFantasia: Yup.string()
-    //     .required()
-    //     .transform(function transformValue(value) {
-    //       return this.isType(value) && value !== null ? value.toUpperCase() : value;
-    //     }),
-    //   InscricaoEstadual: Yup.string().required(),
-    //   IncricaoMunicipal: Yup.string().required(),
-    //   CNPJ: Yup.string().length(14).required(),
-    // });
-
     const schema = Yup.object().shape({
       TipoContrato: Yup.string().matches(/5|9/).required(),
       MotivoAdesao: Yup.number().default(268),
@@ -126,7 +96,6 @@ export default async (req, res, next) => {
         Emails: Yup.array().ensure().compact().of(emailSchema),
         Telefones: Yup.array().ensure().compact().of(telefoneSchema),
       }),
-      // Titular: beneficiarioSchema,
       FormaPagamento: Yup.object().shape({
         TipoCarteira: Yup.number().integer().required(),
         DiaVencimentoMes: Yup.number().integer().default(10),
