@@ -215,7 +215,7 @@ export default class CriaContratoService {
             // await responsavelFinanceiro.setEnderecos(enderecos, { transaction: t });
           }
 
-          if (body.ResponsavelFinanceiro.Telefones && !!responsavelFinanceiroIsBeneficiario) {
+          if (body.ResponsavelFinanceiro.Telefones && !responsavelFinanceiroIsBeneficiario) {
             await Promise.all(
               body.ResponsavelFinanceiro.Telefones.map((tel) =>
                 AdicionarTelefoneService.execute({
@@ -235,7 +235,7 @@ export default class CriaContratoService {
             // await responsavelFinanceiro.addTelefones(telefones, { transaction: t });
           }
 
-          if (body.ResponsavelFinanceiro.Emails && !!responsavelFinanceiroIsBeneficiario) {
+          if (body.ResponsavelFinanceiro.Emails && !responsavelFinanceiroIsBeneficiario) {
             Promise.all(
               body.ResponsavelFinanceiro.Emails.map((email) =>
                 AdicionarEmailService.execute({
