@@ -595,7 +595,7 @@ export default class CriaContratoService {
                 motivoadesaoid: body.MotivoAdesao || 268,
                 planoid: produto.planoid,
                 versaoplanoid: produto.versaoid,
-                tipocarteiraid: body.FormaPagamento.TipoCarteira,
+                tipocarteiraid: carteirinha.id,
                 ben_in_requerente: false,
                 ben_in_cobertura_parcial_tmp: false,
                 ben_in_proc_excluidos_cob: false,

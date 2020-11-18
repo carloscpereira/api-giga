@@ -47,7 +47,10 @@ export default class AdicinarVinculoPFService {
 
       if (!vinculo) throw new Error('Vinculo não encontrado');
 
-      if (await pessoa.hasVinculos(vinculoGet)) return;
+      if (await pessoa.hasVinculos(vinculoGet)) {
+        await AtributoVinculo.destroy({ where: { vinculo: vinculoGet.id, pessoaid: pessoa.id }, transaction });
+        await pessoa.removeVinculos([vinculoGet], { transaction });
+      }
 
       let atributosVinculo = await sequelize.query('SELECT * FROM sp_camposdinamicos WHERE sp_vinculoid = :vinculoid', {
         replacements: { vinculoid: vinculoGet.id },
