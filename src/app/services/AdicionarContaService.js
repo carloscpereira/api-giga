@@ -10,6 +10,7 @@ export default class AdicionarContaService {
     obs = '',
     agenciaid = '',
     digito = '',
+    identificacao = null,
     operacao = '',
     razao = '',
     con_in_principal = false,
@@ -50,6 +51,7 @@ export default class AdicionarContaService {
         digito,
         operacao,
         razao,
+        identificacao,
         con_in_principal,
       },
       { transaction: t }

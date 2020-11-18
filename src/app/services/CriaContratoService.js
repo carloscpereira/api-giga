@@ -280,6 +280,7 @@ export default class CriaContratoService {
               numero: body.FormaPagamento.Conta.Numero,
               operacao: body.FormaPagamento.Conta.Operacao,
               tipocontaid: body.FormaPagamento.Conta.TipoConta,
+              identificacao: body.FormaPagamento.Conta.Identificacao,
             });
           }
 
