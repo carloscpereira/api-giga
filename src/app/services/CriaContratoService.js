@@ -139,6 +139,10 @@ export default class CriaContratoService {
 
           await responsavelFinanceiro.setTiposcontrato([body.TipoContrato], { transaction: t });
 
+          const responsavelFinanceiroIsBeneficiario = !!body.Beneficiarios.find(
+            (ben) => ben.CPF === body.ResponsavelFinanceiro.CPF
+          );
+
           await AdicionarVinculoService.execute({
             pessoa: responsavelFinanceiro,
             vinculo: bv.PESSOA_FISICA,
@@ -185,7 +189,7 @@ export default class CriaContratoService {
             });
           }
 
-          if (body.ResponsavelFinanceiro.Enderecos) {
+          if (body.ResponsavelFinanceiro.Enderecos && !responsavelFinanceiroIsBeneficiario) {
             await Promise.all(
               body.ResponsavelFinanceiro.Enderecos.map((endereco) =>
                 // eslint-disable-next-line no-await-in-loop
@@ -211,7 +215,7 @@ export default class CriaContratoService {
             // await responsavelFinanceiro.setEnderecos(enderecos, { transaction: t });
           }
 
-          if (body.ResponsavelFinanceiro.Telefones) {
+          if (body.ResponsavelFinanceiro.Telefones && !!responsavelFinanceiroIsBeneficiario) {
             await Promise.all(
               body.ResponsavelFinanceiro.Telefones.map((tel) =>
                 AdicionarTelefoneService.execute({
@@ -231,7 +235,7 @@ export default class CriaContratoService {
             // await responsavelFinanceiro.addTelefones(telefones, { transaction: t });
           }
 
-          if (body.ResponsavelFinanceiro.Emails) {
+          if (body.ResponsavelFinanceiro.Emails && !!responsavelFinanceiroIsBeneficiario) {
             Promise.all(
               body.ResponsavelFinanceiro.Emails.map((email) =>
                 AdicionarEmailService.execute({
