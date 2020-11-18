@@ -27,8 +27,10 @@ export default class AdicionarCartaoCreditoService {
 
     if (car_in_principal) {
       const verifyCartaoCreditoPrincipal = await CartaoCredito.findOne({
-        car_in_principal: true,
-        dadosid: pessoa.id,
+        where: {
+          car_in_principal: true,
+          dadosid: pessoa.id,
+        },
       });
 
       if (verifyCartaoCreditoPrincipal)

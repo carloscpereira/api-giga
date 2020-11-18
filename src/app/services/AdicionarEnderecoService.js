@@ -36,8 +36,10 @@ export default class AdicionarEnderecoService {
 
     if (end_in_principal) {
       const verifyEnderecoPrincipal = await Endereco.findOne({
-        end_in_principal: true,
-        dadosid: pessoa.id,
+        where: {
+          end_in_principal: true,
+          dadosid: pessoa.id,
+        },
       });
 
       if (verifyEnderecoPrincipal)

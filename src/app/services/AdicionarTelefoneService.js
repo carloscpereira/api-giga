@@ -24,8 +24,10 @@ export default class AdicionarTelefoneService {
 
     if (tel_in_principal) {
       const verifyTelefonePrincipal = await Telefone.findOne({
-        tel_in_principal: true,
-        dadosid: pessoa.id,
+        where: {
+          tel_in_principal: true,
+          dadosid: pessoa.id,
+        },
       });
 
       if (verifyTelefonePrincipal)

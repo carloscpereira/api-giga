@@ -18,8 +18,10 @@ export default class AdicionarEmailService {
 
     if (ema_in_principal) {
       const verifyEmailPrincipal = await Email.findOne({
-        ema_in_principal: true,
-        dadosid: pessoa.id,
+        where: {
+          ema_in_principal: true,
+          dadosid: pessoa.id,
+        },
       });
 
       if (verifyEmailPrincipal) await verifyEmailPrincipal.update({ ema_in_principal: false }, { transaction: t });

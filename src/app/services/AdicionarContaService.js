@@ -31,8 +31,10 @@ export default class AdicionarContaService {
 
     if (con_in_principal) {
       const verifyContaPrincipal = await Conta.findOne({
-        con_in_principal: true,
-        pessoaid: pessoa.id,
+        where: {
+          con_in_principal: true,
+          pessoaid: pessoa.id,
+        },
       });
 
       if (verifyContaPrincipal) await verifyContaPrincipal.update({ con_in_principal: false }, { transaction: t });
