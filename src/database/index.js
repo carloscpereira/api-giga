@@ -57,6 +57,9 @@ import TipoContratoPessoa from '../app/models/Sequelize/TipoContratoPessoa';
 import PessoaOrganograma from '../app/models/Sequelize/PessoaOrganograma';
 import Conta from '../app/models/Sequelize/Conta';
 import CartaoCredito from '../app/models/Sequelize/CartaoCredito';
+import Cidade from '../app/models/Sequelize/Cidade';
+import Estado from '../app/models/Sequelize/Estado';
+import Bairro from '../app/models/Sequelize/Bairro';
 // import databaseConfig from '../config/database';
 
 const models = [
@@ -112,6 +115,9 @@ const models = [
   PessoaOrganograma,
   CartaoCredito,
   Conta,
+  Cidade,
+  Estado,
+  Bairro,
 ];
 
 class Database {

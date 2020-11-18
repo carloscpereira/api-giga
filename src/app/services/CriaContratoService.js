@@ -104,12 +104,12 @@ export default class CriaContratoService {
                             ON cn_corretorpf.corretorapjid =
                               cn_grupocorretores.corretorpessoaj
             WHERE  (cn_grupocorretores.corretorvendedor IS NOT NULL)
-                    AND (sp_dadospessoafisica.id = :vendedorid)
+                    AND (sp_dadospessoafisica.id = :vendedorid AND cn_corretorpf.id = :corretoraid)
             ORDER  BY sp_dadospessoafisica.nome
             `,
               {
                 type: QueryTypes.SELECT,
-                replacements: { vendedorid: body.Vendedor },
+                replacements: { vendedorid: body.Vendedor, corretoraid: body.Corretora },
               }
             );
 
@@ -134,6 +134,7 @@ export default class CriaContratoService {
             sequelize,
             transaction: t,
           });
+
           await responsavelFinanceiro.addOrganogramas(centroCusto, { transaction: t });
 
           await responsavelFinanceiro.setTiposcontrato([body.TipoContrato], { transaction: t });
@@ -336,6 +337,11 @@ export default class CriaContratoService {
             { transaction: t }
           );
 
+          const carteirinha = await sequelize.query('SELECT * FROM cn_tipocarteira LIMIT 1', {
+            type: QueryTypes.SELECT,
+            plain: true,
+          });
+
           const beneficiarios = [];
 
           const beneficiarioTitular = body.Beneficiarios.find((ben) => ben.Titular);
@@ -522,6 +528,7 @@ export default class CriaContratoService {
           await contrato.setResponsavelpf(responsavelFinanceiro, {
             through: {
               planoid: produto.planoid,
+              tipocarteiraid: carteirinha.id,
               versaoplanoid: produto.versaoid,
               diavencimento: body.FormaPagamento.DiaVencimentoMes,
               datavencimento: moment(body.FormaPagamento.DiaVencimentoMes, 'DD').format(),
@@ -530,7 +537,7 @@ export default class CriaContratoService {
               valorcontrato: valorContratobruto * infoVigencia.mesesvigencia,
               valormes: valorContratoLiquido,
               valorliquido: valorContratoLiquido * infoVigencia.mesesvigencia,
-              valordesconto: valorContratobruto - valorContratoLiquido * infoVigencia.mesesvigencia,
+              valordesconto: (valorContratobruto - valorContratoLiquido) * infoVigencia.mesesvigencia,
             },
             transaction: t,
           });

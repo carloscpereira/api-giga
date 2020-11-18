@@ -1,4 +1,9 @@
+import { Op } from 'sequelize';
+
 import Endereco from '../models/Sequelize/Endereco';
+import Cidade from '../models/Sequelize/Cidade';
+import Estado from '../models/Sequelize/Estado';
+import Bairro from '../models/Sequelize/Bairro';
 
 export default class AdicionarEnderecoService {
   static async execute({
@@ -22,7 +27,7 @@ export default class AdicionarEnderecoService {
       where: {
         logradouro,
         bairro,
-        cidade,
+        id_cidade: cidade,
         estado,
         cep,
         complemento,
@@ -31,7 +36,15 @@ export default class AdicionarEnderecoService {
         dadosid: pessoa.id,
       },
     });
-    console.log(verifyExistsEndereco);
+
+    const findCidade = await Cidade.findOne({ where: { municipio_codigo: cidade } });
+    const findEstado = await Estado.findOne({ where: { codigo: findCidade.codigo_uf } });
+    const findBairro = await Bairro.findOne({
+      where: { municipioid: findCidade.municipio_codigo, bairro: { [Op.iLike]: `%${bairro}%` } },
+    });
+
+    if (!findCidade) throw new Error('Cidade não encontrada');
+
     if (verifyExistsEndereco) return;
 
     if (end_in_principal) {
@@ -51,8 +64,11 @@ export default class AdicionarEnderecoService {
         tipoenderecoid,
         dadosid: pessoa.id,
         bairro,
-        cidade,
-        estado,
+        cidade: findCidade.descricao,
+        estado: findEstado.sigla,
+        id_estado: findEstado.codigo,
+        id_cidade: findCidade.municipio_codigo,
+        bairroid: findBairro ? findBairro.id : null,
         cep,
         complemento,
         vinculoid,

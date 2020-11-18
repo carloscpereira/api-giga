@@ -18,7 +18,7 @@ export default async (req, res, next) => {
     const enderecoSchema = Yup.object().shape({
       Logradouro: Yup.string(),
       Bairro: Yup.string(),
-      Cidade: Yup.string(),
+      Cidade: Yup.number().integer(),
       Estado: Yup.string(),
       Complemento: Yup.string(),
       Numero: Yup.string(),
@@ -81,6 +81,7 @@ export default async (req, res, next) => {
       RenovacaoAutomatica: Yup.boolean().default(false),
       DataAdesao: Yup.date().default(new Date()),
       Vendedor: Yup.number(),
+      Corretora: Yup.number(),
       PrazoVigencia: Yup.string()
         .matches(/BIENAL|ANUAL|DEZ MESES/)
         .default('BIENAL'),
