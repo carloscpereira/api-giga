@@ -30,6 +30,7 @@ import tipoAreaAbrangenciaRouter from './_tipoAreaAbrangenciaRouter';
 import tipoContratacaoRouter from './_tipoContratacaoRouter';
 import tipoContratoRouter from './_tipoContratoRouter';
 import vendedorRouter from './_vendedorRouter';
+import corretoraRouter from './_corretoraRouter';
 
 import { checkAuthorization } from '../app/middlewares';
 
@@ -66,5 +67,6 @@ routes.use('/tipos-area-abrangencia', tipoAreaAbrangenciaRouter);
 routes.use('/tipos-contratacoes', tipoContratacaoRouter);
 routes.use('/tipos-contratos', tipoContratoRouter);
 routes.use('/vendedores', vendedorRouter);
+routes.use('/corretoras', corretoraRouter);
 
 export default routes;
