@@ -60,6 +60,7 @@ import CartaoCredito from '../app/models/Sequelize/CartaoCredito';
 import Cidade from '../app/models/Sequelize/Cidade';
 import Estado from '../app/models/Sequelize/Estado';
 import Bairro from '../app/models/Sequelize/Bairro';
+import RegraFechamento from '../app/models/Sequelize/RegraFechamento';
 // import databaseConfig from '../config/database';
 
 const models = [
@@ -118,6 +119,7 @@ const models = [
   Cidade,
   Estado,
   Bairro,
+  RegraFechamento,
 ];
 
 class Database {
