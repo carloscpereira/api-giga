@@ -69,7 +69,7 @@ export default async (req, res, next) => {
         .required(),
     });
 
-    await schema.validate(req.body);
+    await schema.validate(req.body, { context: { operadora: req.params.operator } });
 
     const { FormaPagamento } = req.body;
     console.log(FormaPagamento);
