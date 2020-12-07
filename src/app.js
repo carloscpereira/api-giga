@@ -5,6 +5,7 @@ import express from 'express';
 import * as Sentry from '@sentry/node';
 import Youch from 'youch';
 import queryParams from 'express-query-params';
+import bodyParser from 'body-parser';
 import cors from 'cors';
 
 // Swagger
@@ -34,6 +35,8 @@ class App {
   }
 
   middleware() {
+    this.server.use(bodyParser.json({ limit: '50mb' }));
+    this.server.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
     this.server.use(
       '/documentation',
       async (req, res, next) => {
