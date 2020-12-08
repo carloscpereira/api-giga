@@ -55,35 +55,53 @@ export default class AdicionarMembroContratoService {
     const t = transaction || (await sequelize.transaction());
 
     try {
-      const contrato = await Contrato.findByPk(id_contrato, {
+      const contrato = await Contrato.findOne({
+        where: {
+          id: id_contrato,
+          statusid: {
+            [Op.in]: [8, 6]
+          },
+          tipocontratoid: {
+            [Op.in]: [5, 9]
+          }
+        },
         include: [
           { model: PessoaFisica, as: 'responsavel_pessoafisica' },
           { model: PessoaJuridica, as: 'responsavel_pessoajuridica' },
         ],
       });
 
-      // Testa se Contrato existe ou se ele está disponível para realizar a operação (Está ativo por exemplo)
+      // Testa se Contrato existe ou se ele está disponível para realizar a operação (Está ativo ou pré-cadastro, por exemplo)
       if (!contrato) throw new Error('Contrato não encontrato ou indisponível para realizar a operação');
 
-      const contratoIsValide = contrato.tipocontratoid === 5 || contrato.tipocontratoid === 8;
+      // const contratoIsValide = contrato.tipocontratoid === 5 || contrato.tipocontratoid === 8;
       const contratoIsPJ = contrato.tipocontratoid === 5;
 
       // Testa validade do contrato
-      if (!contratoIsValide) {
-        throw new Error('É necessário que seja um contrato de associado para que seja adicionado um membro');
-      }
+      // if (!contratoIsValide) {
+      //   throw new Error('É necessário que seja um contrato de associado para que seja adicionado um membro');
+      // }
 
       // Pega os dados do Responsável Financeiro do Contrato
       const rfContrato = contratoIsPJ ? contrato.responsavel_pessoajuridica : contrato.responsavel_pessoafisica;
 
       // Seleciona o título em vigencia do contrato
       const tituloContratoVigente = await Titulo.findOne({
-        where: { numerocontratoid: contrato.id, statusid: 1 },
+        where: { 
+          numerocontratoid: contrato.id,
+          statusid: 1, // Seleciona Título ativo
+          dataperiodoinicial: {
+            [Op.lte]: new Date()
+          }, // Pega Titulo onde o periodo inicial é menor ou igual a data atual
+          dataperiodofinal: {
+            [Op.gte]: new Date()
+          } // Pega Titulo onde o periodo final é maior ou igual a data atual
+        },
         order: 'desc',
       });
 
       // Caso não haja nenhum título ativo, emite erro, pois, o ainda não foi renovado.
-      if (!tituloContratoVigente) throw new Error('Contrato quitado e não renovado');
+      if (!tituloContratoVigente) throw new Error('Contrato quitado ou não renovado');
 
       // Todas parcelas do título em vigencia
       const parcelasTitulo = tituloContratoVigente.getParcelas();
@@ -173,9 +191,10 @@ export default class AdicionarMembroContratoService {
           ],
         });
       } else if (!contratoIsPJ) {
-        const gruposContrato = await contrato.getGruposfamiliar();
-        const grupoFamiliarID = gruposContrato.shift().grupo;
+        const gruposContrato = await contrato.getGruposfamiliar(); // Pego todos os grupos familiares do contrato
+        const grupoFamiliarID = gruposContrato.shift().grupo; // O id (grupo) do primeiro grupo familiar
 
+        // Seleciono e populo a variavel grupoFamiliar com o grupo selecionado
         grupoFamiliar = await GrupoFamiliar.findOne({
           where: { grupo: grupoFamiliarID, contratoid: id_contrato },
           include: [
@@ -187,12 +206,16 @@ export default class AdicionarMembroContratoService {
           ],
         });
       }
+
       // Seleciona o responsável do grupo para inserção do novo beneficiário
       if (grupoFamiliar) {
         responsavelGrupoFamiliar = grupoFamiliar.beneficiarios.filter(
           ({ Beneficiario: b }) => b.responsavelgrupo === grupoFamiliar.grupo
         );
       }
+
+      if (contratoIsPJ && !grupoFamiliar && !beneficiario.Produto)
+        throw new Error('É necessário informar um produto para adicionar esse beneficiário');
 
       // Crio nova Pessoa // Beneficiario
       const novoBeneficiario = await CriaPessoaFisicaService.execute({
@@ -207,9 +230,6 @@ export default class AdicionarMembroContratoService {
         sexo: beneficiario.Sexo,
         transaction: t,
       });
-
-      if (contratoIsPJ && !grupoFamiliar && !beneficiario.Produto)
-        throw new Error('É necessário informar um produto para adicionar esse beneficiário');
 
       // Adiciono os endereços do beneficiario caso tenha enviado
       if (beneficiario.Enderecos) {
@@ -270,6 +290,16 @@ export default class AdicionarMembroContratoService {
       }
 
       //  Adiciono o vínculo a beneficiário
+      await AdicionarVinculoService.execute({
+        atributos: {
+          ...beneficiario,
+        },
+        novoBeneficiario,
+        sequelize,
+        transaction: t,
+        vinculo: bv.PESSOA_FISICA,
+      });
+
       if (beneficiarioIsTitular) {
         await AdicionarVinculoService.execute({
           atributos: {
@@ -383,7 +413,7 @@ export default class AdicionarMembroContratoService {
           contratoid: contrato.id,
           tipobeneficiarioid: tipoBeneficiario.id,
           dataregistrosistema: new Date(),
-          dataadesao: beneficiario.dataadesao || new Date(),
+          dataadesao: beneficiario.DataAdesao || new Date(),
           valor: valorPlano,
           numerocarteira: GeraCarteira({
             operadora: operadoraid,
@@ -414,7 +444,7 @@ export default class AdicionarMembroContratoService {
 
       const parcelasPagasTitulo = parcelasTitulo.filter((p) => p.statusgrupoid === 2); // pegando todas parcelas pagas do título
       const somaTotalPago = parcelasPagasTitulo.reduce((ant, prox) => ant + prox.valor, 0); // somando o valor de todas parcelas pagas
-      const novoValorParcela = infoContrato.valormes + beneficiario.Valor; // calculo para definir novo valor da parcela por mês
+      const novoValorParcela = infoContrato.valormes + (beneficiario.Valor || valorPlano); // calculo para definir novo valor da parcela por mês
 
       // calculo para definir novo valor do título
       const novoValorTitulo =
