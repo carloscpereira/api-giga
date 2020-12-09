@@ -11,7 +11,7 @@ import PessoaJuridica from '../models/Sequelize/PessoaJuridica';
 import AssociadoPF from '../models/Sequelize/AssociadoPF';
 import AssociadoPJ from '../models/Sequelize/AssociadoPJ';
 import GrupoFamiliar from '../models/Sequelize/GrupoFamiliar';
-import RegraFechamento from '../models/Sequelize/RegraFechamento';
+// import RegraFechamento from '../models/Sequelize/RegraFechamento';
 import TipoBeneficiario from '../models/Sequelize/TipoBeneficiario';
 import Produto from '../models/Sequelize/Produto';
 
@@ -59,11 +59,11 @@ export default class AdicionarMembroContratoService {
         where: {
           id: id_contrato,
           statusid: {
-            [Op.in]: [8, 6]
+            [Op.in]: [8, 6],
           },
           tipocontratoid: {
-            [Op.in]: [5, 9]
-          }
+            [Op.in]: [5, 9],
+          },
         },
         include: [
           { model: PessoaFisica, as: 'responsavel_pessoafisica' },
@@ -91,13 +91,13 @@ export default class AdicionarMembroContratoService {
           numerocontratoid: contrato.id,
           statusid: 1, // Seleciona Título ativo
           dataperiodoinicial: {
-            [Op.lte]: new Date()
+            [Op.lte]: new Date(),
           }, // Pega Titulo onde o periodo inicial é menor ou igual a data atual
           dataperiodofinal: {
-            [Op.gte]: new Date()
-          } // Pega Titulo onde o periodo final é maior ou igual a data atual
+            [Op.gte]: new Date(),
+          }, // Pega Titulo onde o periodo final é maior ou igual a data atual
         },
-        order: [['id','DESC']],
+        order: [['id', 'DESC']],
       });
 
       // Caso não haja nenhum título ativo, emite erro, pois, o ainda não foi renovado.
@@ -149,8 +149,6 @@ export default class AdicionarMembroContratoService {
         ? await AssociadoPJ.findByPk(rfContrato.shift().AssociadoPJ.id)
         : await AssociadoPF.findByPk(rfContrato.shift().AssociadoPF.id);
 
-
-
       // Seleciona Regra de Fechamento
       // const regraFechamento = await RegraFechamento.findOne({
       //   [Op.or]: [
@@ -169,6 +167,10 @@ export default class AdicionarMembroContratoService {
       // ) {
       //   throw new Error('Parcela fechada, não é possível adicionar beneficiarios nesse contrato esse mês');
       // }
+
+      if (!proximaParcelaValida || moment(proximaParcelaValida.datavencimento).diff(moment(), 'days') > 1) {
+        throw new Error('Parcela fechada, não é possível adicionar beneficiarios nesse contrato esse mês');
+      }
 
       let grupoFamiliar = null; // Grupo Familiar, se selecionado
       let responsavelGrupoFamiliar = null; // Responsável do Grupo Familiar (titular)
@@ -231,7 +233,7 @@ export default class AdicionarMembroContratoService {
         rg: beneficiario.RG,
         sexo: beneficiario.Sexo,
         transaction: t,
-        sequelize
+        sequelize,
       });
 
       // Adiciono os endereços do beneficiario caso tenha enviado
