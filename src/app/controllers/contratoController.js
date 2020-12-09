@@ -13,7 +13,7 @@ import Titulo from '../models/Sequelize/Titulo';
 import TipoCarteira from '../models/Sequelize/TipoCarteira';
 
 import CriarContratoService from '../services/CriaContratoService';
-import MigrarContratoService from '../services/MigrarContratoService';
+// import MigrarContratoService from '../services/MigrarContratoService';
 
 import RemoveMembroContratoService from '../services/RemoveMembroContratoService';
 import AdicionarMembroContratoService from '../services/AdicionarMembroContratoService';
@@ -125,17 +125,17 @@ class ContratoController {
     return res.json({ error: null, data: responseContrato });
   }
 
-  async migrar(req, res) {
-    console.log(req.formValidation);
+  // async migrar(req, res) {
+  //   console.log(req.formValidation);
 
-    const contrato = await MigrarContratoService.execute({
-      id_contrato: req.params.id,
-      request: req.body,
-      sequelize: req.sequelize,
-    });
+  //   const contrato = await MigrarContratoService.execute({
+  //     id_contrato: req.params.id,
+  //     request: req.body,
+  //     sequelize: req.sequelize,
+  //   });
 
-    return res.json(contrato);
-  }
+  //   return res.json(contrato);
+  // }
 
   async update(req, res) {
     const {

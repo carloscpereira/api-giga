@@ -7,7 +7,7 @@ export default class GrupoFamiliar extends Model {
       {
         grupo: Sequelize.INTEGER,
         contratoid: Sequelize.INTEGER,
-        // responsavelgrupoid: Sequelize.INTEGER,
+        responsavelgrupoid: Sequelize.INTEGER,
         sequencia: Sequelize.INTEGER,
       },
       { sequelize, tableName: 'cn_grupofamiliar' }

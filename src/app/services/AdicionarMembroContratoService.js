@@ -75,7 +75,7 @@ export default class AdicionarMembroContratoService {
       if (!contrato) throw new Error('Contrato não encontrato ou indisponível para realizar a operação');
 
       // const contratoIsValide = contrato.tipocontratoid === 5 || contrato.tipocontratoid === 8;
-      const contratoIsPJ = contrato.tipocontratoid === 5;
+      const contratoIsPJ = contrato.tipocontratoid === 9;
 
       // Testa validade do contrato
       // if (!contratoIsValide) {
@@ -87,7 +87,7 @@ export default class AdicionarMembroContratoService {
 
       // Seleciona o título em vigencia do contrato
       const tituloContratoVigente = await Titulo.findOne({
-        where: { 
+        where: {
           numerocontratoid: contrato.id,
           statusid: 1, // Seleciona Título ativo
           dataperiodoinicial: {
@@ -97,14 +97,14 @@ export default class AdicionarMembroContratoService {
             [Op.gte]: new Date()
           } // Pega Titulo onde o periodo final é maior ou igual a data atual
         },
-        order: 'desc',
+        order: [['id','DESC']],
       });
 
       // Caso não haja nenhum título ativo, emite erro, pois, o ainda não foi renovado.
       if (!tituloContratoVigente) throw new Error('Contrato quitado ou não renovado');
 
       // Todas parcelas do título em vigencia
-      const parcelasTitulo = tituloContratoVigente.getParcelas();
+      const parcelasTitulo = await tituloContratoVigente.getParcelas();
 
       // Última parcela paga do título em vigência
       // const ultimaParcelaPaga = _.orderBy(
@@ -116,7 +116,7 @@ export default class AdicionarMembroContratoService {
       // Regra do Giga para próxima parcela válida
       const proximaParcelaValida = await sequelize.query(
         `
-        SELECT parela.* FROM parcela
+        SELECT parcela.* FROM parcela
           INNER JOIN titulo ON parcela.tituloid = titulo.id
           LEFT JOIN cn_fatura_empresa ON parcela.id = cn_fatura_empresa.parcelaid
           LEFT JOIN parcelalote ON parcela.id = parcelalote.parcelaid
@@ -146,27 +146,29 @@ export default class AdicionarMembroContratoService {
 
       // Pega os dados financeiros do contrato
       const infoContrato = contratoIsPJ
-        ? await AssociadoPJ.findByPk(rfContrato.AssociadoPJ.id)
-        : await AssociadoPF.findByPk(rfContrato.AssociadoPF.id);
+        ? await AssociadoPJ.findByPk(rfContrato.shift().AssociadoPJ.id)
+        : await AssociadoPF.findByPk(rfContrato.shift().AssociadoPF.id);
+
+
 
       // Seleciona Regra de Fechamento
-      const regraFechamento = await RegraFechamento.findOne({
-        [Op.or]: [
-          {
-            tiposcontrato_id: contrato.tipocontratoid,
-            tipodecarteira_id: contrato.tipocarteiraid,
-            centrocusto_id: contrato.centrocustoid,
-            vencimento: infoContrato.diavencimento,
-          },
-        ],
-      });
+      // const regraFechamento = await RegraFechamento.findOne({
+      //   [Op.or]: [
+      //     {
+      //       tiposcontrato_id: contrato.tipocontratoid,
+      //       tipodecarteira_id: contrato.tipocarteiraid,
+      //       centrocusto_id: contrato.centrocustoid,
+      //       vencimento: infoContrato.diavencimento,
+      //     },
+      //   ],
+      // });
 
-      if (
-        !proximaParcelaValida ||
-        moment(proximaParcelaValida.datavencimento).diff(moment(), 'days') <= regraFechamento.fechamento
-      ) {
-        throw new Error('Parcela fechada, não é possível adicionar beneficiarios nesse contrato esse mês');
-      }
+      // if (
+      //   !proximaParcelaValida ||
+      //   moment(proximaParcelaValida.datavencimento).diff(moment(), 'days') <= regraFechamento.fechamento
+      // ) {
+      //   throw new Error('Parcela fechada, não é possível adicionar beneficiarios nesse contrato esse mês');
+      // }
 
       let grupoFamiliar = null; // Grupo Familiar, se selecionado
       let responsavelGrupoFamiliar = null; // Responsável do Grupo Familiar (titular)
@@ -210,7 +212,7 @@ export default class AdicionarMembroContratoService {
       // Seleciona o responsável do grupo para inserção do novo beneficiário
       if (grupoFamiliar) {
         responsavelGrupoFamiliar = grupoFamiliar.beneficiarios.filter(
-          ({ Beneficiario: b }) => b.responsavelgrupo === grupoFamiliar.grupo
+          ({ id }) => id === grupoFamiliar.responsavelgrupoid.toString()
         );
       }
 
@@ -218,7 +220,7 @@ export default class AdicionarMembroContratoService {
         throw new Error('É necessário informar um produto para adicionar esse beneficiário');
 
       // Crio nova Pessoa // Beneficiario
-      const novoBeneficiario = await CriaPessoaFisicaService.execute({
+      const [novoBeneficiario] = await CriaPessoaFisicaService.execute({
         nome: beneficiario.Nome,
         cpf: beneficiario.CPF,
         datanascimento: moment(beneficiario.DataNascimento).format(),
@@ -229,6 +231,7 @@ export default class AdicionarMembroContratoService {
         rg: beneficiario.RG,
         sexo: beneficiario.Sexo,
         transaction: t,
+        sequelize
       });
 
       // Adiciono os endereços do beneficiario caso tenha enviado
@@ -294,7 +297,7 @@ export default class AdicionarMembroContratoService {
         atributos: {
           ...beneficiario,
         },
-        novoBeneficiario,
+        pessoa: novoBeneficiario,
         sequelize,
         transaction: t,
         vinculo: bv.PESSOA_FISICA,
@@ -305,7 +308,7 @@ export default class AdicionarMembroContratoService {
           atributos: {
             ...beneficiario,
           },
-          novoBeneficiario,
+          pessoa: novoBeneficiario,
           sequelize,
           transaction: t,
           vinculo: bv.TITULAR,
@@ -316,7 +319,7 @@ export default class AdicionarMembroContratoService {
             ...beneficiario,
             RgDoBeneficiarioTitular: responsavelGrupoFamiliar.rg,
           },
-          novoBeneficiario,
+          pessoa: novoBeneficiario,
           sequelize,
           transaction: t,
           vinculo: bv[vinculo],

@@ -13,7 +13,7 @@ routes.get('/:operator', operatorMiddleware, contratoController.index);
 routes.post('/:operator', operatorMiddleware, validateStore, contratoController.store);
 
 routes.put('/:operator/:id', operatorMiddleware, validateUpdate, contratoController.update);
-routes.put('/:operator/:id/migrar', operatorMiddleware, validateUpdate, contratoController.migrar);
+// routes.put('/:operator/:id/migrar', operatorMiddleware, validateUpdate, contratoController.migrar);
 
 routes.get('/:operator/:id', operatorMiddleware, contratoController.show);
 routes.put('/:operator/:id/block', operatorMiddleware, contratoController.block);
