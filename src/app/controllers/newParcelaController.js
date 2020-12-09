@@ -5,6 +5,10 @@ import ParcelaAcrescimoDesconto from '../models/Sequelize/ParcelaAcrescimoDescon
 import FormaPagamento from '../models/Sequelize/FormaPagamento';
 import Titulo from '../models/Sequelize/Titulo';
 import Contrato from '../models/Sequelize/Contrato';
+import Pessoa from '../models/Sequelize/Pessoa';
+import TipoContrato from '../models/Sequelize/TipoContrato';
+// import AssociadoPJ from '../models/Sequelize/AssociadoPJ';
+// import AssociadoPF from '../models/Sequelize/AssociadoPF';
 
 class NewParcela {
   async index(req, res) {
@@ -35,9 +39,7 @@ class NewParcela {
       ...filterParcela,
       limit,
       include: [
-        ...(columns.includes('lotes')
-          ? [{ model: LotePagamento, as: 'lotes', ...filterLote }]
-          : []),
+        ...(columns.includes('lotes') ? [{ model: LotePagamento, as: 'lotes', ...filterLote }] : []),
         ...(columns.includes('descontos')
           ? [
               {
@@ -56,18 +58,40 @@ class NewParcela {
               },
             ]
           : []),
-        ...(columns.includes('titulos')
+        ...(columns.includes('titulos') || columns.includes('contratos')
           ? [
               {
                 model: Titulo,
                 as: 'titulo',
                 include: [
-                  {
-                    model: Contrato,
-                    as: 'contrato',
-                    ...filterContrato,
-                    required: true,
-                  },
+                  ...(columns.includes('contratos')
+                    ? [
+                        {
+                          model: Contrato,
+                          as: 'contrato',
+                          ...filterContrato,
+                          include: [
+                            {
+                              model: TipoContrato,
+                              as: 'tipocontrato',
+                            },
+                            {
+                              model: Pessoa,
+                              as: 'responsaveispj',
+                              required: false,
+                            },
+                            {
+                              model: Pessoa,
+                              as: 'responsaveispf',
+                              required: false,
+                              through: {
+                                attributes: [],
+                              },
+                            },
+                          ],
+                        },
+                      ]
+                    : []),
                 ],
                 required: true,
               },
