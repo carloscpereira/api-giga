@@ -1,5 +1,5 @@
 import { Op, QueryTypes } from 'sequelize';
-// import  _  from 'lodash';
+import  _  from 'lodash';
 import moment from 'moment';
 
 import Contrato from '../models/Sequelize/Contrato';
@@ -47,6 +47,8 @@ export default class AdicionarMembroContratoService {
     beneficiario,
     id_grupofamiliar,
     id_contrato,
+    id_vendedor,
+    id_corretor,
     vinculo,
     // formaPagamento,
     sequelize,
@@ -68,6 +70,11 @@ export default class AdicionarMembroContratoService {
         include: [
           { model: PessoaFisica, as: 'responsavel_pessoafisica' },
           { model: PessoaJuridica, as: 'responsavel_pessoajuridica' },
+          {
+            model: GrupoFamiliar,
+            as: 'gruposfamiliar',
+            include: [{ model: PessoaFisica, as: 'beneficiarios' }],
+          },
         ],
       });
 
@@ -148,6 +155,8 @@ export default class AdicionarMembroContratoService {
       const infoContrato = contratoIsPJ
         ? await AssociadoPJ.findByPk(rfContrato.shift().AssociadoPJ.id)
         : await AssociadoPF.findByPk(rfContrato.shift().AssociadoPF.id);
+      const beneficiariosContrato = _.flattenDeep(contrato.gruposfamiliar.map(({ beneficiarios }) => beneficiarios)); // Armazena beneficiarios do contrato atual
+
 
       // Seleciona Regra de Fechamento
       // const regraFechamento = await RegraFechamento.findOne({
@@ -168,13 +177,14 @@ export default class AdicionarMembroContratoService {
       //   throw new Error('Parcela fechada, não é possível adicionar beneficiarios nesse contrato esse mês');
       // }
 
-      if (!proximaParcelaValida || moment(proximaParcelaValida.datavencimento).diff(moment(), 'days') > 1) {
-        throw new Error('Parcela fechada, não é possível adicionar beneficiarios nesse contrato esse mês');
-      }
+      // if (!proximaParcelaValida || moment(proximaParcelaValida.datavencimento).diff(moment(), 'days') > 1) {
+      //   throw new Error('Parcela fechada, não é possível adicionar beneficiarios nesse contrato esse mês');
+      // }
 
       let grupoFamiliar = null; // Grupo Familiar, se selecionado
       let responsavelGrupoFamiliar = null; // Responsável do Grupo Familiar (titular)
       let produto = null; // Produto || Plano & Versão Plano
+      let vendedor = null; // Armazena o vendedor e a corretora
 
       // Testo para ver se o beneficiario será o titular do grupo familiar
       const beneficiarioIsTitular = contratoIsPJ && !grupoFamiliar && beneficiario.Produto;
@@ -213,9 +223,33 @@ export default class AdicionarMembroContratoService {
 
       // Seleciona o responsável do grupo para inserção do novo beneficiário
       if (grupoFamiliar) {
-        responsavelGrupoFamiliar = grupoFamiliar.beneficiarios.filter(
+        responsavelGrupoFamiliar = grupoFamiliar.beneficiarios.find(
           ({ id }) => id === grupoFamiliar.responsavelgrupoid.toString()
         );
+      }
+
+      if((id_vendedor && id_corretor) || responsavelGrupoFamiliar) {
+        const [row] = await sequelize.query(`
+        SELECT sp_dadospessoafisica.id    AS vendedorid,
+                sp_dadospessoafisica.nome AS nome,
+                cn_corretorpf.id          AS corretoraid
+        FROM   sp_dadospessoafisica
+                INNER JOIN cn_grupocorretores
+                        ON cn_grupocorretores.corretorvendedor = sp_dadospessoafisica.id
+                INNER JOIN cn_corretorpf
+                        ON cn_corretorpf.corretorapjid =
+                          cn_grupocorretores.corretorpessoaj
+        WHERE  (cn_grupocorretores.corretorvendedor IS NOT NULL)
+                AND (sp_dadospessoafisica.id = :vendedorid AND cn_corretorpf.id = :corretoraid)
+        ORDER  BY sp_dadospessoafisica.nome;
+        `, {type: QueryTypes.SELECT, replacements: { vendedorid: id_vendedor || responsavelGrupoFamiliar.Beneficiario.vendedorid, corretoraid: id_corretor || responsavelGrupoFamiliar.Beneficiario.corretoraid }});
+
+        vendedor = row;
+      }
+
+      // Verifica se o vendedor é válido
+      if(!vendedor) {
+        throw new Error('Informa um vendedor e uma corretora válido');
       }
 
       if (contratoIsPJ && !grupoFamiliar && !beneficiario.Produto)
@@ -331,8 +365,10 @@ export default class AdicionarMembroContratoService {
       // Seleciona o Produto || Plano do Beneficiário
       if (grupoFamiliar && responsavelGrupoFamiliar) {
         produto = await Produto.findOne({
-          planoid: responsavelGrupoFamiliar.planoid,
-          versaoid: responsavelGrupoFamiliar.versaoplanoid,
+          where: {
+            planoid: responsavelGrupoFamiliar.Beneficiario.planoid,
+            versaoid: responsavelGrupoFamiliar.Beneficiario.versaoplanoid,
+          }
         });
       } else if (beneficiarioIsTitular) {
         produto = await Produto.findByPk(beneficiario.Produto);
@@ -428,6 +464,8 @@ export default class AdicionarMembroContratoService {
           via: 'A',
           sequencia,
           ativo: 1,
+          vendedorid: vendedor.vendedorid,
+          corretoraid: vendedor.corretoraid,
           responsavelgrupo: responsavelGrupoFamiliar.id,
           descontovalor: beneficiario.Valor ? valorPlano - beneficiario.Valor : 0,
           descontoporcent: beneficiario.Valor ? (beneficiario.Valor * 100) / valorPlano : 0,
@@ -447,9 +485,10 @@ export default class AdicionarMembroContratoService {
        * Sessão Financeira
        */
 
-      const parcelasPagasTitulo = parcelasTitulo.filter((p) => p.statusgrupoid === 2); // pegando todas parcelas pagas do título
-      const somaTotalPago = parcelasPagasTitulo.reduce((ant, prox) => ant + prox.valor, 0); // somando o valor de todas parcelas pagas
-      const novoValorParcela = infoContrato.valormes + (beneficiario.Valor || valorPlano); // calculo para definir novo valor da parcela por mês
+      const somaBeneficiariosContrato = beneficiariosContrato.reduce((ant, prox) => ant + (parseFloat(prox.Beneficiario.valor) - parseFloat(prox.Beneficiario.descontovalor)),0);
+      const parcelasPagasTitulo = parcelasTitulo.filter((p) => parseInt(p.statusgrupoid, 10)=== 2 || moment(p.datavencimento).isBefore(moment())); // pegando todas parcelas pagas do título
+      const somaTotalPago = parcelasPagasTitulo.reduce((ant, prox) => ant + parseFloat(prox.valor), 0); // somando o valor de todas parcelas pagas
+      const novoValorParcela = parseFloat(somaBeneficiariosContrato) + (parseFloat(beneficiario.Valor) || valorPlano); // calculo para definir novo valor da parcela por mês
 
       // calculo para definir novo valor do título
       const novoValorTitulo =
