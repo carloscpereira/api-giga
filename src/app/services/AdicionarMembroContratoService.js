@@ -157,6 +157,12 @@ export default class AdicionarMembroContratoService {
         : await AssociadoPF.findByPk(rfContrato.shift().AssociadoPF.id);
       const beneficiariosContrato = _.flattenDeep(contrato.gruposfamiliar.map(({ beneficiarios }) => beneficiarios)); // Armazena beneficiarios do contrato atual
 
+      const checaBeneficiario = beneficiariosContrato.filter(ben => ben.cpf === beneficiario.CPF && ben.Beneficiario.ativo === '1');
+      
+      if(checaBeneficiario && checaBeneficiario.length > 0){
+        throw new Error('O beneficiario já se encontra cadastrado no contrato');
+      }
+
 
       // Seleciona Regra de Fechamento
       // const regraFechamento = await RegraFechamento.findOne({
@@ -485,7 +491,7 @@ export default class AdicionarMembroContratoService {
        * Sessão Financeira
        */
 
-      const somaBeneficiariosContrato = beneficiariosContrato.reduce((ant, prox) => ant + (parseFloat(prox.Beneficiario.valor) - parseFloat(prox.Beneficiario.descontovalor)),0);
+      const somaBeneficiariosContrato = beneficiariosContrato.filter(ben => be.Beneficiario.ativo  === 1).reduce((ant, prox) => ant + (parseFloat(prox.Beneficiario.valor) - parseFloat(prox.Beneficiario.descontovalor)),0);
       const parcelasPagasTitulo = parcelasTitulo.filter((p) => parseInt(p.statusgrupoid, 10)=== 2 || moment(p.datavencimento).isBefore(moment())); // pegando todas parcelas pagas do título
       const somaTotalPago = parcelasPagasTitulo.reduce((ant, prox) => ant + parseFloat(prox.valor), 0); // somando o valor de todas parcelas pagas
       const novoValorParcela = parseFloat(somaBeneficiariosContrato) + (parseFloat(beneficiario.Valor) || valorPlano); // calculo para definir novo valor da parcela por mês
@@ -506,18 +512,9 @@ export default class AdicionarMembroContratoService {
         }
       );
 
-      // selecionando valor total do contrato
-      const [valorContratoTotal] = await sequelize.query(
-        'SELECT SUM(valor) as soma FROM titulo WHERE numerocontratoid = :ID_CONTRATO',
-        {
-          replacements: { ID_CONTRATO: contrato.id },
-          type: QueryTypes.SELECT,
-        }
-      );
-
       // atualizando novo valor de contrato para valor real
       await infoContrato.update(
-        { valorcontrato: valorContratoTotal.soma, valormes: novoValorParcela, valorliquido: novoValorParcela },
+        { valorcontrato: novoValorTitulo, valormes: novoValorParcela, valorliquido: novoValorParcela },
         { transaction: t }
       );
 
