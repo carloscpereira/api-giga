@@ -503,7 +503,7 @@ export default class AdicionarMembroContratoService {
        */
 
       const somaBeneficiariosContrato = beneficiariosContrato
-        .filter((ben) => ben.Beneficiario.ativo === 1)
+        .filter((ben) => ben.Beneficiario.ativo === '1')
         .reduce(
           (ant, prox) => ant + (parseFloat(prox.Beneficiario.valor) - parseFloat(prox.Beneficiario.descontovalor)),
           0
