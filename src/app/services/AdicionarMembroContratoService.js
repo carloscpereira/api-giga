@@ -1,5 +1,5 @@
 import { Op, QueryTypes } from 'sequelize';
-import  _  from 'lodash';
+import _ from 'lodash';
 import moment from 'moment';
 
 import Contrato from '../models/Sequelize/Contrato';
@@ -157,12 +157,13 @@ export default class AdicionarMembroContratoService {
         : await AssociadoPF.findByPk(rfContrato.shift().AssociadoPF.id);
       const beneficiariosContrato = _.flattenDeep(contrato.gruposfamiliar.map(({ beneficiarios }) => beneficiarios)); // Armazena beneficiarios do contrato atual
 
-      const checaBeneficiario = beneficiariosContrato.filter(ben => ben.cpf === beneficiario.CPF && ben.Beneficiario.ativo === '1');
-      
-      if(checaBeneficiario && checaBeneficiario.length > 0){
+      const checaBeneficiario = beneficiariosContrato.filter(
+        (ben) => ben.cpf === beneficiario.CPF && ben.Beneficiario.ativo === '1'
+      );
+
+      if (checaBeneficiario && checaBeneficiario.length > 0) {
         throw new Error('O beneficiario já se encontra cadastrado no contrato');
       }
-
 
       // Seleciona Regra de Fechamento
       // const regraFechamento = await RegraFechamento.findOne({
@@ -234,8 +235,9 @@ export default class AdicionarMembroContratoService {
         );
       }
 
-      if((id_vendedor && id_corretor) || responsavelGrupoFamiliar) {
-        const [row] = await sequelize.query(`
+      if ((id_vendedor && id_corretor) || responsavelGrupoFamiliar) {
+        const [row] = await sequelize.query(
+          `
         SELECT sp_dadospessoafisica.id    AS vendedorid,
                 sp_dadospessoafisica.nome AS nome,
                 cn_corretorpf.id          AS corretoraid
@@ -248,13 +250,21 @@ export default class AdicionarMembroContratoService {
         WHERE  (cn_grupocorretores.corretorvendedor IS NOT NULL)
                 AND (sp_dadospessoafisica.id = :vendedorid AND cn_corretorpf.id = :corretoraid)
         ORDER  BY sp_dadospessoafisica.nome;
-        `, {type: QueryTypes.SELECT, replacements: { vendedorid: id_vendedor || responsavelGrupoFamiliar.Beneficiario.vendedorid, corretoraid: id_corretor || responsavelGrupoFamiliar.Beneficiario.corretoraid }});
+        `,
+          {
+            type: QueryTypes.SELECT,
+            replacements: {
+              vendedorid: id_vendedor || responsavelGrupoFamiliar.Beneficiario.vendedorid,
+              corretoraid: id_corretor || responsavelGrupoFamiliar.Beneficiario.corretoraid,
+            },
+          }
+        );
 
         vendedor = row;
       }
 
       // Verifica se o vendedor é válido
-      if(!vendedor) {
+      if (!vendedor) {
         throw new Error('Informa um vendedor e uma corretora válido');
       }
 
@@ -374,7 +384,7 @@ export default class AdicionarMembroContratoService {
           where: {
             planoid: responsavelGrupoFamiliar.Beneficiario.planoid,
             versaoid: responsavelGrupoFamiliar.Beneficiario.versaoplanoid,
-          }
+          },
         });
       } else if (beneficiarioIsTitular) {
         produto = await Produto.findByPk(beneficiario.Produto);
@@ -491,8 +501,15 @@ export default class AdicionarMembroContratoService {
        * Sessão Financeira
        */
 
-      const somaBeneficiariosContrato = beneficiariosContrato.filter(ben => be.Beneficiario.ativo  === 1).reduce((ant, prox) => ant + (parseFloat(prox.Beneficiario.valor) - parseFloat(prox.Beneficiario.descontovalor)),0);
-      const parcelasPagasTitulo = parcelasTitulo.filter((p) => parseInt(p.statusgrupoid, 10)=== 2 || moment(p.datavencimento).isBefore(moment())); // pegando todas parcelas pagas do título
+      const somaBeneficiariosContrato = beneficiariosContrato
+        .filter((ben) => ben.Beneficiario.ativo === 1)
+        .reduce(
+          (ant, prox) => ant + (parseFloat(prox.Beneficiario.valor) - parseFloat(prox.Beneficiario.descontovalor)),
+          0
+        );
+      const parcelasPagasTitulo = parcelasTitulo.filter(
+        (p) => parseInt(p.statusgrupoid, 10) === 2 || moment(p.datavencimento).isBefore(moment())
+      ); // pegando todas parcelas pagas do título
       const somaTotalPago = parcelasPagasTitulo.reduce((ant, prox) => ant + parseFloat(prox.valor), 0); // somando o valor de todas parcelas pagas
       const novoValorParcela = parseFloat(somaBeneficiariosContrato) + (parseFloat(beneficiario.Valor) || valorPlano); // calculo para definir novo valor da parcela por mês
 
