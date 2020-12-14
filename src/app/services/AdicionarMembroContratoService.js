@@ -466,6 +466,7 @@ export default class AdicionarMembroContratoService {
 
       // Adiciona a pessoa ao grupo familiar
       await grupoFamiliar.addPessoa(novoBeneficiario, {
+        transaction: t,
         through: {
           contratoid: contrato.id,
           tipobeneficiarioid: tipoBeneficiario.id,
