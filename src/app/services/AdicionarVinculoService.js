@@ -1,8 +1,9 @@
-import { QueryTypes, Op } from 'sequelize';
+import { QueryTypes, Op, Transaction, Sequelize } from 'sequelize';
 
 import Pessoa from '../models/Sequelize/Pessoa';
 import Vinculo from '../models/Sequelize/Vinculo';
 import AtributoVinculo from '../models/Sequelize/AtributoVinculo';
+import PessoaVinculo from '../models/Sequelize/PessoaVinculo';
 // import PessoaFisica from '../models/Sequelize/PessoaFisica';
 // import EstadoCivil from '../models/Sequelize/EstadoCivil';
 
@@ -29,9 +30,17 @@ const snakeToPascal = (string) => {
 // };
 
 export default class AdicinarVinculoPFService {
-  static async execute({ pessoa, vinculo, atributos, sequelize, transaction }) {
+  static async execute({ pessoa, vinculo, atributos, alteravel = true, sequelize, transaction }) {
     if (pessoa instanceof Pessoa) {
       if (typeof atributos !== 'object') throw new Error('Atributos precisa ser um objeto');
+
+      if (!(transaction instanceof Transaction) && (!sequelize || !(sequelize instanceof Sequelize))) {
+        throw new Error('Não foi possível estabelecer conexão com o banco');
+      }
+
+      if (!(transaction instanceof Transaction) && sequelize && sequelize instanceof Sequelize) {
+        transaction = await sequelize.transaction();
+      }
 
       const vinculoGet = await Vinculo.findOne({
         where: {
@@ -42,10 +51,9 @@ export default class AdicinarVinculoPFService {
         },
       });
 
-      console.log('pessoa: ', atributos);
-      console.log('vinculo: ', vinculo);
-
       if (!vinculo) throw new Error('Vinculo não encontrado');
+
+      if (!alteravel && (await pessoa.hasVinculos(vinculoGet))) return;
 
       if (await pessoa.hasVinculos(vinculoGet)) {
         await AtributoVinculo.destroy({ where: { vinculoid: vinculoGet.id, pessoaid: pessoa.id }, transaction });
@@ -77,7 +85,15 @@ export default class AdicinarVinculoPFService {
 
       if (propertyErrors.length > 0) throw new Error(propertyErrors);
 
-      await pessoa.addVinculos([vinculoGet], { transaction });
+      const vinculoExists = await PessoaVinculo.findOne({
+        where: { pessoaid: pessoa.id, vinculoid: vinculoGet.id },
+      });
+
+      if (!vinculoExists) {
+        await PessoaVinculo.create({ pessoaid: pessoa.id, vinculoid: vinculoGet.id }, { transaction });
+      }
+
+      // await pessoa.addVinculos([vinculoGet], { transaction });
       // eslint-disable-next-line no-restricted-syntax
       for (const atributo of atributosVinculo) {
         if (atributos[snakeToPascal(atributo.descricaocampo)]) {

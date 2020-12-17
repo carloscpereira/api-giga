@@ -83,5 +83,21 @@ export default class PessoaFisica extends Model {
         singular: 'email',
       },
     });
+
+    this.hasMany(models.CartaoCredito, {
+      foreignKey: 'pessoaid',
+      as: {
+        plural: 'cartoes',
+        singular: 'cartao',
+      },
+    });
+
+    this.hasMany(models.Conta, {
+      foreignKey: 'pessoaid',
+      as: {
+        plural: 'contas',
+        singular: 'conta',
+      },
+    });
   }
 }

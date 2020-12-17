@@ -1,4 +1,6 @@
 import * as Yup from 'yup';
+import { Sequelize } from 'sequelize';
+
 import queryStringConverter from 'sequelize-querystring-converter';
 import Contrato from '../models/Sequelize/Contrato';
 import TipoContrato from '../models/Sequelize/TipoContrato';
@@ -13,7 +15,7 @@ import Titulo from '../models/Sequelize/Titulo';
 import TipoCarteira from '../models/Sequelize/TipoCarteira';
 
 import CriarContratoService from '../services/CriaContratoService';
-// import MigrarContratoService from '../services/MigrarContratoService';
+import MigrarContratoService from '../services/MigrarContratoService';
 
 import RemoveMembroContratoService from '../services/RemoveMembroContratoService';
 import AdicionarMembroContratoService from '../services/AdicionarMembroContratoService';
@@ -125,17 +127,16 @@ class ContratoController {
     return res.json({ error: null, data: responseContrato });
   }
 
-  // async migrar(req, res) {
-  //   console.log(req.formValidation);
+  async migrar(req, res) {
+    console.log(req.sequelize instanceof Sequelize);
+    const contrato = await MigrarContratoService.execute({
+      id_contrato: req.params.id,
+      connection: req.sequelize,
+      proposta: req.body,
+    });
 
-  //   const contrato = await MigrarContratoService.execute({
-  //     id_contrato: req.params.id,
-  //     request: req.body,
-  //     sequelize: req.sequelize,
-  //   });
-
-  //   return res.json(contrato);
-  // }
+    return res.json({ contrato });
+  }
 
   async update(req, res) {
     const {

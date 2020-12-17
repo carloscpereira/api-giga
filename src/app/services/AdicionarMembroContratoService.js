@@ -1,4 +1,4 @@
-import { Op, QueryTypes } from 'sequelize';
+import { Op, QueryTypes, Sequelize, Transaction } from 'sequelize';
 import _ from 'lodash';
 import moment from 'moment';
 
@@ -11,7 +11,7 @@ import PessoaJuridica from '../models/Sequelize/PessoaJuridica';
 import AssociadoPF from '../models/Sequelize/AssociadoPF';
 import AssociadoPJ from '../models/Sequelize/AssociadoPJ';
 import GrupoFamiliar from '../models/Sequelize/GrupoFamiliar';
-// import RegraFechamento from '../models/Sequelize/RegraFechamento';
+import RegraFechamento from '../models/Sequelize/RegraFechamento';
 import TipoBeneficiario from '../models/Sequelize/TipoBeneficiario';
 import Produto from '../models/Sequelize/Produto';
 
@@ -54,7 +54,16 @@ export default class AdicionarMembroContratoService {
     sequelize,
     transaction,
   }) {
-    const t = transaction || (await sequelize.transaction());
+    let t = transaction;
+    // Testa se a instancia de conexão com o banco de dados foi passada corretamente
+    if (!sequelize || !(sequelize instanceof Sequelize)) {
+      throw new Error('Não foi possível estabalecer conexão com o banco de dados');
+    }
+
+    // Testa se a instancia de transação foi mandada corretamente, caso não, cria uma nova instancia
+    if (!transaction || !(transaction instanceof Transaction)) {
+      t = await sequelize.transaction();
+    }
 
     try {
       const contrato = await Contrato.findOne({
@@ -166,27 +175,27 @@ export default class AdicionarMembroContratoService {
       }
 
       // Seleciona Regra de Fechamento
-      // const regraFechamento = await RegraFechamento.findOne({
-      //   [Op.or]: [
-      //     {
-      //       tiposcontrato_id: contrato.tipocontratoid,
-      //       tipodecarteira_id: contrato.tipocarteiraid,
-      //       centrocusto_id: contrato.centrocustoid,
-      //       vencimento: infoContrato.diavencimento,
-      //     },
-      //   ],
-      // });
+      const regraFechamento = await RegraFechamento.findOne({
+        [Op.or]: [
+          {
+            tiposcontrato_id: contrato.tipocontratoid,
+            tipodecarteira_id: contrato.tipocarteiraid,
+            centrocusto_id: contrato.centrocustoid,
+            vencimento: infoContrato.diavencimento,
+          },
+        ],
+      });
 
-      // if (
-      //   !proximaParcelaValida ||
-      //   moment(proximaParcelaValida.datavencimento).diff(moment(), 'days') <= regraFechamento.fechamento
-      // ) {
-      //   throw new Error('Parcela fechada, não é possível adicionar beneficiarios nesse contrato esse mês');
-      // }
+      if (
+        !proximaParcelaValida ||
+        moment(proximaParcelaValida.datavencimento).diff(moment(), 'days') <= regraFechamento.fechamento
+      ) {
+        throw new Error('Parcela fechada, não é possível adicionar beneficiarios nesse contrato esse mês');
+      }
 
-      // if (!proximaParcelaValida || moment(proximaParcelaValida.datavencimento).diff(moment(), 'days') > 1) {
-      //   throw new Error('Parcela fechada, não é possível adicionar beneficiarios nesse contrato esse mês');
-      // }
+      if (!proximaParcelaValida || moment(proximaParcelaValida.datavencimento).diff(moment(), 'days') > 1) {
+        throw new Error('Parcela fechada, não é possível adicionar beneficiarios nesse contrato esse mês');
+      }
 
       let grupoFamiliar = null; // Grupo Familiar, se selecionado
       let responsavelGrupoFamiliar = null; // Responsável do Grupo Familiar (titular)
@@ -536,7 +545,7 @@ export default class AdicionarMembroContratoService {
         { transaction: t }
       );
 
-      t.commit();
+      if (!transaction) t.commit();
 
       return contrato;
     } catch (error) {

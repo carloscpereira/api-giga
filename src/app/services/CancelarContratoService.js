@@ -1,4 +1,4 @@
-import { Op } from 'sequelize';
+import { Op, Sequelize, Transaction } from 'sequelize';
 
 import Contrato from '../models/Sequelize/Contrato';
 import GrupoFamiliar from '../models/Sequelize/GrupoFamiliar';
@@ -8,7 +8,17 @@ import Beneficiario from '../models/Sequelize/Beneficiario';
 
 export default class CancelarContratoService {
   static async execute({ id, sequelize, transaction, motivocancelamentoid = 38 }) {
-    const t = transaction || (await sequelize.transaction());
+    let t = transaction;
+
+    // Testa se a instancia de conexão com o banco de dados foi passada corretamente
+    if (!sequelize || !(sequelize instanceof Sequelize)) {
+      throw new Error('Não foi possível estabalecer conexão com o banco de dados');
+    }
+
+    // Testa se a instancia de transação foi mandada corretamente, caso não, cria uma nova instancia
+    if (!t || !(t instanceof Transaction)) {
+      t = await sequelize.transaction();
+    }
 
     try {
       // Seleciona o contrato a ser cancelado
@@ -66,7 +76,8 @@ export default class CancelarContratoService {
       }
 
       // Submete alterações ao banco de dados
-      t.commit();
+
+      if (!transaction) t.commit();
 
       return true;
     } catch (error) {

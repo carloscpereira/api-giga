@@ -20,5 +20,6 @@ module.exports = {
     camelcase: 'off',
     'no-unused-vars': ['error', { argsIgnorePattern: 'next' }],
     'no-console': 'off',
+    'no-await-in-loop': 'off',
   },
 };

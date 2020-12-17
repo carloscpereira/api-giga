@@ -1,5 +1,5 @@
 /* eslint-disable default-case */
-import { QueryTypes } from 'sequelize';
+import { QueryTypes, Sequelize, Transaction } from 'sequelize';
 import moment from 'moment';
 
 import Contrato from '../models/Sequelize/Contrato';
@@ -47,8 +47,17 @@ const bv = {
 };
 
 export default class CriaContratoService {
-  static async execute({ formValidation: body, sequelize }) {
-    const t = await sequelize.transaction();
+  static async execute({ formValidation: body, sequelize, transaction, alterarVinculo = true }) {
+    let t = transaction;
+    // Testa se a instancia de conexão com o banco de dados foi passada corretamente
+    if (!sequelize || !(sequelize instanceof Sequelize)) {
+      throw new Error('Não foi possível estabalecer conexão com o banco de dados');
+    }
+
+    // Testa se a instancia de transação foi mandada corretamente, caso não, cria uma nova instancia
+    if (!transaction || !(transaction instanceof Transaction)) {
+      t = await sequelize.transaction();
+    }
     try {
       switch (body.Convenio) {
         case 'Empresa':
@@ -92,7 +101,7 @@ export default class CriaContratoService {
                               cn_grupocorretores.corretorpessoaj
             WHERE  (cn_grupocorretores.corretorvendedor IS NOT NULL)
                     AND (sp_dadospessoafisica.id = :vendedorid AND cn_corretorpf.id = :corretoraid)
-            ORDER  BY sp_dadospessoafisica.nome
+            ORDER  BY sp_dadospessoafisica.nome;
             `,
               {
                 type: QueryTypes.SELECT,
@@ -134,6 +143,7 @@ export default class CriaContratoService {
             pessoa: responsavelFinanceiro,
             vinculo: bv.PESSOA_FISICA,
             atributos: body.ResponsavelFinanceiro,
+            alteravel: alterarVinculo,
             sequelize,
             transaction: t,
           });
@@ -142,6 +152,7 @@ export default class CriaContratoService {
             pessoa: responsavelFinanceiro,
             vinculo: bv.REPONSAVEL_FINANCEIRO,
             atributos: body.ResponsavelFinanceiro,
+            alteravel: alterarVinculo,
             sequelize,
             transaction: t,
           });
@@ -150,6 +161,7 @@ export default class CriaContratoService {
             await AdicionarVinculoService.execute({
               pessoa: responsavelFinanceiro,
               vinculo: bv.SERVIDOR_PUBLICO_MUNICIPAL,
+              alteravel: alterarVinculo,
               atributos: body.ResponsavelFinanceiro,
               sequelize,
               transaction: t,
@@ -160,6 +172,7 @@ export default class CriaContratoService {
             await AdicionarVinculoService.execute({
               pessoa: responsavelFinanceiro,
               vinculo: bv.SERVIDOR_PUBLICO_ESTADUAL,
+              alteravel: alterarVinculo,
               atributos: body.ResponsavelFinanceiro,
               sequelize,
               transaction: t,
@@ -170,6 +183,7 @@ export default class CriaContratoService {
             await AdicionarVinculoService.execute({
               pessoa: responsavelFinanceiro,
               vinculo: bv.SERVIDOR_PUBLICO_FEDERAL,
+              alteravel: alterarVinculo,
               atributos: body.ResponsavelFinanceiro,
               sequelize,
               transaction: t,
@@ -400,6 +414,7 @@ export default class CriaContratoService {
               },
               pessoa,
               sequelize,
+              alteravel: alterarVinculo,
               transaction: t,
               vinculo: beneficiario.Titular ? bv.TITULAR : bv[beneficiario.Vinculo],
             });
@@ -679,8 +694,7 @@ export default class CriaContratoService {
               { transaction: t }
             );
           }
-
-          await t.commit();
+          if (!transaction) await t.commit();
 
           return contrato;
         }

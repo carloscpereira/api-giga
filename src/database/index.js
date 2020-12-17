@@ -61,6 +61,8 @@ import Cidade from '../app/models/Sequelize/Cidade';
 import Estado from '../app/models/Sequelize/Estado';
 import Bairro from '../app/models/Sequelize/Bairro';
 import RegraFechamento from '../app/models/Sequelize/RegraFechamento';
+import TipoBaixa from '../app/models/Sequelize/TipoBaixa';
+import CentroMovimentacaoFinanceira from '../app/models/Sequelize/CentroMovimentacaoFinanceira';
 // import databaseConfig from '../config/database';
 
 const models = [
@@ -120,6 +122,8 @@ const models = [
   Estado,
   Bairro,
   RegraFechamento,
+  TipoBaixa,
+  CentroMovimentacaoFinanceira,
 ];
 
 class Database {
