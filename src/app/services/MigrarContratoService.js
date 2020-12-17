@@ -17,6 +17,7 @@ import TipoCarteira from '../models/Sequelize/TipoCarteira';
 import EstadoCivil from '../models/Sequelize/EstadoCivil';
 import CartaoCredito from '../models/Sequelize/CartaoCredito';
 import Conta from '../models/Sequelize/Conta';
+import RegraFechamento from '../models/Sequelize/RegraFechamento';
 
 // import CriaPessoaFisica from './CriaPessoaFisicaService';
 // import AdicionarVinculoService from './AdicionarVinculoService';
@@ -151,17 +152,65 @@ export default class MigrarContratoService {
       //       p.lotes.length === 0
       //   )
       //   .sort((a, b) => parseInt(a.id, 10) - parseInt(b.id, 10))
-      //   .shift(); // Recupera a próxima parcela a ser paga
+
+      // Regra do Giga para próxima parcela válida
+      const proximaParcelaValida = await connection.query(
+        `
+              SELECT parcela.* FROM parcela
+                INNER JOIN titulo ON parcela.tituloid = titulo.id
+                LEFT JOIN cn_fatura_empresa ON parcela.id = cn_fatura_empresa.parcelaid
+                LEFT JOIN parcelalote ON parcela.id = parcelalote.parcelaid
+                LEFT JOIN parcela_acrescimo_desconto ON parcela.id = parcela_acrescimo_desconto.parcelaid
+                WHERE  (parcela.datavencimento >= Current_Date + CASE
+                  WHEN (SELECT MAX(v.periodovencimento) FROM cn_versaoplano v
+                  WHERE v.id IN (SELECT b.versaoplanoid FROM cn_beneficiario b
+                    WHERE (b.ativo = '1') AND (b.contratoid = :P_ID_CONTRATO))) IS NULL THEN 0
+                  ELSE (SELECT MAX(v.periodovencimento) FROM cn_versaoplano v
+                  WHERE v.id IN (SELECT b.versaoplanoid FROM cn_beneficiario b
+                    WHERE (b.ativo = '1') AND (b.contratoid = :P_ID_CONTRATO))) END) AND
+                (parcela.statusgrupoid = 1) AND
+                (parcela.codigobarras IS NULL) AND
+                (parcela.statusarquivo IS NULL) AND
+                (cn_fatura_empresa.parcelaid IS NULL) AND
+                (parcelalote.parcelaid IS NULL) AND
+                (titulo.id = :P_ID_TITULO) AND
+                (parcela_acrescimo_desconto.parcelaid IS NULL) LIMIT 1
+            `,
+        {
+          type: QueryTypes.SELECT,
+          replacements: { P_ID_CONTRATO: contrato.id, P_ID_TITULO: tituloVigenciaContrato.id },
+          plain: true,
+          model: Parcela,
+        }
+      );
+
+      const regraFechamento = await RegraFechamento.findOne({
+        [Op.or]: [
+          {
+            tiposcontrato_id: contrato.tipocontratoid,
+            tipodecarteira_id: contrato.tipocarteiraid,
+            centrocusto_id: contrato.centrocustoid,
+            vencimento: infoContrato.diavencimento,
+          },
+        ],
+      });
+
+      if (
+        !proximaParcelaValida ||
+        moment(proximaParcelaValida.datavencimento).diff(moment(), 'days') <= regraFechamento.fechamento
+      ) {
+        throw new Error('Parcela fechada, não é possível adicionar beneficiarios nesse contrato esse mês');
+      }
 
       // Verificar parcelas em atraso
-      // const parcelasEmAtraso = _.flattenDeep(contrato.titulos.map((t) => t.parcelas)).filter(
-      //   (p) => p.statusgrupoid === '1' && moment().isAfter(p.datavencimento)
-      // );
+      const parcelasEmAtraso = _.flattenDeep(contrato.titulos.map((t) => t.parcelas)).filter(
+        (p) => p.statusgrupoid === '1' && moment().isAfter(p.datavencimento)
+      );
 
       // Verifica se o contrato é adimplente
-      // if (parcelasEmAtraso) {
-      //   throw new Error('Contrato Inadimplente');
-      // }
+      if (parcelasEmAtraso) {
+        throw new Error('Contrato Inadimplente');
+      }
 
       const beneficiariosContrato = _.flattenDeep(contrato.gruposfamiliar.map(({ beneficiarios }) => beneficiarios)); // Armazena beneficiarios do contrato atual
 
@@ -395,6 +444,7 @@ export default class MigrarContratoService {
           });
         }
       }
+
       const estadoCivilRF = await EstadoCivil.findByPk(rfContrato.estadocivilid);
       const tipoDeCarteiraRF = await TipoCarteira.findByPk(contrato.tipodecarteiracontratoid);
 
