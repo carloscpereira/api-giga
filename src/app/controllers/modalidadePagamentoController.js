@@ -5,12 +5,15 @@ import ModalidadePagamento from '../models/Sequelize/ModalidadePagamento';
 class ModalidadePagamentoController {
   async index(req, res) {
     const { page = 1, limit = 20, ...query } = req.query;
+    const offset = (page - 1) * limit;
 
     const criteria = queryStringConverter.convert({
-      query: { limit, ...query, offset: (page - 1) * limit },
+      limit,
+      offset,
+      query,
     });
 
-    const modalidadesPagamento = await ModalidadePagamento.findAll(criteria);
+    const modalidadesPagamento = await ModalidadePagamento.findAll({ ...criteria });
 
     return res.json({ error: null, data: modalidadesPagamento });
   }
