@@ -22,11 +22,15 @@ import AdicionarMembroContratoService from '../services/AdicionarMembroContratoS
 
 class ContratoController {
   async index(req, res) {
-    const { limit = 20, page = 1, ...query } = req.query;
+    const { limit = 20, page = 1, cpf, ...querya } = req.query;
     const offset = (page - 1) * limit;
 
-    const criteria = queryStringConverter.convert({ query });
+    const criteria = queryStringConverter.convert({ query: querya });
+    const cpfCriteria = queryStringConverter.convert({ query: { ...((cpf && { cpf }) || {}) } });
     const transaction = await req.sequelize.transaction();
+
+    console.log(cpfCriteria);
+
     const contratos = await Contrato.findAll({
       ...criteria,
       limit,
@@ -34,7 +38,7 @@ class ContratoController {
       attributes: { exclude: ['infoStatus'] },
       include: [
         { model: PessoaJuridica, as: 'operadora', attributes: ['id', 'nomefantasia', 'razaosocial', 'cnpj'] },
-        { model: PessoaFisica, as: 'responsavel_pessoafisica' },
+        { model: PessoaFisica, as: 'responsavel_pessoafisica', ...cpfCriteria },
         { model: PessoaJuridica, as: 'responsavel_pessoajuridica' },
         { model: Status, as: 'infoStatus', attributes: ['descricao'] },
         { model: TipoCarteira, as: 'infoCarteira', attributes: ['descricao'] },
