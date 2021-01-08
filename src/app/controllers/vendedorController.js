@@ -4,7 +4,7 @@ import { QueryTypes } from 'sequelize';
 class VinculoController {
   async index(req, res) {
     const { sequelize } = req;
-    const { id, cpf, nome, corretoraid } = req.query;
+    const { id, cpf, nome, corretorid } = req.query;
 
     // corretora = corretora || vendedor || 0;
     // vendedor = vendedor || corretora || 0;
@@ -26,7 +26,7 @@ class VinculoController {
           ${(id && 'AND sp_dadospessoafisica.id = :pessoaid') || ''}
           ${(cpf && 'AND sp_dadospessoafisica.cpf = :pessoacpf') || ''}
           ${(nome && 'AND sp_dadospessoafisica.nome ILIKE :pessoanome') || ''}
-          ${(corretoraid && 'AND cn_corretorpf.id = :corretoraid') || ''}
+          ${(corretorid && 'AND cn_corretorpf.id = :corretorid') || ''}
       ORDER  BY sp_dadospessoafisica.nome
   `,
       {
@@ -35,7 +35,7 @@ class VinculoController {
           pessoaid: id,
           pessoacpf: cpf,
           pessoanome: `%${nome}%`,
-          corretoraid,
+          corretorid,
         },
       }
     );
