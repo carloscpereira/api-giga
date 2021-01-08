@@ -6,17 +6,15 @@ import ModalidadePagamento from '../models/Sequelize/ModalidadePagamento';
 
 class TipoCarteiraController {
   async index(req, res) {
-    const { page = 1, limit = 30, with: withColumn, filter = {} } = req.query;
+    const { page = 1, limit = 30, with: withColumn, ...filter } = req.query;
 
     const columns = withColumn ? withColumn.split(',') : [];
 
-    const { carteira = {}, modalidade_cobranca = {}, modalidade_pagamento = {} } = filter;
+    const { modalidade_cobranca = {}, modalidade_pagamento = {}, ...carteira } = filter;
 
     const criteriaCarteira = queryStringConverter.convert({ query: carteira });
     const criteriaModalidadeCobranca = queryStringConverter.convert({ query: modalidade_cobranca });
     const criteriaModalidadePagamento = queryStringConverter.convert({ query: modalidade_pagamento });
-
-    console.log(criteriaCarteira);
 
     const tipoCarteira = await TipoCarteira.findAll({
       limit,
