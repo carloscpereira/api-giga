@@ -4,11 +4,11 @@ import { QueryTypes } from 'sequelize';
 class VinculoController {
   async index(req, res) {
     const { sequelize } = req;
-    let { corretora, vendedor } = req.query;
+    const { id, cpf, nome, corretoraid } = req.query;
 
-    corretora = corretora || vendedor || 0;
-    vendedor = vendedor || corretora || 0;
-    const cpfvendedor = vendedor?.toString() || corretora?.toString() || '0';
+    // corretora = corretora || vendedor || 0;
+    // vendedor = vendedor || corretora || 0;
+    // const cpfvendedor = vendedor?.toString() || corretora?.toString() || '0';
 
     const vendedores = await sequelize.query(
       `
@@ -23,20 +23,19 @@ class VinculoController {
                     ON cn_corretorpf.corretorapjid =
                         cn_grupocorretores.corretorpessoaj
       WHERE  ( cn_grupocorretores.corretorvendedor IS NOT NULL )
-           ${
-             corretora || vendedor
-               ? 'AND ( cn_corretorpf.id = :corretoraid OR sp_dadospessoafisica.id = :vendedorid OR sp_dadospessoafisica.cpf = :cpfvendedor OR sp_dadospessoafisica.nome ILIKE :nomevendedor  )'
-               : ''
-           }
+          ${(id && 'AND sp_dadospessoafisica.id = :pessoaid') || ''}
+          ${(cpf && 'AND sp_dadospessoafisica.cpf = :pessoacpf') || ''}
+          ${(nome && 'AND sp_dadospessoafisica.nome ILIKE :pessoanome') || ''}
+          ${(corretoraid && 'AND cn_corretorpf.id = :corretoraid') || ''}
       ORDER  BY sp_dadospessoafisica.nome
   `,
       {
         type: QueryTypes.SELECT,
         replacements: {
-          vendedorid: Number.parseInt(vendedor) || 0,
-          corretoraid: Number.parseInt(corretora) || 0,
-          cpfvendedor,
-          nomevendedor: `%${cpfvendedor}%`,
+          pessoaid: id,
+          pessoacpf: cpf,
+          pessoanome: `%${nome}%`,
+          corretoraid,
         },
       }
     );
