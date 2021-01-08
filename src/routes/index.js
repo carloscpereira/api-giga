@@ -31,12 +31,15 @@ import tipoContratacaoRouter from './_tipoContratacaoRouter';
 import tipoContratoRouter from './_tipoContratoRouter';
 import vendedorRouter from './_vendedorRouter';
 import corretoraRouter from './_corretoraRouter';
+import testeRouter from './_testeRouter';
 
 import { checkAuthorization } from '../app/middlewares';
 
 const routes = Router();
 
-routes.use('/rede-credenciada', redeCredenciadaRouter);
+routes.use('/redes-credenciadas', redeCredenciadaRouter);
+
+routes.use('/teste', testeRouter);
 
 if (process.env.NODE_ENV !== 'development') routes.use(checkAuthorization);
 routes.use('/parcelas/log/cartao-credito', logCartaoCreditoRouter);
@@ -45,7 +48,7 @@ routes.use('/lotes', loteRouter);
 routes.use('/parcelas', parcelaRouter);
 routes.use('/contratos', contratoRouter);
 routes.use('/modalidade-pagamentos', modalidadePagamentoRouter);
-routes.use('/tipo-carteira', tipoCarteiraRouter);
+routes.use('/tipos-carteiras', tipoCarteiraRouter);
 routes.use('/pessoa-juridica', pessoaJuridicaRouter);
 routes.use('/pessoa', pessoaRouter);
 routes.use('/pessoa-fisica', pessoaFisicaRouter);
