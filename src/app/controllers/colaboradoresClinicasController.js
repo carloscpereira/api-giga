@@ -5,7 +5,7 @@ class ColaboradoresClinicaController {
     try {
       const {
         sequelize,
-        params: { idcontrato },
+        params: { idcontrato, operator },
       } = req;
 
       const colaboradores = await sequelize.query(
@@ -19,7 +19,7 @@ class ColaboradoresClinicaController {
         LEFT JOIN LATERAL (SELECT pav.dadocampo as cro
                   FROM sp_pessoaatributovinculo pav
                   WHERE pav.pessoaid = cdc.dentistapfid
-                    AND pav.vinculoid = 63
+                    AND pav.vinculoid = ${operator === 'atemde' ? '60' : '63'}
                     AND pav.campo = 1
                     AND pav.dadocampo IS NOT NULL
                   LIMIT 1) cro ON TRUE
