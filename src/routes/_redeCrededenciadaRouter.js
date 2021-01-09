@@ -9,9 +9,13 @@ import { checkOperator } from '../app/middlewares';
  *  Import Controllers
  */
 import RedeCredenciadaController from '../app/controllers/redeCredenciadaController';
+import ColaboradoresClinicasController from '../app/controllers/colaboradoresClinicasController';
 
 const routes = new Router();
 
 routes.get('/:operator', checkOperator, RedeCredenciadaController.index);
+
+// Rota Colaboradores
+routes.get('/:operator/:idcontrato/colaboradores', checkOperator, ColaboradoresClinicasController.index);
 
 export default routes;
