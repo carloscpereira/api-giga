@@ -6,11 +6,11 @@ import ModalidadePagamento from '../models/Sequelize/ModalidadePagamento';
 
 class TipoCarteiraController {
   async index(req, res) {
-    const { page = 1, limit = 30, with: withColumn, ...filter } = req.query;
+    const { page = 1, limit = 30, with: withColumn, filter, ...carteira } = req.query;
 
     const columns = withColumn ? withColumn.split(',') : [];
 
-    const { modalidade_cobranca = {}, modalidade_pagamento = {}, ...carteira } = filter;
+    const { modalidade_cobranca = {}, modalidade_pagamento = {} } = filter;
 
     const criteriaCarteira = queryStringConverter.convert({ query: carteira });
     const criteriaModalidadeCobranca = queryStringConverter.convert({ query: modalidade_cobranca });
@@ -23,7 +23,14 @@ class TipoCarteiraController {
       attributes: { exclude: ['img_doc_cobranca'] },
       include: [
         ...(columns.includes('modalidade_cobranca')
-          ? [{ model: ModalidadeCobranca, as: 'modalidade_cobranca', ...criteriaModalidadeCobranca }]
+          ? [
+              {
+                model: ModalidadeCobranca,
+                attributes: { exclude: ['local', 'localarquivoretorno'] },
+                as: 'modalidade_cobranca',
+                ...criteriaModalidadeCobranca,
+              },
+            ]
           : []),
         ...(columns.includes('modalidade_pagamento')
           ? [{ model: ModalidadePagamento, as: 'modalidade_pagamento', ...criteriaModalidadePagamento }]
