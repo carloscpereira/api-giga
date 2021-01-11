@@ -6,7 +6,7 @@ import ModalidadePagamento from '../models/Sequelize/ModalidadePagamento';
 
 class TipoCarteiraController {
   async index(req, res) {
-    const { page = 1, limit = 30, with: withColumn, filter, ...carteira } = req.query;
+    const { page = 1, limit = 30, with: withColumn, filter = {}, ...carteira } = req.query;
 
     const columns = withColumn ? withColumn.split(',') : [];
 
