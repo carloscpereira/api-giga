@@ -50,6 +50,10 @@ class App {
     this.server.use(cors(corsConfig));
     this.server.use(Sentry.Handlers.requestHandler());
     this.server.use(express.json());
+    this.server.use((req, res, next) => {
+      req.query = { ...req.query, ...(req.query.rf_nome ? { rf_nome: req.query.rf_nome.toUpperCase() } : {}) };
+      return next();
+    });
     this.server.use(
       queryParams({
         format: 'sql',

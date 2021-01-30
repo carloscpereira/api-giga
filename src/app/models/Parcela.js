@@ -366,7 +366,7 @@ export default class Parcela {
 
         -- Referentes ao Pagante
         coalesce(sp_dadospessoafisica.id,sp_dadospessoajuridica.id)                               as rf_id,
-        coalesce(sp_dadospessoafisica.nome, sp_dadospessoajuridica.razaosocial)                   as rf_nome,
+        upper(coalesce(sp_dadospessoafisica.nome, sp_dadospessoajuridica.razaosocial))                   as rf_nome,
         coalesce(sp_dadospessoafisica.cpf, sp_dadospessoajuridica.cnpj)                           as rf_documento,
         coalesce(sp_dadospessoafisica.datanascimento, sp_dadospessoajuridica.datacadastro)        as rf_nascimento,
 
