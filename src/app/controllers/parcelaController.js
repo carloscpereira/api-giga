@@ -512,6 +512,8 @@ class ParcelaController {
   }
 
   async baixaParcelas(req, res) {
+    console.log('entrei aqui no baixa parcelas');
+
     const schema = Yup.object().shape({
       parcelas: Yup.array().of(
         Yup.object().shape({
