@@ -53,7 +53,7 @@ routes.use('/pessoa-juridica', pessoaJuridicaRouter);
 routes.use('/pessoa', pessoaRouter);
 routes.use('/pessoa-fisica', pessoaFisicaRouter);
 routes.use('/system/log/contato', logContatoRouter);
-routes.use('/parcelas', boletoRouter);
+// routes.use('/parcelas', boletoRouter);
 routes.use('/vinculos', vinculoRouter);
 routes.use('/centro-resultados', centroCustoRouter);
 routes.use('/bancos', bancoRouter);
