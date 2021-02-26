@@ -375,6 +375,8 @@ export default class Parcela {
 
         -- Refetentes ao Telefone Pagante
         sp_telefone.numero                                                                        as rf_numero,
+        wpp.numero                                                                                as rf_whatsapp,
+
 
         -- Referentes ao Endereco do Pagante
         sp_endereco.logradouro                                                                    as rf_endereco_logradouro,
@@ -477,6 +479,8 @@ export default class Parcela {
               LEFT JOIN sp_email ON (coalesce(sp_dadospessoafisica.id,sp_dadospessoajuridica.id) = sp_email.dadosid AND sp_email.ema_in_principal = true)
               LEFT JOIN sp_telefone
                         ON (coalesce(sp_dadospessoafisica.id,sp_dadospessoajuridica.id) = sp_telefone.dadosid AND sp_telefone.tel_in_principal = true)
+               LEFT JOIN sp_telefone wpp
+                        ON (coalesce(sp_dadospessoafisica.id,sp_dadospessoajuridica.id) = wpp.dadosid AND wpp.tipotelefoneid = 9)
               LEFT JOIN sp_endereco ON (COALESCE(sp_dadospessoafisica.id, sp_dadospessoajuridica.id) = sp_endereco.dadosid AND sp_endereco.end_in_principal = true)
               LEFT JOIN modpagamento ON (cn_tipodecarteira.modalidadepagamentoid = modpagamento.id)
               LEFT JOIN formapagamento ON (parcela.id = formapagamento.parcelaid)
