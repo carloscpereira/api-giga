@@ -23,7 +23,7 @@ class RedeCredenciadaController {
 
           INNER JOIN sp_dadospessoafisica pf on cd.dentistaid = pf.id
           CROSS JOIN LATERAL (SELECT array_to_json(array_agg(row_to_json(d))) AS telefones
-                              FROM (SELECT * FROM sp_telefone WHERE pf.id = sp_telefone.dadosid AND sp_telefone.tipotelefoneid IS NOT NULL AND sp_telefone.tipotelefoneid NOT IN (3, 4)) d) telefones
+                              FROM (SELECT * FROM sp_telefone WHERE pf.id = sp_telefone.dadosid AND sp_telefone.tipotelefoneid IS NOT NULL AND sp_telefone.tipotelefoneid NOT IN (3, 4, 5, 7)) d) telefones
           CROSS JOIN LATERAL (SELECT array_to_json(array_agg(row_to_json(d))) AS enderecos
                               FROM (SELECT * FROM sp_endereco WHERE pf.id = sp_endereco.dadosid) d) enderecos
           CROSS JOIN LATERAL (SELECT array_to_json(array_agg(row_to_json(d))) AS emails
@@ -66,7 +66,7 @@ class RedeCredenciadaController {
 
           INNER JOIN sp_dadospessoajuridica pj on cd.clinicaid = pj.id
           CROSS JOIN LATERAL (SELECT array_to_json(array_agg(row_to_json(d))) AS telefones
-                              FROM (SELECT * FROM sp_telefone WHERE pj.id = sp_telefone.dadosid AND sp_telefone.tipotelefoneid IS NOT NULL AND sp_telefone.tipotelefoneid NOT IN (3, 4)) d) telefones
+                              FROM (SELECT * FROM sp_telefone WHERE pj.id = sp_telefone.dadosid AND sp_telefone.tipotelefoneid IS NOT NULL AND sp_telefone.tipotelefoneid NOT IN (3, 4, 5, 7)) d) telefones
           CROSS JOIN LATERAL (SELECT array_to_json(array_agg(row_to_json(d))) AS enderecos
                               FROM (SELECT * FROM sp_endereco WHERE pj.id = sp_endereco.dadosid) d) enderecos
           CROSS JOIN LATERAL (SELECT array_to_json(array_agg(row_to_json(d))) AS emails
