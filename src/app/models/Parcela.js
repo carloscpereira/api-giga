@@ -457,7 +457,12 @@ export default class Parcela {
         (SELECT array_to_json(array_agg(row_to_json(d)))
                 FROM (SELECT *
                       FROM sys_log_contato
-                      WHERE sys_log_contato.parcela_id = parcela.id AND sys_log_contato.tipo_id=2) d)                                 AS logs_sms
+                      WHERE sys_log_contato.parcela_id = parcela.id AND sys_log_contato.tipo_id=2) d)                                 AS logs_sms,
+
+        (SELECT array_to_json(array_agg(row_to_json(d)))
+                FROM (SELECT *
+                      FROM sys_log_contato
+                      WHERE sys_log_contato.parcela_id = parcela.id AND sys_log_contato.tipo_id=3) d)                                 AS logs_whatsapp
 
             FROM parcela
               INNER JOIN statusgrupo ON (parcela.statusgrupoid = statusgrupo.id)
