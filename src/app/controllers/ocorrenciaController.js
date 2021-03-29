@@ -30,6 +30,7 @@ class OcorrenciaController {
       tipoocorrencia_calendario = null,
       ocorrenciasistema = null,
       horaocorrencia = null,
+      parcela_id = null,
     } = req.body;
 
     const data = {
@@ -49,6 +50,7 @@ class OcorrenciaController {
       tipoocorrencia_calendario,
       ocorrenciasistema,
       horaocorrencia,
+      parcela_id,
     };
     console.log(data);
     const response = await Ocorrencia.create(data);
@@ -75,6 +77,7 @@ class OcorrenciaController {
         tipoocorrencia_calendario = null,
         ocorrenciasistema = null,
         horaocorrencia = null,
+        parcela_id,
       },
       params: { id = null },
     } = req;
@@ -96,6 +99,7 @@ class OcorrenciaController {
       ...(tipoocorrencia_calendario ? { tipoocorrencia_calendario } : {}),
       ...(ocorrenciasistema ? { ocorrenciasistema } : {}),
       ...(horaocorrencia ? { horaocorrencia } : {}),
+      ...(parcela_id ? { parcela_id } : {}),
     };
 
     const response = await Ocorrencia.update(data, {
