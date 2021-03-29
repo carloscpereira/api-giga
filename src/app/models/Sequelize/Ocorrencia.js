@@ -7,6 +7,7 @@ export default class Ocorrencia extends Model {
       {
         dataocorrencia: Sequelize.DATE,
         datavalidade: Sequelize.DATE,
+        parcela_id: Sequelize.BIGINT,
         statusid: Sequelize.INTEGER,
         obs: Sequelize.STRING,
         pessoaagendante: Sequelize.INTEGER,
