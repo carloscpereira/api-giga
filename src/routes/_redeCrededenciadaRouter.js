@@ -14,6 +14,7 @@ import ColaboradoresClinicasController from '../app/controllers/colaboradoresCli
 const routes = new Router();
 
 routes.get('/:operator', checkOperator, RedeCredenciadaController.index);
+routes.get('/:operator/:idcontrato', checkOperator, RedeCredenciadaController.show);
 
 // Rota Colaboradores
 routes.get('/:operator/:idcontrato/colaboradores', checkOperator, ColaboradoresClinicasController.index);
