@@ -1,8 +1,8 @@
 import queryStringConverter from 'sequelize-querystring-converter';
 
-import TipoContrato from '../models/Sequelize/TipoContrato';
+import EstadoCivil from '../models/Sequelize/EstadoCivil';
 
-class TipoContratoController {
+class EstadoCivilController {
   async index(req, res) {
     const { page = 1, limit = 20, ...query } = req.query;
     const criteria = queryStringConverter.convert({
@@ -11,16 +11,16 @@ class TipoContratoController {
 
     console.log(criteria);
 
-    const tiposContrato = await TipoContrato.findAll(criteria);
+    const tiposContrato = await EstadoCivil.findAll(criteria);
     return res.json({ error: null, data: tiposContrato });
   }
 
   async show(req, res) {
     const { id } = req.params;
 
-    const tipoContrato = await TipoContrato.findByPk(id);
+    const estadoCivil = await EstadoCivil.findByPk(id);
 
-    return res.json({ error: null, data: tipoContrato });
+    return res.json({ error: null, data: estadoCivil });
   }
 
   // async create(req, res) {
@@ -67,4 +67,4 @@ class TipoContratoController {
   // }
 }
 
-export default new TipoContratoController();
+export default new EstadoCivilController();
