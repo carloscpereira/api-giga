@@ -1,10 +1,13 @@
 /* eslint-disable default-case */
-import { QueryTypes, Sequelize, Transaction } from 'sequelize';
+import { QueryTypes, Sequelize, Transaction, Op } from 'sequelize';
+import { subBusinessDays, parseISO, getDay, setDate, isAfter, isBefore, format } from 'date-fns';
 import moment from 'moment';
 
+import axios from 'axios';
 import Contrato from '../models/Sequelize/Contrato';
 import Titulo from '../models/Sequelize/Titulo';
 import ModalidadePagamento from '../models/Sequelize/ModalidadePagamento';
+import RegraFechamento from '../models/Sequelize/RegraFechamento';
 // import Telefone from '../models/Sequelize/Telefone';
 // import Email from '../models/Sequelize/Email';
 // import Endereco from '../models/Sequelize/Endereco';
@@ -26,6 +29,7 @@ import AdicionarEnderecoService from './AdicionarEnderecoService';
 import AdicionarTelefoneService from './AdicionarTelefoneService';
 import AdicionarCartaoCreditoService from './AdicionarCartaoCreditoService';
 import AdicionarContaService from './AdicionarContaService';
+import BaixarParcelaService from './BaixarParcelaService';
 
 const bv = {
   PESSOA_FISICA: 4,
@@ -47,7 +51,7 @@ const bv = {
 };
 
 export default class CriaContratoService {
-  static async execute({ formValidation: body, sequelize, transaction, alterarVinculo = true }) {
+  static async execute({ formValidation: body, sequelize, transaction, alterarVinculo = true, operadora = 'idental' }) {
     let t = transaction;
     // Testa se a instancia de conexão com o banco de dados foi passada corretamente
     if (!sequelize || !(sequelize instanceof Sequelize)) {
@@ -65,6 +69,9 @@ export default class CriaContratoService {
           CriarContratoEmpresa(body);
           return true;
         default: {
+          /**
+           * Seleciona o Produto
+           */
           const produto = await Produto.findOne({
             where: {
               id: body.Produto,
@@ -72,13 +79,16 @@ export default class CriaContratoService {
             },
           });
 
+          // Verifica se o Produto existe
           if (!produto)
             throw new Error('Produto selecionado não encontrado ou está indisponível para o tipo contrato selecionado');
 
+          // Seleciona o centro custo
           const centroCusto = body.CentroCusto
             ? await CentroCusto.findByPk(body.CentroCusto)
             : await CentroCusto.findByPk(194);
 
+          // Verifica se Centro custo não existe
           if (!centroCusto && body.Convenio !== 'Pessoa Fisica')
             throw new Error('Centro Custo informado não encontrado');
 
@@ -522,8 +532,6 @@ export default class CriaContratoService {
           );
 
           const valorContratobruto = beneficiarios.reduce((ant, pos) => {
-            console.log('ant: ', ant);
-            console.log('pos: ', pos.valor || defaultValor);
             return ant + (pos.valor || defaultValor);
           }, 0);
 
@@ -613,10 +621,6 @@ export default class CriaContratoService {
             });
           }
 
-          // await grupoFamiliar.addPessoas(beneficiarios, {
-          //   transaction: t,
-          // });
-
           /**
            * Modalidade de Pagamento
            */
@@ -694,8 +698,115 @@ export default class CriaContratoService {
               { transaction: t }
             );
           }
-          if (!transaction) await t.commit();
 
+          const parcelas = await titulo.getParcelas({ transaction: t });
+
+          if (body.Pagamento) {
+            const firstInstallment = parcelas[0];
+            await BaixarParcelaService.execute({
+              transaction: t,
+              forma_pagamento: body.Pagamento,
+              id_parcela: firstInstallment.id,
+              data_pagamento: new Date(),
+            });
+          }
+
+          // Verifica metodos de pagamento
+          if (modPagamento.id === '3' || modPagamento.id === '10') {
+            // Seleciona a regra fechamento
+            const regraFechamento = await RegraFechamento.findOne({
+              where: {
+                [Op.and]: [
+                  {
+                    [Op.or]: [
+                      {
+                        centrocusto_id: {
+                          [Op.is]: null,
+                        },
+                      },
+                      {
+                        centrocusto_id: {
+                          [Op.eq]: centroCusto.id,
+                        },
+                      },
+                    ],
+                  },
+                  {
+                    tipodecarteira_id: {
+                      [Op.eq]: verifyCarteira.id,
+                    },
+                  },
+                ],
+              },
+            });
+
+            // Verifica se existe alguma regra
+            if (regraFechamento) {
+              const closingDay = body.DataFechamento
+                ? setDate(new Date(), body.DataFechamento)
+                : setDate(new Date(), regraFechamento.fechamento); // Peda o dia de fechamento
+
+              const dayOfTheWeek = getDay(closingDay); // Pega o dia da semana do fechamento
+
+              const businessDay =
+                dayOfTheWeek === 0 || dayOfTheWeek === 6 ? subBusinessDays(closingDay, 1) : closingDay; // Seleciona um dia válido
+              const vencimento = setDate(new Date(), regraFechamento.vencimento); // Seleciona o Vencimento do fechamento
+
+              if (isAfter(new Date(), businessDay) && isBefore(new Date(), vencimento)) {
+                // gerar boleto para a parcela 2
+                const secondInstallment = parcelas[1];
+
+                if (!secondInstallment) {
+                  throw new Error('Erro ao gerar parcela');
+                }
+
+                const enderecos = await responsavelFinanceiro.getEnderecos({ transaction: t });
+
+                const endereco = enderecos && enderecos.length > 0 ? enderecos[0] : null;
+
+                if (!endereco) {
+                  throw new Error('É necessário informar ao menos um endereço para o responsável financeiro');
+                }
+
+                const {
+                  data: { data: boleto },
+                } = await axios.post(
+                  `https://www.idental.com.br/api/bb/${operadora}`,
+                  {
+                    TipoTitulo: 1,
+                    ValorBruto: secondInstallment.valor,
+                    DataVencimento: format(parseISO(secondInstallment.datavencimento), 'yyyy-MM-dd'),
+                    Pagador: {
+                      Tipo: 1,
+                      Nome: body.ResponsavelFinanceiro.Nome,
+                      Documento: body.ResponsavelFinanceiro.CPF,
+                      Estado: endereco.estado,
+                      Cidade: endereco.cidade,
+                      Bairro: endereco.bairro,
+                      Endereco: endereco.logradouro,
+                      Cep: endereco.cep,
+                    },
+                  },
+                  { headers: { appAuthorization: 'ff4e09f0-241d-4bbf-85f0-76dd1bd67919' } }
+                );
+
+                await Parcela.update(
+                  {
+                    linhadigitavel: boleto.linhaDigitavel,
+                    codigobarras: boleto.codigoBarraNumerico,
+                    nossonumero: boleto.numero,
+                  },
+                  {
+                    where: {
+                      id: secondInstallment.id,
+                    },
+                    transaction: t,
+                  }
+                );
+              }
+            }
+          }
+          await t.commit();
           return contrato;
         }
       }

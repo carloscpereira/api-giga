@@ -58,6 +58,7 @@ export default async (req, res, next) => {
       Produto: Yup.number().when('TipoContrato', (validator, s) =>
         validator === '5' ? s.required() : s.nullable().default(null)
       ),
+      DataFechamento: Yup.date(),
       Convenio: Yup.string()
         .matches(/Pessoa Fisica|Empresa|Municipio|Estado|Federal/)
         .default('Pessoa Fisica'),
@@ -151,6 +152,60 @@ export default async (req, res, next) => {
             .nullable()
             .default(null)
         ),
+      Pagamento: Yup.array().of(
+        Yup.object({
+          Modalidade: Yup.number().integer().required(),
+          Carteira: Yup.number().integer().required(),
+          Valor: Yup.number().required(),
+          NumeroTransacao: Yup.string(),
+          PaymentId: Yup.string(),
+          Tid: Yup.string(),
+          Especie: Yup.boolean(),
+          Deposito: Yup.boolean(),
+          CartaoCredito: Yup.object({
+            Numero: Yup.string(),
+            Validade: Yup.string().matches(/^(0?[1-9]|1[012])[/-]\d{4}$/gim, {
+              message:
+                'Invalid date format. Valid format for this field is MM/YYYY where the month must be between 1 and 12 and year with four digits',
+              excludeEmptyString: false,
+            }),
+            CodigoSeguranca: Yup.string(),
+            TipoCartaoId: Yup.number().integer(),
+          })
+            .notRequired()
+            .default(null)
+            .nullable(),
+          Cheque: Yup.object({
+            Emitente: Yup.string(),
+            Conta: Yup.string(),
+            Numero: Yup.string(),
+            ChequeId: Yup.number().integer(),
+          })
+            .notRequired()
+            .default(null)
+            .nullable(),
+          Boleto: Yup.object({
+            Numero: Yup.string(),
+          })
+            .notRequired()
+            .default(null)
+            .nullable(),
+          Consignado: Yup.object({
+            Documento: Yup.string(),
+            Matricula: Yup.string(),
+          })
+            .notRequired()
+            .default(null)
+            .nullable(),
+          Transferencia: Yup.object({
+            ContaId: Yup.number().integer(),
+            AgenciaId: Yup.number().integer(),
+          })
+            .notRequired()
+            .default(null)
+            .nullable(),
+        })
+      ),
     });
 
     await schema.validate(req.body, { abortEarly: false, context: { convenio: req.body.Convenio || 'Pessoa Fisica' } });

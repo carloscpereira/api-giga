@@ -54,8 +54,8 @@ export default class AdicinarVinculoPFService {
       if (!vinculo) throw new Error('Vinculo não encontrado');
 
       if (!alteravel && (await pessoa.hasVinculos(vinculoGet))) return;
-
-      if (await pessoa.hasVinculos(vinculoGet)) {
+      const existsVinculo = await pessoa.hasVinculos(vinculoGet);
+      if (existsVinculo) {
         await AtributoVinculo.destroy({ where: { vinculoid: vinculoGet.id, pessoaid: pessoa.id }, transaction });
         await pessoa.removeVinculos([vinculoGet], { transaction });
       }
@@ -98,15 +98,17 @@ export default class AdicinarVinculoPFService {
       for (const atributo of atributosVinculo) {
         if (atributos[snakeToPascal(atributo.descricaocampo)]) {
           // eslint-disable-next-line no-await-in-loop
-          await AtributoVinculo.create(
-            {
+          await AtributoVinculo.findOrCreate({
+            where: {
               pessoaid: pessoa.id,
               vinculoid: vinculoGet.id,
+            },
+            defaults: {
               campo: atributo.campo,
               dadocampo: atributos[snakeToPascal(atributo.descricaocampo)],
             },
-            { transaction }
-          );
+            transaction,
+          });
         }
       }
     } else {
