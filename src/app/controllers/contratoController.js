@@ -1,5 +1,5 @@
 import * as Yup from 'yup';
-import { Sequelize } from 'sequelize';
+import { Sequelize, Op } from 'sequelize';
 
 import queryStringConverter from 'sequelize-querystring-converter';
 import Contrato from '../models/Sequelize/Contrato';
@@ -22,14 +22,28 @@ import AdicionarMembroContratoService from '../services/AdicionarMembroContratoS
 
 class ContratoController {
   async index(req, res) {
-    const { limit = 20, page = 1, cpf, ...querya } = req.query;
+    const { limit = 20, page = 1, cpf, nome, ...querya } = req.query;
     const offset = (page - 1) * limit;
 
     const criteria = queryStringConverter.convert({ query: querya });
-    const cpfCriteria = queryStringConverter.convert({ query: { ...((cpf && { cpf }) || {}) } });
+    // const cpfCriteria = queryStringConverter.convert({ query: { ...((cpf && { cpf }) || {}) } });
 
-    console.log(criteria);
-    console.log(cpfCriteria);
+    // const { where: whereCriteria, ...parameterCriteria } = cpfCriteria;
+    // const { codigo, ...allWhere } = whereCriteria || {};
+    // console.log({
+    //   where: {
+    //     ...allWhere,
+    //     ...(codigo
+    //       ? {
+    //           codigo: {
+    //             [Op.iLike]: `%${codigo}%`,
+    //           },
+    //         }
+    //       : {}),
+    //   },
+    // });
+
+    // console.log(cpfCriteria);
 
     const contratos = await Contrato.findAll({
       ...criteria,
@@ -38,7 +52,14 @@ class ContratoController {
       attributes: { exclude: ['infoStatus'] },
       include: [
         { model: PessoaJuridica, as: 'operadora', attributes: ['id', 'nomefantasia', 'razaosocial', 'cnpj'] },
-        { model: PessoaFisica, as: 'responsavel_pessoafisica', ...cpfCriteria },
+        {
+          model: PessoaFisica,
+          as: 'responsavel_pessoafisica',
+          where: {
+            ...(cpf ? { cpf: { [Op.iLike]: `${cpf}%` } } : {}),
+            ...(nome ? { nome: { [Op.iLike]: `%${nome}%` } } : {}),
+          },
+        },
         { model: PessoaJuridica, as: 'responsavel_pessoajuridica' },
         { model: Status, as: 'infoStatus', attributes: ['descricao'] },
         { model: TipoCarteira, as: 'infoCarteira', attributes: ['descricao'] },
@@ -97,8 +118,6 @@ class ContratoController {
         },
       ],
     });
-
-    console.log(contratos);
 
     return res.json({ error: null, data: contratos });
   }
