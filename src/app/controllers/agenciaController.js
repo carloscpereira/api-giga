@@ -1,5 +1,7 @@
 import queryStringConverter from 'sequelize-querystring-converter';
 
+import { Op } from 'sequelize';
+
 import Agencia from '../models/Sequelize/Agencia';
 import Banco from '../models/Sequelize/Banco';
 
@@ -10,10 +12,33 @@ class AgenciaController {
       query: { limit, ...query, offset: (page - 1) * limit },
     });
 
-    console.log(criteria);
+    const { where: whereCriteria, ...parameterCriteria } = criteria;
+    const { codigo, ...allWhere } = whereCriteria || {};
+    console.log({
+      where: {
+        ...allWhere,
+        ...(codigo
+          ? {
+              codigo: {
+                [Op.iLike]: `%${codigo}%`,
+              },
+            }
+          : {}),
+      },
+    });
 
     const agencias = await Agencia.findAll({
-      ...criteria,
+      ...parameterCriteria,
+      where: {
+        ...allWhere,
+        ...(codigo
+          ? {
+              codigo: {
+                [Op.iLike]: `${codigo}%`,
+              },
+            }
+          : {}),
+      },
       include: [{ model: Banco, as: 'banco', attributes: { exclude: ['logomarca_boleto'] } }],
     });
     return res.json({ error: null, data: agencias });
