@@ -18,7 +18,7 @@ export default async (req, res, next) => {
     const enderecoSchema = Yup.object().shape({
       Logradouro: Yup.string(),
       Bairro: Yup.string(),
-      Cidade: Yup.number().integer(),
+      Cidade: Yup.string(),
       Estado: Yup.string(),
       Complemento: Yup.string(),
       Numero: Yup.string(),

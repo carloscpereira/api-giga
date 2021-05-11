@@ -19,6 +19,7 @@ export default class AdicionarEnderecoService {
     end_in_principal = false,
     sequelize,
     transaction,
+    estado,
   }) {
     const t = transaction || (await sequelize.transaction());
 
@@ -26,7 +27,7 @@ export default class AdicionarEnderecoService {
       where: {
         logradouro,
         bairro,
-        id_cidade: cidade,
+        cidade,
         cep,
         complemento,
         numero,
@@ -34,8 +35,10 @@ export default class AdicionarEnderecoService {
       },
     });
 
-    const findCidade = await Cidade.findOne({ where: { municipio_codigo: cidade } });
-    const findEstado = await Estado.findOne({ where: { codigo: findCidade.codigo_uf } });
+    const findEstado = await Estado.findOne({ where: { sigla: { [Op.iLike]: `%${estado}%` } } });
+    const findCidade = await Cidade.findOne({
+      where: { [Op.and]: [{ municipio_nome: { [Op.iLike]: `%${cidade}%` } }, { codigo_uf: findEstado.codigo }] },
+    });
     const findBairro = await Bairro.findOne({
       where: { municipioid: findCidade.municipio_codigo, bairro: { [Op.iLike]: `%${bairro}%` } },
     });
