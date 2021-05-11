@@ -32,6 +32,7 @@ import tipoContratoRouter from './_tipoContratoRouter';
 import estadoCivilRouter from './_estadoCivilRouter';
 import vendedorRouter from './_vendedorRouter';
 import corretoraRouter from './_corretoraRouter';
+import regraFechamentoRouter from './_regraFechamentoRouter';
 import testeRouter from './_testeRouter';
 
 import { checkAuthorization } from '../app/middlewares';
@@ -73,5 +74,6 @@ routes.use('/tipos-contratos', tipoContratoRouter);
 routes.use('/estado-civil', estadoCivilRouter);
 routes.use('/vendedores', vendedorRouter);
 routes.use('/corretoras', corretoraRouter);
+routes.use('/regras-fechamento', regraFechamentoRouter);
 
 export default routes;
