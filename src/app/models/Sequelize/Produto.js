@@ -77,5 +77,18 @@ export default class Produto extends Model {
       foreignKey: 'pro_id_regra_vigencia',
       as: 'regra_vigencia',
     });
+
+    this.hasMany(models.RolCoberturaPlano, {
+      sourceKey: 'planoid',
+      foreignKey: 'planoid',
+      as: 'rol_cobertura',
+      scope: {
+        versaoid: this.sequelize.where(
+          this.sequelize.col('Produto.versaoid'),
+          '=',
+          this.sequelize.col('rol_cobertura.versaoid')
+        ),
+      },
+    });
   }
 }

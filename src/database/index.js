@@ -63,6 +63,15 @@ import Bairro from '../app/models/Sequelize/Bairro';
 import RegraFechamento from '../app/models/Sequelize/RegraFechamento';
 import TipoBaixa from '../app/models/Sequelize/TipoBaixa';
 import CentroMovimentacaoFinanceira from '../app/models/Sequelize/CentroMovimentacaoFinanceira';
+import DentistaPF from '../app/models/Sequelize/DentistaPF';
+import RegraFaturamento from '../app/models/Sequelize/RegraFaturamento';
+import Procedimento from '../app/models/Sequelize/Procedimento';
+import Localidade from '../app/models/Sequelize/Localidade';
+import EspecialidadeClinica from '../app/models/Sequelize/EspecialidadeClinica';
+import Especialidade from '../app/models/Sequelize/Especialidade';
+import EspecialidadeDentista from '../app/models/Sequelize/EspecialidadeDentista';
+import RolCoberturaPlanoProcedimento from '../app/models/Sequelize/RolCoberturaPlanoProcedimento';
+import RolCoberturaPlano from '../app/models/Sequelize/RolCoberturaPlano';
 // import databaseConfig from '../config/database';
 
 const models = [
@@ -124,6 +133,15 @@ const models = [
   RegraFechamento,
   TipoBaixa,
   CentroMovimentacaoFinanceira,
+  DentistaPF,
+  RegraFaturamento,
+  Procedimento,
+  Localidade,
+  EspecialidadeClinica,
+  Especialidade,
+  EspecialidadeDentista,
+  RolCoberturaPlanoProcedimento,
+  RolCoberturaPlano,
 ];
 
 class Database {

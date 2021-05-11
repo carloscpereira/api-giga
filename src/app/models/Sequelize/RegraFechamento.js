@@ -13,7 +13,7 @@ export default class RegraFechamento extends Model {
       },
       {
         sequelize,
-        tableName: 'cn_tipocontratacao',
+        tableName: 'cn_regrafechamento',
       }
     );
 

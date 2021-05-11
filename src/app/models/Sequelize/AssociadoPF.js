@@ -31,4 +31,11 @@ export default class AssociadoPF extends Model {
 
     return this;
   }
+
+  static associate(models) {
+    this.belongsTo(models.PessoaFisica, {
+      foreignKey: 'responsavelfinanceiroid',
+      as: 'pessoa_fisica',
+    });
+  }
 }

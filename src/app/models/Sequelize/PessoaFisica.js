@@ -99,5 +99,11 @@ export default class PessoaFisica extends Model {
         singular: 'conta',
       },
     });
+    this.belongsToMany(models.Vinculo, {
+      through: models.PessoaVinculo,
+      as: { singular: 'vinculo', plural: 'vinculos' },
+      foreignKey: 'pessoaid',
+      otherKey: 'vinculoid',
+    });
   }
 }
