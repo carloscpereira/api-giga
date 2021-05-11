@@ -27,8 +27,8 @@ class ContratoController {
 
     const criteria = queryStringConverter.convert({ query: querya });
     const cpfCriteria = queryStringConverter.convert({ query: { ...((cpf && { cpf }) || {}) } });
-    const transaction = await req.sequelize.transaction();
 
+    console.log(criteria);
     console.log(cpfCriteria);
 
     const contratos = await Contrato.findAll({
@@ -96,9 +96,92 @@ class ContratoController {
           ],
         },
       ],
-      transaction,
     });
-    await transaction.rollback();
+
+    console.log(contratos);
+
+    return res.json({ error: null, data: contratos });
+  }
+
+  async responsavel(req, res) {
+    const { cpf } = req.body;
+    const { limit = 20, page = 1, ...querya } = req.query;
+    const offset = (page - 1) * limit;
+
+    const criteria = queryStringConverter.convert({ query: querya });
+    const cpfCriteria = queryStringConverter.convert({ query: { ...((cpf && { cpf }) || {}) } });
+
+    console.log(criteria);
+    console.log(cpfCriteria);
+
+    const contratos = await Contrato.findAll({
+      ...criteria,
+      limit,
+      offset,
+      attributes: { exclude: ['infoStatus'] },
+      include: [
+        { model: PessoaJuridica, as: 'operadora', attributes: ['id', 'nomefantasia', 'razaosocial', 'cnpj'] },
+        { model: PessoaFisica, as: 'responsavel_pessoafisica', ...cpfCriteria },
+        { model: PessoaJuridica, as: 'responsavel_pessoajuridica' },
+        { model: Status, as: 'infoStatus', attributes: ['descricao'] },
+        { model: TipoCarteira, as: 'infoCarteira', attributes: ['descricao'] },
+        { model: TipoContrato, as: 'infoContrato', attributes: ['descricao'] },
+        { model: TipoTabelaUso, as: 'infoTabelaUso', attributes: ['descricao'] },
+        { model: TipoOcorrencia, as: 'infoAdesao', attributes: ['descricao'] },
+        { model: TipoOcorrencia, as: 'infoCancelamento', attributes: ['descricao'] },
+        {
+          model: GrupoFamiliar,
+          as: 'gruposfamiliar',
+          include: [
+            {
+              model: PessoaFisica,
+              as: 'beneficiarios',
+              attributes: { exclude: ['alteracao', 'secretariaid', 'usuario', 'status', 'tipodadosid'] },
+              through: {
+                as: 'dados',
+                attributes: [
+                  'dataadesao',
+                  'ativo',
+                  'datadesativacao',
+                  'tipobeneficiarioid',
+                  'versaoplanoid',
+                  'planoid',
+                  'tipobeneficiarioid',
+                  'tipocarteiraid',
+                  'valor',
+                  'descontovalor',
+                  'descontoporcent',
+                ],
+              },
+            },
+
+            {
+              model: PessoaFisica,
+              as: 'responsaveis',
+              attributes: { exclude: ['alteracao', 'secretariaid', 'usuario', 'status', 'tipodadosid'] },
+              through: {
+                as: 'dados',
+                attributes: [
+                  'dataadesao',
+                  'ativo',
+                  'datadesativacao',
+                  'tipobeneficiarioid',
+                  'versaoplanoid',
+                  'planoid',
+                  'tipobeneficiarioid',
+                  'tipocarteiraid',
+                  'valor',
+                  'descontovalor',
+                  'descontoporcent',
+                ],
+              },
+            },
+          ],
+        },
+      ],
+    });
+
+    console.log(contratos);
 
     return res.json({ error: null, data: contratos });
   }
