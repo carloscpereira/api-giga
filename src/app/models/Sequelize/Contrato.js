@@ -15,6 +15,24 @@ export default class Contrato extends Model {
             return this.infoStatus ? this.infoStatus.descricao : undefined;
           },
         },
+        valor: {
+          type: Sequelize.VIRTUAL,
+          get() {
+            if (this.gruposfamiliar[0]) {
+              if (this.gruposfamiliar[0].beneficiarios) {
+                return this.gruposfamiliar[0].beneficiarios
+                  .filter((ben) => ben.dados.ativo === '1')
+                  .reduce((old, current) => {
+                    console.log('entrei aqui');
+                    console.log(current);
+                    return old + (current.dados.valor - current.dados.descontovalor);
+                  }, 0);
+              }
+            }
+
+            return 0;
+          },
+        },
         dataadesao: Sequelize.DATE,
         datacancelamento: Sequelize.DATE,
         dataregistrosistema: Sequelize.DATE,
@@ -98,10 +116,12 @@ export default class Contrato extends Model {
       foreignKey: 'numerocontratoid',
       as: { sigle: 'titulo', plural: 'titulos' },
     });
+
     this.belongsTo(models.TipoContrato, {
       foreignKey: 'tipocontratoid',
       as: 'infoContrato',
     });
+
     this.belongsToMany(models.Pessoa, {
       through: models.AssociadoPJ,
       foreignKey: 'id',
@@ -109,6 +129,7 @@ export default class Contrato extends Model {
       constraints: false,
       as: 'responsavelpj',
     });
+
     this.belongsToMany(models.PessoaJuridica, {
       through: models.AssociadoPJ,
       foreignKey: 'id',
@@ -116,6 +137,7 @@ export default class Contrato extends Model {
       constraints: false,
       as: 'responsavel_pessoajuridica',
     });
+
     this.belongsToMany(models.Pessoa, {
       through: models.AssociadoPF,
       foreignKey: 'id',
@@ -123,6 +145,7 @@ export default class Contrato extends Model {
       constraints: false,
       as: 'responsavelpf',
     });
+
     this.belongsToMany(models.PessoaFisica, {
       through: models.AssociadoPF,
       foreignKey: 'id',
@@ -130,6 +153,20 @@ export default class Contrato extends Model {
       constraints: false,
       as: 'responsavel_pessoafisica',
     });
+
+    this.belongsTo(models.AssociadoPF, {
+      foreignKey: 'id',
+      otherKey: 'id',
+      as: 'associado_pf',
+    });
+
+    this.belongsToMany(models.Especialidade, {
+      through: models.EspecialidadeClinica,
+      foreignKey: 'numerocontrato',
+      otherKey: 'especialidadeid',
+      as: 'especialidades_clinica',
+    });
+
     this.hasMany(models.GrupoFamiliar, {
       foreignKey: 'contratoid',
       as: {
@@ -137,6 +174,7 @@ export default class Contrato extends Model {
         singular: 'grupofamiliar',
       },
     });
+
     this.hasMany(models.Beneficiario, {
       foreignKey: 'contratoid',
       as: {
@@ -144,29 +182,40 @@ export default class Contrato extends Model {
         singular: 'beneficiario',
       },
     });
+
     this.belongsTo(models.PessoaJuridica, {
       foreignKey: 'operadoraid',
       as: 'operadora',
     });
+
     this.belongsTo(models.TipoCarteira, {
       foreignKey: 'tipodecarteiraid',
       as: 'infoCarteira',
     });
+
     this.belongsTo(models.Status, {
       foreignKey: 'statusid',
       as: 'infoStatus',
     });
+
     this.belongsTo(models.TipoTabelaUso, {
       foreignKey: 'tipotabelausoid',
       as: 'infoTabelaUso',
     });
+
     this.belongsTo(models.TipoOcorrencia, {
       foreignKey: 'motivoadesaoid',
       as: 'infoAdesao',
     });
+
     this.belongsTo(models.TipoOcorrencia, {
       foreignKey: 'motivocancelamentoid',
       as: 'infoCancelamento',
+    });
+
+    this.hasOne(models.DentistaPF, {
+      foreignKey: 'id',
+      as: 'dentista',
     });
   }
 }
