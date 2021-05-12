@@ -808,7 +808,7 @@ export default class CriaContratoService {
             }
           }
 
-          if (!transaction) t.commit();
+          if (!transaction) await t.commit();
 
           return contrato;
         }

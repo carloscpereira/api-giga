@@ -274,7 +274,7 @@ export default class BaixarParcelaService {
       await parcela.update({ statusgrupoid: 2 }, { transaction: t });
       await lote.update({ lop_dt_baixa: moment().format(), statusid: 2 }, { transaction: t });
 
-      if (!transaction) t.commit();
+      if (!transaction) await t.commit();
 
       return lote;
     } catch (error) {
