@@ -1,3 +1,4 @@
+/* eslint-disable no-nested-ternary */
 import { Sequelize, Transaction, QueryTypes } from 'sequelize';
 import moment from 'moment';
 
@@ -39,19 +40,19 @@ export default class BaixarParcelaService {
 
     try {
       const [contrato, parcela, pessoaUsuario, checkLote] = await Promise.all([
-        Contrato.findByPk(id_contrato),
-        Parcela.findByPk(id_parcela),
-        Pessoa.findByPk(id_pessoa),
-        Lote.findByPk(id_lote),
+        Contrato.findByPk(id_contrato, { transaction: t }),
+        Parcela.findByPk(id_parcela, { transaction: t }),
+        Pessoa.findByPk(id_pessoa, { transaction: t }),
+        Lote.findByPk(id_lote, { transaction: t }),
       ]);
-      const getLoteParcela = parcela.getLotes();
+      const getLoteParcela = await parcela.getLotes({ transaction: t });
       let tipoBaixa;
 
       const parcelaLote = getLoteParcela ? getLoteParcela.shift() : null;
 
       const formaPagamento = Array.isArray(forma_pagamento) ? forma_pagamento : [forma_pagamento];
-      const descontosPagamento = Array.isArray(descontos) ? descontos : [descontos];
-      const acrescimosPagamento = Array.isArray(acrescimos) ? acrescimos : [acrescimos];
+      const descontosPagamento = descontos ? (Array.isArray(descontos) ? descontos : [descontos]) : [];
+      const acrescimosPagamento = acrescimos ? (Array.isArray(acrescimos) ? acrescimos : [acrescimos]) : [];
 
       if (checkLote && checkLote.statusid !== 1) {
         throw new Error('It is not possible to change a batch that has already been finalized');
@@ -68,14 +69,14 @@ export default class BaixarParcelaService {
       if (!id_pessoa || !pessoaUsuario) {
         throw new Error('Usuário pessoa informado não encontrado no sistema');
       }
-
-      if (tipo_movimento !== 'C' || tipo_movimento !== 'D' || !tipo_movimento) {
+      console.log();
+      if (tipo_movimento !== 'C' && tipo_movimento !== 'D' && !tipo_movimento) {
         throw new Error('Tipo de movimento informado é inválido');
       }
 
       // Verifica e pega o tipo de baixa
       if (Number.isInteger(Math.abs(tipo_baixa))) {
-        tipoBaixa = await TipoBaixa.findByPk(tipo_baixa);
+        tipoBaixa = await TipoBaixa.findByPk(tipo_baixa, { transaction: t });
       } else if (tipo_baixa) {
         tipoBaixa = await connection.query(
           `SELECT * FROM tipobaixa WHERE unaccent(descricao) ILIKE unaccent(%${tipo_baixa}%)`,
@@ -83,6 +84,7 @@ export default class BaixarParcelaService {
             type: QueryTypes.SELECT,
             plain: true,
             model: TipoBaixa,
+            transaction: t,
           }
         );
       }
@@ -94,19 +96,22 @@ export default class BaixarParcelaService {
       const lote =
         checkLote ||
         parcelaLote ||
-        (await Lote.create({
-          statusid: 1,
-          datacadastro: moment(new Date()).format(),
-          pessoausuarioid: pessoaUsuario.id,
-          lop_id_pessoa: pessoaUsuario.id,
-          lop_id_tipo_baixa: tipoBaixa.id,
-          lop_in_tipo_movimento: tipo_movimento,
-          ...(contrato ? { lop_id_contrato: contrato.id } : {}),
-          lop_in_cobranca: false,
-        }));
+        (await Lote.create(
+          {
+            statusid: 1,
+            datacadastro: moment(new Date()).format(),
+            pessoausuarioid: pessoaUsuario.id,
+            lop_id_pessoa: pessoaUsuario.id,
+            lop_id_tipo_baixa: tipoBaixa.id,
+            lop_in_tipo_movimento: tipo_movimento,
+            ...(contrato ? { lop_id_contrato: contrato.id } : {}),
+            lop_in_cobranca: false,
+          },
+          { transaction: t }
+        ));
 
       if (!parcelaLote) {
-        await parcela.setLote(lote, {
+        await parcela.setLotes(lote, {
           through: { pal_dt_pagamento: moment(data_pagamento, 'YYYY-MM-DD').format() },
           transaction: t,
         });
@@ -268,7 +273,7 @@ export default class BaixarParcelaService {
 
       // eslint-disable-next-line no-restricted-syntax
       for (const data of dataFormaPagamento) {
-        await FormaPagamento.create(data);
+        await FormaPagamento.create(data, { transaction: t });
       }
 
       await parcela.update({ statusgrupoid: 2 }, { transaction: t });
@@ -278,6 +283,7 @@ export default class BaixarParcelaService {
 
       return lote;
     } catch (error) {
+      console.log(error);
       t.rollback();
       return error;
     }
