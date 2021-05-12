@@ -701,13 +701,13 @@ export default class CriaContratoService {
 
           const parcelas = await titulo.getParcelas({ transaction: t });
 
-          if (body.Pagamento) {
+          if (body.Pagamentos) {
             const firstInstallment = parcelas[0];
             await BaixarParcelaService.execute({
               transaction: t,
-              forma_pagamento: body.Pagamento,
+              forma_pagamento: body.Pagamentos,
               id_parcela: firstInstallment.id,
-              data_pagamento: new Date(),
+              data_pagamento: moment(body.DataPagamento).format() || new Date(),
             });
           }
 

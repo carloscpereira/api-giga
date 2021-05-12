@@ -20,6 +20,7 @@ export default async (req, res, next) => {
       Bairro: Yup.string(),
       Cidade: Yup.string(),
       Estado: Yup.string(),
+      Cep: Yup.string(),
       Complemento: Yup.string(),
       Numero: Yup.string(),
       Principal: Yup.boolean(),
@@ -152,7 +153,8 @@ export default async (req, res, next) => {
             .nullable()
             .default(null)
         ),
-      Pagamento: Yup.array().of(
+      DataPagamento: Yup.date(),
+      Pagamentos: Yup.array().of(
         Yup.object({
           Modalidade: Yup.number().integer().required(),
           Carteira: Yup.number().integer().required(),
