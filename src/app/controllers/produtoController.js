@@ -1,3 +1,4 @@
+/* eslint-disable no-restricted-syntax */
 import queryStringConverter from 'sequelize-querystring-converter';
 
 import Produto from '../models/Sequelize/Produto';
@@ -10,100 +11,47 @@ import TipoAreaAbrangencia from '../models/Sequelize/TipoAreaAbrangencia';
 import AreaCobertura from '../models/Sequelize/AreaCobertura';
 import TipoContrato from '../models/Sequelize/TipoContrato';
 import RegraVigenciaContrato from '../models/Sequelize/RegraVigenciaContrato';
+import RolCoberturaPlano from '../models/Sequelize/RolCoberturaPlano';
+import Procedimento from '../models/Sequelize/Procedimento';
+import Especialidade from '../models/Sequelize/Especialidade';
 
 class ProdutoController {
   async index(req, res) {
     const {
-      page = 1,
-      limit = 20,
-      plano = {},
-      versao_plano = {},
-      segmentacao_assistencial = {},
-      participacao_financeira = {},
-      tipo_contratacao = {},
-      tipo_area_abrangencia = {},
-      area_cobertura = {},
-      tipo_contrato = {},
-      regra_vigencia = {},
-      ...query
-    } = req.query;
+      query: { page = 1, limit = 20, ...query },
+      sequelize,
+    } = req;
 
-    const criteria = queryStringConverter.convert({
-      query: { limit, ...query, offset: (page - 1) * limit },
-    });
+    const fields = Object.keys(query);
+    const value = Object.values(query);
 
-    const criteriaPlano = queryStringConverter.convert({
-      query: plano,
-    });
-    const criteriaVersaoPlano = queryStringConverter.convert({
-      query: versao_plano,
-    });
-    const criteriaSegmentacaoAssistencial = queryStringConverter.convert({
-      query: segmentacao_assistencial,
-    });
-    const criteriaParticipacaoFinanceira = queryStringConverter.convert({
-      query: participacao_financeira,
-    });
-    const criteriaTipoAreaAbrangencia = queryStringConverter.convert({
-      query: tipo_area_abrangencia,
-    });
-    const criteriaAreaCobertura = queryStringConverter.convert({
-      query: area_cobertura,
-    });
-    const criteriaTipoContrato = queryStringConverter.convert({
-      query: tipo_contrato,
-    });
-    const criteriaRegraVigencia = queryStringConverter.convert({
-      query: regra_vigencia,
-    });
-    const criteriaTipoContratacao = queryStringConverter.convert({
-      query: tipo_contratacao,
-    });
+    let querySql = `select distinct
+    "cn_produto".*,
+     coalesce("cn_planotipobeneficiario".valor,0) as "preco"
+from "cn_produto"
+ inner join "cn_rolcoberturaplano" on "cn_rolcoberturaplano"."planoid" = "cn_produto"."planoid" and "cn_rolcoberturaplano"."versaoid" = "cn_produto"."versaoid"
+ inner join "cn_tabelaprecoplano" on "cn_tabelaprecoplano".planoid = "cn_produto".planoid and "cn_tabelaprecoplano".versaoid = "cn_produto".versaoid
+ left join "cn_planotipobeneficiario" on "cn_planotipobeneficiario"."tabelaprecoplanoid" = "cn_tabelaprecoplano"."id" and "cn_planotipobeneficiario"."tipobeneficiarioid" = 1`;
 
-    console.log(criteria);
+    let andWhere = '';
 
-    const produtos = await Produto.findAll({
-      ...criteria,
-      attributes: {
-        exclude: [
-          'planoid',
-          'versaoid',
-          'segmentacaoassistencialid',
-          'participacaofinanceiraid',
-          'tipocontratacaoid',
-          'tipoareaabrangenciaid',
-          'areacoberturaid',
-          'pro_id_tipo_contrato',
-          'pro_id_regra_vigencia',
-        ],
-      },
-      include: [
-        { model: Plano, as: 'plano', attributes: ['id', 'descricao'], ...criteriaPlano },
-        { model: VersaoPlano, as: 'versao_plano', attributes: ['id', 'descricao'], ...criteriaVersaoPlano },
-        {
-          model: SegmentacaoAssistencial,
-          as: 'segmentacao_assistencial',
-          attributes: ['id', 'descricao'],
-          ...criteriaSegmentacaoAssistencial,
-        },
-        {
-          model: ParticipacaoFinanceira,
-          as: 'participacao_financeira',
-          attributes: ['id', 'descricao'],
-          ...criteriaParticipacaoFinanceira,
-        },
-        { model: TipoContratacao, as: 'tipo_contratacao', attributes: ['id', 'descricao'], ...criteriaTipoContratacao },
-        {
-          model: TipoAreaAbrangencia,
-          as: 'tipo_area_abrangencia',
-          attributes: ['id', 'descricao'],
-          ...criteriaTipoAreaAbrangencia,
-        },
-        { model: AreaCobertura, as: 'area_cobertura', attributes: ['id', 'descricao'], ...criteriaAreaCobertura },
-        { model: TipoContrato, as: 'tipo_contrato', attributes: ['id', 'descricao'], ...criteriaTipoContrato },
-        { model: RegraVigenciaContrato, as: 'regra_vigencia', ...criteriaRegraVigencia },
-      ],
-    });
+    for (const [i, v] of fields.entries()) {
+      if (i === 0) {
+        andWhere = `WHERE "cn_produto".${v} = $${i + 1}`;
+        // eslint-disable-next-line no-continue
+        continue;
+      }
+      andWhere = `${andWhere} AND "cn_produto".${v} = $${i + 1}`;
+    }
+
+    if (andWhere) {
+      querySql = `${querySql} ${andWhere}`;
+    }
+
+    console.log(querySql);
+
+    const [produtos] = await sequelize.query(querySql, { bind: value });
+
     return res.json({ error: null, data: produtos });
   }
 
