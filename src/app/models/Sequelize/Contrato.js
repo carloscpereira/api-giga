@@ -18,7 +18,7 @@ export default class Contrato extends Model {
         valor: {
           type: Sequelize.VIRTUAL,
           get() {
-            if (this.gruposfamiliar[0]) {
+            if (this.gruposfamiliar && this.gruposfamiliar.length > 0) {
               if (this.gruposfamiliar[0].beneficiarios) {
                 return this.gruposfamiliar[0].beneficiarios
                   .filter((ben) => ben.dados.ativo === '1')

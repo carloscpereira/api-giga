@@ -126,7 +126,7 @@ export default class CriaContratoService {
           /**
            * Cria o responsavel financeiro
            */
-          const [responsavelFinanceiro] = await CriaPessoaFisicaService.execute({
+          const responsavelFinanceiro = await CriaPessoaFisicaService.execute({
             usuario: 'N',
             nome: body.ResponsavelFinanceiro.Nome,
             rg: body.ResponsavelFinanceiro.RG,
@@ -145,9 +145,9 @@ export default class CriaContratoService {
 
           await responsavelFinanceiro.setTiposcontrato([body.TipoContrato], { transaction: t });
 
-          const responsavelFinanceiroIsBeneficiario = !!body.Beneficiarios.find(
-            (ben) => ben.CPF === body.ResponsavelFinanceiro.CPF
-          );
+          // const responsavelFinanceiroIsBeneficiario = !!body.Beneficiarios.find(
+          //   (ben) => ben.CPF === body.ResponsavelFinanceiro.CPF
+          // );
 
           await AdicionarVinculoService.execute({
             pessoa: responsavelFinanceiro,
@@ -200,7 +200,7 @@ export default class CriaContratoService {
             });
           }
 
-          if (body.ResponsavelFinanceiro.Enderecos && !responsavelFinanceiroIsBeneficiario) {
+          if (body.ResponsavelFinanceiro.Enderecos) {
             await Promise.all(
               body.ResponsavelFinanceiro.Enderecos.map((endereco) =>
                 // eslint-disable-next-line no-await-in-loop
@@ -226,7 +226,7 @@ export default class CriaContratoService {
             // await responsavelFinanceiro.setEnderecos(enderecos, { transaction: t });
           }
 
-          if (body.ResponsavelFinanceiro.Telefones && !responsavelFinanceiroIsBeneficiario) {
+          if (body.ResponsavelFinanceiro.Telefones) {
             await Promise.all(
               body.ResponsavelFinanceiro.Telefones.map((tel) =>
                 AdicionarTelefoneService.execute({
@@ -246,7 +246,7 @@ export default class CriaContratoService {
             // await responsavelFinanceiro.addTelefones(telefones, { transaction: t });
           }
 
-          if (body.ResponsavelFinanceiro.Emails && !responsavelFinanceiroIsBeneficiario) {
+          if (body.ResponsavelFinanceiro.Emails) {
             Promise.all(
               body.ResponsavelFinanceiro.Emails.map((email) =>
                 AdicionarEmailService.execute({
@@ -398,7 +398,7 @@ export default class CriaContratoService {
             console.log(valor);
 
             // eslint-disable-next-line no-await-in-loop
-            const [pessoa] = await CriaPessoaFisicaService.execute({
+            const pessoa = await CriaPessoaFisicaService.execute({
               usuario: 'N',
               nome: beneficiario.Nome,
               rg: beneficiario.RG,
@@ -806,7 +806,7 @@ export default class CriaContratoService {
               }
             }
           }
-          await t.commit();
+          await t.rollback();
           return contrato;
         }
       }

@@ -34,12 +34,15 @@ export default class AdicinarVinculoPFService {
     if (pessoa instanceof Pessoa) {
       if (typeof atributos !== 'object') throw new Error('Atributos precisa ser um objeto');
 
-      if (!(transaction instanceof Transaction) && (!sequelize || !(sequelize instanceof Sequelize))) {
-        throw new Error('Não foi possível estabelecer conexão com o banco');
+      let t = transaction;
+      // Testa se a instancia de conexão com o banco de dados foi passada corretamente
+      if (!sequelize || !(sequelize instanceof Sequelize)) {
+        throw new Error('Não foi possível estabalecer conexão com o banco de dados');
       }
 
-      if (!(transaction instanceof Transaction) && sequelize && sequelize instanceof Sequelize) {
-        transaction = await sequelize.transaction();
+      // Testa se a instancia de transação foi mandada corretamente, caso não, cria uma nova instancia
+      if (!transaction || !(transaction instanceof Transaction)) {
+        t = await sequelize.transaction();
       }
 
       const vinculoGet = await Vinculo.findOne({
@@ -53,11 +56,11 @@ export default class AdicinarVinculoPFService {
 
       if (!vinculo) throw new Error('Vinculo não encontrado');
 
-      if (!alteravel && (await pessoa.hasVinculos(vinculoGet))) return;
-      const existsVinculo = await pessoa.hasVinculos(vinculoGet);
+      if (!alteravel && (await pessoa.hasVinculos(vinculoGet, { transaction: t }))) return;
+      const existsVinculo = await pessoa.hasVinculos(vinculoGet, { transaction: t });
       if (existsVinculo) {
-        await AtributoVinculo.destroy({ where: { vinculoid: vinculoGet.id, pessoaid: pessoa.id }, transaction });
-        await pessoa.removeVinculos([vinculoGet], { transaction });
+        await AtributoVinculo.destroy({ where: { vinculoid: vinculoGet.id, pessoaid: pessoa.id }, transaction: t });
+        await pessoa.removeVinculos([vinculoGet], { transaction: t });
       }
 
       let atributosVinculo = await sequelize.query('SELECT * FROM sp_camposdinamicos WHERE sp_vinculoid = :vinculoid', {
@@ -87,28 +90,39 @@ export default class AdicinarVinculoPFService {
 
       const vinculoExists = await PessoaVinculo.findOne({
         where: { pessoaid: pessoa.id, vinculoid: vinculoGet.id },
+        transaction: t,
       });
 
       if (!vinculoExists) {
-        await PessoaVinculo.create({ pessoaid: pessoa.id, vinculoid: vinculoGet.id }, { transaction });
+        await PessoaVinculo.create({ pessoaid: pessoa.id, vinculoid: vinculoGet.id }, { transaction: t });
       }
 
       // await pessoa.addVinculos([vinculoGet], { transaction });
       // eslint-disable-next-line no-restricted-syntax
       for (const atributo of atributosVinculo) {
         if (atributos[snakeToPascal(atributo.descricaocampo)]) {
-          // eslint-disable-next-line no-await-in-loop
-          await AtributoVinculo.findOrCreate({
+          const existsAtributeVinculo = await AtributoVinculo.findOne({
             where: {
               pessoaid: pessoa.id,
               vinculoid: vinculoGet.id,
-            },
-            defaults: {
-              campo: atributo.campo,
               dadocampo: atributos[snakeToPascal(atributo.descricaocampo)],
             },
-            transaction,
+            transaction: t,
           });
+
+          if (existsAtributeVinculo) {
+            await existsAtributeVinculo.destroy({ transaction: t });
+          }
+          // eslint-disable-next-line no-await-in-loop
+          await AtributoVinculo.create(
+            {
+              pessoaid: pessoa.id,
+              vinculoid: vinculoGet.id,
+              dadocampo: atributos[snakeToPascal(atributo.descricaocampo)],
+              campo: atributo.campo,
+            },
+            { transaction: t }
+          );
         }
       }
     } else {

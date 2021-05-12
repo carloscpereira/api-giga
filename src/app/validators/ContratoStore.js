@@ -37,7 +37,7 @@ export default async (req, res, next) => {
       CPF: Yup.string().length(11).required(),
       DataNascimento: Yup.date().required(),
       Sexo: Yup.string().matches(/M|F/).required(),
-      EstadoCivil: Yup.string(),
+      EstadoCivil: Yup.number(),
       OrgaoEmissor: Yup.string().required(),
       Nacionalidade: Yup.string().required(),
       Enderecos: Yup.array().of(enderecoSchema),
