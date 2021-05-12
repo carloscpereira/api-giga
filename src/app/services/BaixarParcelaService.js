@@ -29,7 +29,7 @@ export default class BaixarParcelaService {
 
     if (!connection || !(connection instanceof Sequelize)) {
       throw new Error(
-        'Não foi possível estabelecer uma conexão com o banco de dados, verifique se houve a instanciação da conexãor'
+        'Não foi possível estabelecer uma conexão com o banco de dados, verifique se houve a instancia da conexão'
       );
     }
 

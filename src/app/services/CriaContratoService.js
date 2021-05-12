@@ -708,6 +708,7 @@ export default class CriaContratoService {
               forma_pagamento: body.Pagamentos,
               id_parcela: firstInstallment.id,
               data_pagamento: moment(body.DataPagamento).format() || new Date(),
+              connection: sequelize,
             });
           }
 
