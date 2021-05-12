@@ -806,7 +806,9 @@ export default class CriaContratoService {
               }
             }
           }
-          await t.rollback();
+
+          if (!transaction) t.commit();
+
           return contrato;
         }
       }
