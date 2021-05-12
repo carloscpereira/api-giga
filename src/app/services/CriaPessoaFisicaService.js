@@ -30,23 +30,24 @@ export default class CriaPessoaFisicaService {
       t = await sequelize.transaction();
     }
 
-    const personExists = await Pessoa.findOne({
-      where: {
-        ...(id ? { id } : {}),
-      },
-      include: [
-        {
-          model: PessoaFisica,
-          as: 'dadospessoafisica',
-          where: {
-            ...(cpf && !id ? { cpf } : {}),
-          },
+    const personExists = await Pessoa.findOne(
+      {
+        where: {
+          ...(id ? { id } : {}),
         },
-      ],
-
-      transaction: t,
-    });
-    const estadoCivil = await EstadoCivil.findByPk(estadocivil);
+        include: [
+          {
+            model: PessoaFisica,
+            as: 'dadospessoafisica',
+            where: {
+              ...(cpf && !id ? { cpf } : {}),
+            },
+          },
+        ],
+      },
+      { transaction: t }
+    );
+    const estadoCivil = await EstadoCivil.findByPk(estadocivil, { transaction: t });
 
     let pessoa;
 

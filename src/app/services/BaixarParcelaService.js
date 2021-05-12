@@ -283,8 +283,7 @@ export default class BaixarParcelaService {
 
       return lote;
     } catch (error) {
-      console.log(error);
-      t.rollback();
+      if (!transaction) await t.rollback();
       return error;
     }
   }

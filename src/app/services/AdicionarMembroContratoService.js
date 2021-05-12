@@ -66,26 +66,29 @@ export default class AdicionarMembroContratoService {
     }
 
     try {
-      const contrato = await Contrato.findOne({
-        where: {
-          id: id_contrato,
-          statusid: {
-            [Op.in]: [8, 6],
+      const contrato = await Contrato.findOne(
+        {
+          where: {
+            id: id_contrato,
+            statusid: {
+              [Op.in]: [8, 6],
+            },
+            tipocontratoid: {
+              [Op.in]: [5, 9],
+            },
           },
-          tipocontratoid: {
-            [Op.in]: [5, 9],
-          },
+          include: [
+            { model: PessoaFisica, as: 'responsavel_pessoafisica' },
+            { model: PessoaJuridica, as: 'responsavel_pessoajuridica' },
+            {
+              model: GrupoFamiliar,
+              as: 'gruposfamiliar',
+              include: [{ model: PessoaFisica, as: 'beneficiarios' }],
+            },
+          ],
         },
-        include: [
-          { model: PessoaFisica, as: 'responsavel_pessoafisica' },
-          { model: PessoaJuridica, as: 'responsavel_pessoajuridica' },
-          {
-            model: GrupoFamiliar,
-            as: 'gruposfamiliar',
-            include: [{ model: PessoaFisica, as: 'beneficiarios' }],
-          },
-        ],
-      });
+        { transaction: t }
+      );
 
       // Testa se Contrato existe ou se ele está disponível para realizar a operação (Está ativo ou pré-cadastro, por exemplo)
       if (!contrato) throw new Error('Contrato não encontrato ou indisponível para realizar a operação');
@@ -102,25 +105,28 @@ export default class AdicionarMembroContratoService {
       const rfContrato = contratoIsPJ ? contrato.responsavel_pessoajuridica : contrato.responsavel_pessoafisica;
 
       // Seleciona o título em vigencia do contrato
-      const tituloContratoVigente = await Titulo.findOne({
-        where: {
-          numerocontratoid: contrato.id,
-          statusid: 1, // Seleciona Título ativo
-          dataperiodoinicial: {
-            [Op.lte]: new Date(),
-          }, // Pega Titulo onde o periodo inicial é menor ou igual a data atual
-          dataperiodofinal: {
-            [Op.gte]: new Date(),
-          }, // Pega Titulo onde o periodo final é maior ou igual a data atual
+      const tituloContratoVigente = await Titulo.findOne(
+        {
+          where: {
+            numerocontratoid: contrato.id,
+            statusid: 1, // Seleciona Título ativo
+            dataperiodoinicial: {
+              [Op.lte]: new Date(),
+            }, // Pega Titulo onde o periodo inicial é menor ou igual a data atual
+            dataperiodofinal: {
+              [Op.gte]: new Date(),
+            }, // Pega Titulo onde o periodo final é maior ou igual a data atual
+          },
+          order: [['id', 'DESC']],
         },
-        order: [['id', 'DESC']],
-      });
+        { transaction: t }
+      );
 
       // Caso não haja nenhum título ativo, emite erro, pois, o ainda não foi renovado.
       if (!tituloContratoVigente) throw new Error('Contrato quitado ou não renovado');
 
       // Todas parcelas do título em vigencia
-      const parcelasTitulo = await tituloContratoVigente.getParcelas();
+      const parcelasTitulo = await tituloContratoVigente.getParcelas({ transaction: t });
 
       // Última parcela paga do título em vigência
       // const ultimaParcelaPaga = _.orderBy(
@@ -157,13 +163,14 @@ export default class AdicionarMembroContratoService {
           replacements: { P_ID_CONTRATO: contrato.id, P_ID_TITULO: tituloContratoVigente.id },
           plain: true,
           model: Parcela,
+          transaction: t,
         }
       );
 
       // Pega os dados financeiros do contrato
       const infoContrato = contratoIsPJ
-        ? await AssociadoPJ.findByPk(rfContrato.shift().AssociadoPJ.id)
-        : await AssociadoPF.findByPk(rfContrato.shift().AssociadoPF.id);
+        ? await AssociadoPJ.findByPk(rfContrato.shift().AssociadoPJ.id, { transaction: t })
+        : await AssociadoPF.findByPk(rfContrato.shift().AssociadoPF.id, { transaction: t });
       const beneficiariosContrato = _.flattenDeep(contrato.gruposfamiliar.map(({ beneficiarios }) => beneficiarios)); // Armazena beneficiarios do contrato atual
 
       const checaBeneficiario = beneficiariosContrato.filter(
@@ -175,16 +182,19 @@ export default class AdicionarMembroContratoService {
       }
 
       // Seleciona Regra de Fechamento
-      const regraFechamento = await RegraFechamento.findOne({
-        [Op.or]: [
-          {
-            tiposcontrato_id: contrato.tipocontratoid,
-            tipodecarteira_id: contrato.tipocarteiraid,
-            centrocusto_id: contrato.centrocustoid,
-            vencimento: infoContrato.diavencimento,
-          },
-        ],
-      });
+      const regraFechamento = await RegraFechamento.findOne(
+        {
+          [Op.or]: [
+            {
+              tiposcontrato_id: contrato.tipocontratoid,
+              tipodecarteira_id: contrato.tipocarteiraid,
+              centrocusto_id: contrato.centrocustoid,
+              vencimento: infoContrato.diavencimento,
+            },
+          ],
+        },
+        { transaction: t }
+      );
 
       if (
         !proximaParcelaValida ||
@@ -207,34 +217,40 @@ export default class AdicionarMembroContratoService {
 
       // Seleciona o grupo familiar
       if (contratoIsPJ && id_grupofamiliar) {
-        grupoFamiliar = await GrupoFamiliar.findOne({
-          where: {
-            grupo: id_grupofamiliar,
-            contratoid: id_contrato,
-          },
-          include: [
-            {
-              model: PessoaFisica,
-              through: Beneficiario,
-              as: 'beneficiarios',
+        grupoFamiliar = await GrupoFamiliar.findOne(
+          {
+            where: {
+              grupo: id_grupofamiliar,
+              contratoid: id_contrato,
             },
-          ],
-        });
+            include: [
+              {
+                model: PessoaFisica,
+                through: Beneficiario,
+                as: 'beneficiarios',
+              },
+            ],
+          },
+          { transaction: t }
+        );
       } else if (!contratoIsPJ) {
-        const gruposContrato = await contrato.getGruposfamiliar(); // Pego todos os grupos familiares do contrato
+        const gruposContrato = await contrato.getGruposfamiliar({ transaction: t }); // Pego todos os grupos familiares do contrato
         const grupoFamiliarID = gruposContrato.shift().grupo; // O id (grupo) do primeiro grupo familiar
 
         // Seleciono e populo a variavel grupoFamiliar com o grupo selecionado
-        grupoFamiliar = await GrupoFamiliar.findOne({
-          where: { grupo: grupoFamiliarID, contratoid: id_contrato },
-          include: [
-            {
-              model: PessoaFisica,
-              through: Beneficiario,
-              as: 'beneficiarios',
-            },
-          ],
-        });
+        grupoFamiliar = await GrupoFamiliar.findOne(
+          {
+            where: { grupo: grupoFamiliarID, contratoid: id_contrato },
+            include: [
+              {
+                model: PessoaFisica,
+                through: Beneficiario,
+                as: 'beneficiarios',
+              },
+            ],
+          },
+          { transaction: t }
+        );
       }
 
       // Seleciona o responsável do grupo para inserção do novo beneficiário
@@ -266,6 +282,7 @@ export default class AdicionarMembroContratoService {
               vendedorid: id_vendedor || responsavelGrupoFamiliar.Beneficiario.vendedorid,
               corretoraid: id_corretor || responsavelGrupoFamiliar.Beneficiario.corretoraid,
             },
+            transaction: t,
           }
         );
 
@@ -389,14 +406,17 @@ export default class AdicionarMembroContratoService {
 
       // Seleciona o Produto || Plano do Beneficiário
       if (grupoFamiliar && responsavelGrupoFamiliar) {
-        produto = await Produto.findOne({
-          where: {
-            planoid: responsavelGrupoFamiliar.Beneficiario.planoid,
-            versaoid: responsavelGrupoFamiliar.Beneficiario.versaoplanoid,
+        produto = await Produto.findOne(
+          {
+            where: {
+              planoid: responsavelGrupoFamiliar.Beneficiario.planoid,
+              versaoid: responsavelGrupoFamiliar.Beneficiario.versaoplanoid,
+            },
           },
-        });
+          { transaction: t }
+        );
       } else if (beneficiarioIsTitular) {
-        produto = await Produto.findByPk(beneficiario.Produto);
+        produto = await Produto.findByPk(beneficiario.Produto, { transaction: t });
       } else {
         throw new Error('Lancei a braba');
       }
@@ -414,6 +434,7 @@ export default class AdicionarMembroContratoService {
         'SELECT pessoaoperadoraid as operadoraid FROM configuracao_sistema',
         {
           type: QueryTypes.SELECT,
+          transaction: t,
         }
       );
 
@@ -421,12 +442,13 @@ export default class AdicionarMembroContratoService {
       const carteirinha = await sequelize.query('SELECT * FROM cn_tipocarteira LIMIT 1', {
         type: QueryTypes.SELECT,
         plain: true,
+        transaction: t,
       });
 
       // Seleciona o Tipo de Beneficiário
       const tipoBeneficiario = beneficiarioIsTitular
-        ? await TipoBeneficiario.findOne({ where: { codigo: bv.TITULAR } })
-        : await TipoBeneficiario.findOne({ where: { codigo: bv[vinculo] } });
+        ? await TipoBeneficiario.findOne({ where: { codigo: bv.TITULAR } }, { transaction: t })
+        : await TipoBeneficiario.findOne({ where: { codigo: bv[vinculo] } }, { transaction: t });
 
       // Seleciona Valor do Plano
       const [{ valor: valorPlano }] = await sequelize.query(
@@ -455,6 +477,7 @@ export default class AdicionarMembroContratoService {
             P_ID_VERSAO: produto.versaoid,
             P_DT_ADESAO_BENEF: beneficiario.DataAdesao,
           },
+          transaction: t,
         }
       );
 
@@ -470,7 +493,7 @@ export default class AdicionarMembroContratoService {
       HAVING ( cn_beneficiario.planoid = :plano )
           AND ( cn_beneficiario.tipobeneficiarioid = :tipo )
       `,
-        { replacements: { plano: produto.planoid, tipo: tipoBeneficiario.id }, type: QueryTypes.SELECT }
+        { replacements: { plano: produto.planoid, tipo: tipoBeneficiario.id }, type: QueryTypes.SELECT, transaction: t }
       );
 
       // Adiciona a pessoa ao grupo familiar
@@ -549,7 +572,7 @@ export default class AdicionarMembroContratoService {
 
       return contrato;
     } catch (error) {
-      t.rollback();
+      if (!transaction) t.rollback();
       throw error;
     }
   }

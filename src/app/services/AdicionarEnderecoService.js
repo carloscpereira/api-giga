@@ -1,4 +1,4 @@
-import { Op } from 'sequelize';
+import { Op, Sequelize, Transaction } from 'sequelize';
 
 import Endereco from '../models/Sequelize/Endereco';
 import Cidade from '../models/Sequelize/Cidade';
@@ -21,27 +21,46 @@ export default class AdicionarEnderecoService {
     transaction,
     estado,
   }) {
-    const t = transaction || (await sequelize.transaction());
+    let t = transaction;
 
-    const verifyExistsEndereco = await Endereco.findOne({
-      where: {
-        logradouro,
-        bairro,
-        cidade,
-        cep,
-        complemento,
-        numero,
-        dadosid: pessoa.id,
+    if (!sequelize || !(sequelize instanceof Sequelize)) {
+      throw new Error(
+        'Não foi possível estabelecer uma conexão com o banco de dados, verifique se houve a instancia da conexão'
+      );
+    }
+
+    if (!transaction || !(transaction instanceof Transaction)) {
+      t = await sequelize.transaction();
+    }
+
+    const verifyExistsEndereco = await Endereco.findOne(
+      {
+        where: {
+          logradouro,
+          bairro,
+          cidade,
+          cep,
+          complemento,
+          numero,
+          dadosid: pessoa.id,
+        },
       },
-    });
+      { transaction: t }
+    );
 
-    const findEstado = await Estado.findOne({ where: { sigla: { [Op.iLike]: `%${estado}%` } } });
-    const findCidade = await Cidade.findOne({
-      where: { [Op.and]: [{ municipio_nome: { [Op.iLike]: `%${cidade}%` } }, { codigo_uf: findEstado.codigo }] },
-    });
-    const findBairro = await Bairro.findOne({
-      where: { municipioid: findCidade.municipio_codigo, bairro: { [Op.iLike]: `%${bairro}%` } },
-    });
+    const findEstado = await Estado.findOne({ where: { sigla: { [Op.iLike]: `%${estado}%` } } }, { transaction: t });
+    const findCidade = await Cidade.findOne(
+      {
+        where: { [Op.and]: [{ municipio_nome: { [Op.iLike]: `%${cidade}%` } }, { codigo_uf: findEstado.codigo }] },
+      },
+      { transaction: t }
+    );
+    const findBairro = await Bairro.findOne(
+      {
+        where: { municipioid: findCidade.municipio_codigo, bairro: { [Op.iLike]: `%${bairro}%` } },
+      },
+      { transaction: t }
+    );
 
     if (!findCidade) throw new Error('Cidade não encontrada');
 
@@ -50,18 +69,21 @@ export default class AdicionarEnderecoService {
     }
 
     if (end_in_principal) {
-      const verifyEnderecoPrincipal = await Endereco.findOne({
-        where: {
-          end_in_principal: true,
-          dadosid: pessoa.id,
+      const verifyEnderecoPrincipal = await Endereco.findOne(
+        {
+          where: {
+            end_in_principal: true,
+            dadosid: pessoa.id,
+          },
         },
-      });
+        { transaction: t }
+      );
 
       if (verifyEnderecoPrincipal)
         await verifyEnderecoPrincipal.update({ end_in_principal: false }, { transaction: t });
     }
 
-    await Endereco.create(
+    const endereco = await Endereco.create(
       {
         tipoenderecoid,
         dadosid: pessoa.id,
@@ -80,5 +102,9 @@ export default class AdicionarEnderecoService {
       },
       { transaction: t }
     );
+
+    if (!transaction) await t.commit();
+
+    return endereco;
   }
 }

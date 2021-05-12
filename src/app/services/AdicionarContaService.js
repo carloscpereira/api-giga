@@ -1,3 +1,5 @@
+import { Sequelize, Transaction } from 'sequelize';
+
 import Conta from '../models/Sequelize/Conta';
 
 export default class AdicionarContaService {
@@ -15,33 +17,51 @@ export default class AdicionarContaService {
     razao = '',
     con_in_principal = false,
   }) {
-    const t = transaction || (await sequelize.transaction());
+    let t = transaction;
 
-    const verifyExistsConta = await Conta.findOne({
-      where: {
-        numero,
-        agenciaid,
-        tipocontaid,
-        digito,
-        operacao,
-        pessoaid: pessoa.id,
-      },
-    });
+    if (!sequelize || !(sequelize instanceof Sequelize)) {
+      throw new Error(
+        'Não foi possível estabelecer uma conexão com o banco de dados, verifique se houve a instancia da conexão'
+      );
+    }
 
-    if (verifyExistsConta) return;
+    if (!transaction || !(transaction instanceof Transaction)) {
+      t = await sequelize.transaction();
+    }
 
-    if (con_in_principal) {
-      const verifyContaPrincipal = await Conta.findOne({
+    const verifyExistsConta = await Conta.findOne(
+      {
         where: {
-          con_in_principal: true,
+          numero,
+          agenciaid,
+          tipocontaid,
+          digito,
+          operacao,
           pessoaid: pessoa.id,
         },
-      });
+      },
+      { transaction: t }
+    );
+
+    if (verifyExistsConta) {
+      await verifyExistsConta.destroy({ transaction: t });
+    }
+
+    if (con_in_principal) {
+      const verifyContaPrincipal = await Conta.findOne(
+        {
+          where: {
+            con_in_principal: true,
+            pessoaid: pessoa.id,
+          },
+        },
+        { transaction: t }
+      );
 
       if (verifyContaPrincipal) await verifyContaPrincipal.update({ con_in_principal: false }, { transaction: t });
     }
 
-    await Conta.create(
+    const newConta = await Conta.create(
       {
         numero,
         tipocontaid,
@@ -56,5 +76,9 @@ export default class AdicionarContaService {
       },
       { transaction: t }
     );
+
+    if (!transaction) await t.commit();
+
+    return newConta;
   }
 }

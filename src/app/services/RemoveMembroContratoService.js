@@ -1,4 +1,4 @@
-import { Op, QueryTypes } from 'sequelize';
+import { Op, QueryTypes, Sequelize, Transaction } from 'sequelize';
 import moment from 'moment';
 
 import Contrato from '../models/Sequelize/Contrato';
@@ -12,7 +12,16 @@ import AssociadoPJ from '../models/Sequelize/AssociadoPJ';
 
 export default class RemoveMembroContratoService {
   static async execute({ id_contrato, id_beneficiario, sequelize, transaction }) {
-    const t = transaction || (await sequelize.transaction());
+    let t = transaction;
+    if (!sequelize || !(sequelize instanceof Sequelize)) {
+      throw new Error(
+        'Não foi possível estabelecer uma conexão com o banco de dados, verifique se houve a instanciação da conexãor'
+      );
+    }
+
+    if (!transaction || !(transaction instanceof Transaction)) {
+      t = await sequelize.transaction();
+    }
 
     try {
       /**
@@ -24,8 +33,9 @@ export default class RemoveMembroContratoService {
             { model: PessoaFisica, as: 'responsavel_pessoafisica' },
             { model: PessoaJuridica, as: 'responsavel_pessoajuridica' },
           ],
+          transaction: t,
         }),
-        Beneficiario.findOne({ where: { id: id_beneficiario, contratoid: id_contrato } }),
+        Beneficiario.findOne({ where: { id: id_beneficiario, contratoid: id_contrato } }, { transaction: t }),
       ]);
 
       if (!beneficiario) throw new Error('Beneficiario não encontrado para o contrato informado');
@@ -33,18 +43,21 @@ export default class RemoveMembroContratoService {
       /**
        * Seleciono o Beneficiario e titulo
        */
-      const titulo = await Titulo.findOne({
-        where: {
-          numerocontratoid: contrato.id,
-          datavencimento: {
-            [Op.gte]: new Date(),
+      const titulo = await Titulo.findOne(
+        {
+          where: {
+            numerocontratoid: contrato.id,
+            datavencimento: {
+              [Op.gte]: new Date(),
+            },
+            dataperiodoinicial: {
+              [Op.lt]: new Date(),
+            },
+            statusid: 1,
           },
-          dataperiodoinicial: {
-            [Op.lt]: new Date(),
-          },
-          statusid: 1,
         },
-      });
+        { transaction: t }
+      );
 
       /**
        * Se não houver titulos em aberto não há alterações a serem feitas
@@ -56,7 +69,7 @@ export default class RemoveMembroContratoService {
        */
       const ultimaParcelaQuitada = await sequelize.query(
         `SELECT * FROM parcela INNER JOIN titulo ON parcela.tituloid = titulo.id WHERE titulo.numerocontratoid = :id_contrato AND parcela.statusgrupoid = 2 ORDER BY parcela.id DESC LIMIT 1`,
-        { type: QueryTypes.SELECT, replacements: { id_contrato }, plain: true, model: Parcela }
+        { type: QueryTypes.SELECT, replacements: { id_contrato }, plain: true, model: Parcela, transaction: t }
       );
 
       console.log(ultimaParcelaQuitada);
@@ -74,7 +87,7 @@ export default class RemoveMembroContratoService {
 
       if (!titulo) throw new Error('Não há titulos em vigencia para contrado selecionado');
 
-      const parcelasTitulo = await titulo.getParcelas();
+      const parcelasTitulo = await titulo.getParcelas({ transaction: t });
 
       const parcelasQuitadasTitulo = parcelasTitulo.filter((parcelas) => parcelas.statusgrupoid === 2);
 
@@ -89,15 +102,18 @@ export default class RemoveMembroContratoService {
         dadosContrato.valorcontrato - beneficiario.valor * (parcelasQuitadasTitulo.length - qtdParcelasContrato);
       const newContractCost = dadosContrato.valorcontrato - beneficiario.valor * qtdParcelasContrato;
 
-      const beneficiariosContrato = await Beneficiario.findAll({
-        where: {
-          contratoid: id_contrato,
-          id: {
-            [Op.ne]: beneficiario.id,
+      const beneficiariosContrato = await Beneficiario.findAll(
+        {
+          where: {
+            contratoid: id_contrato,
+            id: {
+              [Op.ne]: beneficiario.id,
+            },
+            ativo: 1,
           },
-          ativo: 1,
         },
-      });
+        { transaction: t }
+      );
 
       const newContractMonthCost = beneficiariosContrato.reduce((ant, { valor }) => ant + (valor || 0), 0);
 
@@ -157,13 +173,11 @@ export default class RemoveMembroContratoService {
         }
       );
 
-      if (transaction) return;
-
-      t.commit();
+      if (!transaction) t.commit();
 
       return;
     } catch (error) {
-      t.rollback();
+      if (!transaction) t.rollback();
       throw error;
     }
   }

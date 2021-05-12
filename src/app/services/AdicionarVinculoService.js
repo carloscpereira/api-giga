@@ -45,14 +45,17 @@ export default class AdicinarVinculoPFService {
         t = await sequelize.transaction();
       }
 
-      const vinculoGet = await Vinculo.findOne({
-        where: {
-          [Op.or]: [
-            ...(typeof vinculo === 'number' ? [{ id: vinculo }] : []),
-            { descricao: { [Op.iLike]: `%${vinculo}%` } },
-          ],
+      const vinculoGet = await Vinculo.findOne(
+        {
+          where: {
+            [Op.or]: [
+              ...(typeof vinculo === 'number' ? [{ id: vinculo }] : []),
+              { descricao: { [Op.iLike]: `%${vinculo}%` } },
+            ],
+          },
         },
-      });
+        { transaction: t }
+      );
 
       if (!vinculo) throw new Error('Vinculo não encontrado');
 
@@ -66,6 +69,7 @@ export default class AdicinarVinculoPFService {
       let atributosVinculo = await sequelize.query('SELECT * FROM sp_camposdinamicos WHERE sp_vinculoid = :vinculoid', {
         replacements: { vinculoid: vinculoGet.id },
         type: QueryTypes.SELECT,
+        transaction: t,
       });
 
       const propertyErrors = [];
@@ -125,6 +129,8 @@ export default class AdicinarVinculoPFService {
           );
         }
       }
+
+      if (!transaction) t.commit();
     } else {
       throw new Error('Você precisa dar uma instancia de pessoa para efetuar o registro de vínculo');
     }

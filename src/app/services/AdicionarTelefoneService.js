@@ -1,3 +1,4 @@
+import { Sequelize, Transaction } from 'sequelize';
 import Telefone from '../models/Sequelize/Telefone';
 
 export default class AdicionarTelefoneService {
@@ -11,33 +12,49 @@ export default class AdicionarTelefoneService {
     sequelize,
     transaction,
   }) {
-    const t = transaction || (await sequelize.transaction());
+    let t = transaction;
 
-    const verifyExistsTelefone = await Telefone.findOne({
-      where: {
-        numero,
-        ramal,
-        dadosid: pessoa.id,
+    if (!sequelize || !(sequelize instanceof Sequelize)) {
+      throw new Error(
+        'Não foi possível estabelecer uma conexão com o banco de dados, verifique se houve a instancia da conexão'
+      );
+    }
+
+    if (!transaction || !(transaction instanceof Transaction)) {
+      t = await sequelize.transaction();
+    }
+
+    const verifyExistsTelefone = await Telefone.findOne(
+      {
+        where: {
+          numero,
+          ramal,
+          dadosid: pessoa.id,
+        },
       },
-    });
+      { transaction: t }
+    );
 
     if (verifyExistsTelefone) {
       await verifyExistsTelefone.destroy({ transaction: t });
     }
 
     if (tel_in_principal) {
-      const verifyTelefonePrincipal = await Telefone.findOne({
-        where: {
-          tel_in_principal: true,
-          dadosid: pessoa.id,
+      const verifyTelefonePrincipal = await Telefone.findOne(
+        {
+          where: {
+            tel_in_principal: true,
+            dadosid: pessoa.id,
+          },
         },
-      });
+        { transaction: t }
+      );
 
       if (verifyTelefonePrincipal)
         await verifyTelefonePrincipal.update({ tel_in_principal: false }, { transaction: t });
     }
 
-    await Telefone.create(
+    const newTelefone = await Telefone.create(
       {
         tipotelefoneid,
         dadosid: pessoa.id,
@@ -48,5 +65,9 @@ export default class AdicionarTelefoneService {
       },
       { transaction: t }
     );
+
+    if (!transaction) await t.commit();
+
+    return newTelefone;
   }
 }

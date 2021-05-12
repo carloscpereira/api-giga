@@ -1,3 +1,4 @@
+import { Sequelize, Transaction } from 'sequelize';
 import CartaoCredito from '../models/Sequelize/CartaoCredito';
 
 export default class AdicionarCartaoCreditoService {
@@ -13,31 +14,49 @@ export default class AdicionarCartaoCreditoService {
     sequelize,
     transaction,
   }) {
-    const t = transaction || (await sequelize.transaction());
+    let t = transaction;
 
-    const verifyExistsCartaoCredito = await CartaoCredito.findOne({
-      where: {
-        codigosegurancacartao,
-        validadecartao,
-        nome_titular,
+    if (!sequelize || !(sequelize instanceof Sequelize)) {
+      throw new Error(
+        'Não foi possível estabelecer uma conexão com o banco de dados, verifique se houve a instancia da conexão'
+      );
+    }
+
+    if (!transaction || !(transaction instanceof Transaction)) {
+      t = await sequelize.transaction();
+    }
+
+    const verifyExistsCartaoCredito = await CartaoCredito.findOne(
+      {
+        where: {
+          codigosegurancacartao,
+          validadecartao,
+          nome_titular,
+        },
       },
-    });
+      { transaction: t }
+    );
 
-    if (verifyExistsCartaoCredito) return;
+    if (verifyExistsCartaoCredito) {
+      await verifyExistsCartaoCredito.destroy({ transaction: t });
+    }
 
     if (car_in_principal) {
-      const verifyCartaoCreditoPrincipal = await CartaoCredito.findOne({
-        where: {
-          car_in_principal: true,
-          dadosid: pessoa.id,
+      const verifyCartaoCreditoPrincipal = await CartaoCredito.findOne(
+        {
+          where: {
+            car_in_principal: true,
+            dadosid: pessoa.id,
+          },
         },
-      });
+        { transaction: t }
+      );
 
       if (verifyCartaoCreditoPrincipal)
         await verifyCartaoCreditoPrincipal.update({ car_in_principal: false }, { transaction: t });
     }
 
-    await CartaoCredito.create(
+    const newCartaoCredito = await CartaoCredito.create(
       {
         numerocartao,
         codigosegurancacartao,
@@ -50,5 +69,9 @@ export default class AdicionarCartaoCreditoService {
       },
       { transaction: t }
     );
+
+    if (!transaction) await t.commit();
+
+    return newCartaoCredito;
   }
 }

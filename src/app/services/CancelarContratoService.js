@@ -22,18 +22,22 @@ export default class CancelarContratoService {
 
     try {
       // Seleciona o contrato a ser cancelado
-      const contrato = await Contrato.findByPk(id, {
-        include: [
-          {
-            model: GrupoFamiliar,
-            as: 'gruposfamiliar',
-          },
-          {
-            model: Titulo,
-            as: 'titulos',
-          },
-        ],
-      });
+      const contrato = await Contrato.findByPk(
+        id,
+        {
+          include: [
+            {
+              model: GrupoFamiliar,
+              as: 'gruposfamiliar',
+            },
+            {
+              model: Titulo,
+              as: 'titulos',
+            },
+          ],
+        },
+        { transaction: t }
+      );
 
       // Caso o contrato não exista, retorna um erro
       if (!contrato) throw new Error('Impossível cancelar um contrato inexistente');
@@ -81,7 +85,7 @@ export default class CancelarContratoService {
 
       return true;
     } catch (error) {
-      t.rollback();
+      if (!transaction) t.rollback();
 
       throw error;
     }

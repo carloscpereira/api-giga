@@ -1,36 +1,52 @@
-import { Op } from 'sequelize';
+import { Op, Sequelize, Transaction } from 'sequelize';
 
 import Email from '../models/Sequelize/Email';
 
 export default class AdicionarEmailService {
   static async execute({ pessoa, email = '', ema_in_principal, vinculoid, tipoemail, sequelize, transaction }) {
-    const t = transaction || (await sequelize.transaction());
+    let t = transaction;
 
-    const verifyExistsEmail = await Email.findOne({
-      where: {
-        descricao: {
-          [Op.iLike]: `%${email}%`,
+    if (!sequelize || !(sequelize instanceof Sequelize)) {
+      throw new Error(
+        'Não foi possível estabelecer uma conexão com o banco de dados, verifique se houve a instancia da conexão'
+      );
+    }
+
+    if (!transaction || !(transaction instanceof Transaction)) {
+      t = await sequelize.transaction();
+    }
+
+    const verifyExistsEmail = await Email.findOne(
+      {
+        where: {
+          descricao: {
+            [Op.iLike]: `%${email}%`,
+          },
+          dadosid: pessoa.id,
         },
-        dadosid: pessoa.id,
       },
-    });
+      { transaction: t }
+    );
 
     if (verifyExistsEmail) {
       await verifyExistsEmail.destroy({ transaction: t });
     }
 
     if (ema_in_principal) {
-      const verifyEmailPrincipal = await Email.findOne({
-        where: {
-          ema_in_principal: true,
-          dadosid: pessoa.id,
+      const verifyEmailPrincipal = await Email.findOne(
+        {
+          where: {
+            ema_in_principal: true,
+            dadosid: pessoa.id,
+          },
         },
-      });
+        { transaction: t }
+      );
 
       if (verifyEmailPrincipal) await verifyEmailPrincipal.update({ ema_in_principal: false }, { transaction: t });
     }
 
-    await Email.create(
+    const newEmail = await Email.create(
       {
         descricao: email,
         tipoemailid: tipoemail,
@@ -40,5 +56,9 @@ export default class AdicionarEmailService {
       },
       { transaction: t }
     );
+
+    if (!transaction) await t.commit();
+
+    return newEmail;
   }
 }

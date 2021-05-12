@@ -72,12 +72,15 @@ export default class CriaContratoService {
           /**
            * Seleciona o Produto
            */
-          const produto = await Produto.findOne({
-            where: {
-              id: body.Produto,
-              pro_id_tipo_contrato: body.TipoContrato,
+          const produto = await Produto.findOne(
+            {
+              where: {
+                id: body.Produto,
+                pro_id_tipo_contrato: body.TipoContrato,
+              },
             },
-          });
+            { transaction: t }
+          );
 
           // Verifica se o Produto existe
           if (!produto)
@@ -85,8 +88,8 @@ export default class CriaContratoService {
 
           // Seleciona o centro custo
           const centroCusto = body.CentroCusto
-            ? await CentroCusto.findByPk(body.CentroCusto)
-            : await CentroCusto.findByPk(194);
+            ? await CentroCusto.findByPk(body.CentroCusto, { transaction: t })
+            : await CentroCusto.findByPk(194, { transaction: t });
 
           // Verifica se Centro custo não existe
           if (!centroCusto && body.Convenio !== 'Pessoa Fisica')
@@ -116,6 +119,7 @@ export default class CriaContratoService {
               {
                 type: QueryTypes.SELECT,
                 replacements: { vendedorid: body.Vendedor, corretoraid: body.Corretora },
+                transaction: t,
               }
             );
 
@@ -319,6 +323,7 @@ export default class CriaContratoService {
             'SELECT pessoaoperadoraid as operadoraid FROM configuracao_sistema',
             {
               type: QueryTypes.SELECT,
+              transaction: t,
             }
           );
 
@@ -356,6 +361,7 @@ export default class CriaContratoService {
           const carteirinha = await sequelize.query('SELECT * FROM cn_tipocarteira LIMIT 1', {
             type: QueryTypes.SELECT,
             plain: true,
+            transaction: t,
           });
 
           const beneficiarios = [];
@@ -392,6 +398,7 @@ export default class CriaContratoService {
                   P_ID_VERSAO: produto.versaoid,
                   P_DT_ADESAO_BENEF: body.DataAdesao,
                 },
+                transaction: t,
               }
             );
 
@@ -528,6 +535,7 @@ export default class CriaContratoService {
                 P_ID_VERSAO: produto.versaoid,
                 P_DT_ADESAO_BENEF: body.DataAdesao,
               },
+              transaction: t,
             }
           );
 
@@ -567,7 +575,10 @@ export default class CriaContratoService {
           // eslint-disable-next-line no-restricted-syntax
           for (const ben of beneficiarios) {
             // eslint-disable-next-line no-await-in-loop
-            const tipoBeneficiario = await TipoBeneficiario.findOne({ where: { codigo: ben.vinculo } });
+            const tipoBeneficiario = await TipoBeneficiario.findOne(
+              { where: { codigo: ben.vinculo } },
+              { transaction: t }
+            );
 
             // eslint-disable-next-line no-await-in-loop
             const [{ sequencia }] = await sequelize.query(
@@ -581,7 +592,11 @@ export default class CriaContratoService {
                 HAVING ( cn_beneficiario.planoid = :plano )
                       AND ( cn_beneficiario.tipobeneficiarioid = :tipo )
               `,
-              { replacements: { plano: produto.planoid, tipo: tipoBeneficiario.id }, type: QueryTypes.SELECT }
+              {
+                replacements: { plano: produto.planoid, tipo: tipoBeneficiario.id },
+                type: QueryTypes.SELECT,
+                transaction: t,
+              }
             );
 
             const valor = ben.valor || defaultValor;
@@ -624,22 +639,28 @@ export default class CriaContratoService {
           /**
            * Modalidade de Pagamento
            */
-          const modPagamento = await ModalidadePagamento.findOne({
-            where: {
-              id: body.FormaPagamento.Modalidade,
+          const modPagamento = await ModalidadePagamento.findOne(
+            {
+              where: {
+                id: body.FormaPagamento.Modalidade,
+              },
             },
-          });
+            { transaction: t }
+          );
 
           if (!modPagamento || !body.FormaPagamento.Modalidade) {
             throw new Error('É necessário informar uma modalidade de pagamento em FormaPagamento.Modalidade');
           }
 
-          const verifyCarteira = await TipoCarteira.findOne({
-            where: {
-              id: body.FormaPagamento.TipoCarteira,
-              modalidadepagamentoid: modPagamento.id,
+          const verifyCarteira = await TipoCarteira.findOne(
+            {
+              where: {
+                id: body.FormaPagamento.TipoCarteira,
+                modalidadepagamentoid: modPagamento.id,
+              },
             },
-          });
+            { transaction: t }
+          );
 
           if (!verifyCarteira) throw new Error('A carteira não pertence a modalidade escolhida');
 
@@ -715,31 +736,34 @@ export default class CriaContratoService {
           // Verifica metodos de pagamento
           if (modPagamento.id === '3' || modPagamento.id === '10') {
             // Seleciona a regra fechamento
-            const regraFechamento = await RegraFechamento.findOne({
-              where: {
-                [Op.and]: [
-                  {
-                    [Op.or]: [
-                      {
-                        centrocusto_id: {
-                          [Op.is]: null,
+            const regraFechamento = await RegraFechamento.findOne(
+              {
+                where: {
+                  [Op.and]: [
+                    {
+                      [Op.or]: [
+                        {
+                          centrocusto_id: {
+                            [Op.is]: null,
+                          },
                         },
-                      },
-                      {
-                        centrocusto_id: {
-                          [Op.eq]: centroCusto.id,
+                        {
+                          centrocusto_id: {
+                            [Op.eq]: centroCusto.id,
+                          },
                         },
-                      },
-                    ],
-                  },
-                  {
-                    tipodecarteira_id: {
-                      [Op.eq]: verifyCarteira.id,
+                      ],
                     },
-                  },
-                ],
+                    {
+                      tipodecarteira_id: {
+                        [Op.eq]: verifyCarteira.id,
+                      },
+                    },
+                  ],
+                },
               },
-            });
+              { transaction: t }
+            );
 
             // Verifica se existe alguma regra
             if (regraFechamento) {
@@ -814,7 +838,7 @@ export default class CriaContratoService {
         }
       }
     } catch (error) {
-      await t.rollback();
+      if (!transaction) await t.rollback();
       throw error;
     }
   }

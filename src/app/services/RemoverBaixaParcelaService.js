@@ -18,13 +18,13 @@ export default class RemoverBaixaParcelaService {
     }
 
     try {
-      const parcela = await Parcela.findByPk(id_parcela);
+      const parcela = await Parcela.findByPk(id_parcela, { transaction: t });
 
       if (parseInt(parcela.statusgrupoid, 10) !== 1) {
         throw new Error('Installment not settled');
       }
 
-      const lotes = await parcela.getLotes();
+      const lotes = await parcela.getLotes({ transaction: t });
 
       if (lotes.length === 0) {
         await parcela.update({ statusgrupoid: 1, valor: parcela.valor_bruto }, { transaction: t });
@@ -33,7 +33,7 @@ export default class RemoverBaixaParcelaService {
       }
 
       const firstLote = lotes.shift();
-      const loteParcelas = await firstLote.getParcelas();
+      const loteParcelas = await firstLote.getParcelas({ transaction: t });
 
       connection.query('ALTER TABLE parcelalote DISABLE TRIGGER trd_parcelalote', { transaction: t });
       connection.query('ALTER TABLE parcelalote DISABLE TRIGGER triu_parcelalote', { transaction: t });
@@ -58,11 +58,11 @@ export default class RemoverBaixaParcelaService {
       connection.query('ALTER TABLE lotepagamento ENABLE TRIGGER triu_lotepagamento', { transaction: t });
       connection.query('ALTER TABLE formapagamento ENABLE TRIGGER trd_formapagamento', { transaction: t });
 
-      transaction.commit();
+      if (!transaction) t.commit();
 
       return parcela;
     } catch (error) {
-      t.rollback();
+      if (!transaction) t.rollback();
       return error;
     }
   }
