@@ -359,7 +359,7 @@ export default class CriaContratoService {
               dataadesao: body.DataAdesao,
               datainicialvigencia: body.DataAdesao,
               datafinalvigencia: moment(body.FormaPagamento.DiaVencimentoMes, 'DD')
-                .add(infoVigencia.mesesvigencia, 'months')
+                .add(infoVigencia.mesesvigencia - 1, 'months')
                 .format(),
               dataregistrosistema: moment().format(),
               ciclovigenciacontrato: 1,
@@ -725,6 +725,7 @@ export default class CriaContratoService {
           );
 
           let i = 1;
+          let j = 1;
           let mesVigencia = infoVigencia.mesesvigencia;
 
           if (body.Pagamentos && body.DataPagamento) {
@@ -736,7 +737,7 @@ export default class CriaContratoService {
                 tituloid: titulo.id,
                 tipodocumentoid: 1,
                 numerodocumento: i.toString().padStart(2, '0'),
-                numero: i,
+                numero: j,
                 datavencimento: moment(body.DataPagamento, 'YYYY-MM-DD').format(),
                 datacadastramento: new Date(),
                 statusgrupoid: 1,
@@ -746,6 +747,8 @@ export default class CriaContratoService {
               },
               { transaction: t }
             );
+
+            j += 1;
 
             if (moment(body.DataPagamento, 'YYYY-MM-DD').isSame(moment(body.FormaPagamento.DiaVencimentoMes, 'DD'))) {
               i += 1;
@@ -760,7 +763,7 @@ export default class CriaContratoService {
                 tituloid: titulo.id,
                 tipodocumentoid: 1,
                 numerodocumento: i.toString().padStart(2, '0'),
-                numero: i,
+                numero: j,
                 datavencimento: moment(body.FormaPagamento.DiaVencimentoMes, 'DD')
                   .add(i - 1, 'months')
                   .format(),
