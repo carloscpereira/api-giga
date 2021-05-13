@@ -109,7 +109,7 @@ export default class AdicinarVinculoPFService {
             where: {
               pessoaid: pessoa.id,
               vinculoid: vinculoGet.id,
-              dadocampo: atributos[snakeToPascal(atributo.descricaocampo)],
+              campo: atributo.campo,
             },
             transaction: t,
           });
@@ -122,7 +122,7 @@ export default class AdicinarVinculoPFService {
             {
               pessoaid: pessoa.id,
               vinculoid: vinculoGet.id,
-              dadocampo: atributos[snakeToPascal(atributo.descricaocampo)],
+              dadocampo: atributos[snakeToPascal(atributo.descricaocampo)].toString(),
               campo: atributo.campo,
             },
             { transaction: t }
