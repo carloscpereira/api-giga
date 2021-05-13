@@ -775,6 +775,8 @@ export default class CriaContratoService {
               },
               { transaction: t }
             );
+
+            j += 1;
           }
 
           const parcelas = await titulo.getParcelas({ transaction: t });
