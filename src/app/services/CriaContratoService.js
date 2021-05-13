@@ -338,7 +338,9 @@ export default class CriaContratoService {
               statusid: 8,
               dataadesao: body.DataAdesao,
               datainicialvigencia: body.DataAdesao,
-              datafinalvigencia: moment(body.DataAdesao).add(infoVigencia.mesesvigencia, 'months').format(),
+              datafinalvigencia: moment(body.FormaPagamento.DiaVencimentoMes, 'DD')
+                .add(infoVigencia.mesesvigencia, 'months')
+                .format(),
               dataregistrosistema: moment().format(),
               ciclovigenciacontrato: 1,
               quantidadedemesesvigencia: infoVigencia.mesesvigencia,
@@ -698,7 +700,35 @@ export default class CriaContratoService {
             { transaction: t }
           );
 
-          for (let i = 1; i <= infoVigencia.mesesvigencia; i += 1) {
+          let i = 1;
+          let mesVigencia = infoVigencia.mesesvigencia;
+
+          if (body.Pagamentos && body.DataPagamento) {
+            mesVigencia -= 1;
+
+            await Parcela.create(
+              {
+                pessoausuarioid: 1,
+                tituloid: titulo.id,
+                tipodocumentoid: 1,
+                numerodocumento: i.toString().padStart(2, '0'),
+                numero: i,
+                datavencimento: moment(body.DataPagamento, 'YYYY-MM-DD').format(),
+                datacadastramento: new Date(),
+                statusgrupoid: 1,
+                valor: valorContratoLiquido,
+                valor_bruto: valorContratoLiquido,
+                pcl_in_cobranca: false,
+              },
+              { transaction: t }
+            );
+
+            if (moment(body.DataPagamento, 'YYYY-MM-DD').isSame(moment(body.FormaPagamento.DiaVencimentoMes, 'DD'))) {
+              i += 1;
+            }
+          }
+
+          for (i; i <= mesVigencia; i += 1) {
             // eslint-disable-next-line no-await-in-loop
             await Parcela.create(
               {
@@ -707,7 +737,7 @@ export default class CriaContratoService {
                 tipodocumentoid: 1,
                 numerodocumento: i.toString().padStart(2, '0'),
                 numero: i,
-                datavencimento: moment(moment(body.FormaPagamento.DiaVencimentoMes, 'DD').format())
+                datavencimento: moment(body.FormaPagamento.DiaVencimentoMes, 'DD')
                   .add(i - 1, 'months')
                   .format(),
                 datacadastramento: new Date(),
@@ -766,7 +796,7 @@ export default class CriaContratoService {
             );
 
             // Verifica se existe alguma regra
-            if (regraFechamento) {
+            if (regraFechamento && !body.Averbacao) {
               const closingDay = body.DataFechamento
                 ? setDate(new Date(), body.DataFechamento)
                 : setDate(new Date(), regraFechamento.fechamento); // Peda o dia de fechamento

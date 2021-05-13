@@ -52,6 +52,7 @@ export default async (req, res, next) => {
       RenovacaoAutomatica: Yup.boolean().default(false),
       DataAdesao: Yup.date().default(new Date()),
       Vendedor: Yup.number(),
+      Averbacao: Yup.boolean(),
       Corretora: Yup.number(),
       PrazoVigencia: Yup.string()
         .matches(/BIENAL|ANUAL|DEZ MESES/)
