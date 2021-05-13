@@ -156,7 +156,11 @@ export default class CriaContratoService {
           await AdicionarVinculoService.execute({
             pessoa: responsavelFinanceiro,
             vinculo: bv.PESSOA_FISICA,
-            atributos: body.ResponsavelFinanceiro,
+            atributos: {
+              ...body.ResponsavelFinanceiro,
+              DataDeNascimento: body.ResponsavelFinanceiro.DataNascimento,
+              NºDaMatricula: body.ResponsavelFinanceiro.Matricula,
+            },
             alteravel: alterarVinculo,
             sequelize,
             transaction: t,
@@ -165,7 +169,11 @@ export default class CriaContratoService {
           await AdicionarVinculoService.execute({
             pessoa: responsavelFinanceiro,
             vinculo: bv.REPONSAVEL_FINANCEIRO,
-            atributos: body.ResponsavelFinanceiro,
+            atributos: {
+              ...body.ResponsavelFinanceiro,
+              DataDeNascimento: body.ResponsavelFinanceiro.DataNascimento,
+              NºDaMatricula: body.ResponsavelFinanceiro.Matricula,
+            },
             alteravel: alterarVinculo,
             sequelize,
             transaction: t,
@@ -176,7 +184,11 @@ export default class CriaContratoService {
               pessoa: responsavelFinanceiro,
               vinculo: bv.SERVIDOR_PUBLICO_MUNICIPAL,
               alteravel: alterarVinculo,
-              atributos: body.ResponsavelFinanceiro,
+              atributos: {
+                ...body.ResponsavelFinanceiro,
+                DataDeNascimento: body.ResponsavelFinanceiro.DataNascimento,
+                NºDaMatricula: body.ResponsavelFinanceiro.Matricula,
+              },
               sequelize,
               transaction: t,
             });
@@ -187,7 +199,11 @@ export default class CriaContratoService {
               pessoa: responsavelFinanceiro,
               vinculo: bv.SERVIDOR_PUBLICO_ESTADUAL,
               alteravel: alterarVinculo,
-              atributos: body.ResponsavelFinanceiro,
+              atributos: {
+                ...body.ResponsavelFinanceiro,
+                DataDeNascimento: body.ResponsavelFinanceiro.DataNascimento,
+                NºDaMatricula: body.ResponsavelFinanceiro.Matricula,
+              },
               sequelize,
               transaction: t,
             });
@@ -198,7 +214,11 @@ export default class CriaContratoService {
               pessoa: responsavelFinanceiro,
               vinculo: bv.SERVIDOR_PUBLICO_FEDERAL,
               alteravel: alterarVinculo,
-              atributos: body.ResponsavelFinanceiro,
+              atributos: {
+                ...body.ResponsavelFinanceiro,
+                DataDeNascimento: body.ResponsavelFinanceiro.DataNascimento,
+                NºDaMatricula: body.ResponsavelFinanceiro.Matricula,
+              },
               sequelize,
               transaction: t,
             });
@@ -430,6 +450,10 @@ export default class CriaContratoService {
               atributos: {
                 ...beneficiario,
                 ...(!beneficiarioTitular.RG ? {} : { RgDoBeneficiarioTitular: beneficiarioTitular.RG }),
+                ...(!beneficiarioTitular.DataNascimento
+                  ? {}
+                  : { DataDeNascimento: beneficiarioTitular.DataNascimento }),
+                ...(!beneficiarioTitular.Matricula ? {} : { NºDaMatricula: beneficiarioTitular.Matricula }),
               },
               pessoa,
               sequelize,
