@@ -729,6 +729,8 @@ export default class CriaContratoService {
           if (body.Pagamentos && body.DataPagamento) {
             mesVigencia -= 1;
 
+            const dataVencimento = body.DataVencimento || body.DataPagamento;
+
             await Parcela.create(
               {
                 pessoausuarioid: 1,
@@ -736,7 +738,7 @@ export default class CriaContratoService {
                 tipodocumentoid: 1,
                 numerodocumento: i.toString().padStart(2, '0'),
                 numero: j,
-                datavencimento: moment(body.DataPagamento, 'YYYY-MM-DD').format(),
+                datavencimento: moment(dataVencimento, 'YYYY-MM-DD').format(),
                 datacadastramento: new Date(),
                 statusgrupoid: 1,
                 valor: valorContratoLiquido,
@@ -748,7 +750,7 @@ export default class CriaContratoService {
 
             j += 1;
 
-            if (moment(body.DataPagamento, 'YYYY-MM-DD').isSame(moment(body.FormaPagamento.DiaVencimentoMes, 'DD'))) {
+            if (moment(dataVencimento, 'YYYY-MM-DD').isSame(moment(body.FormaPagamento.DiaVencimentoMes, 'DD'))) {
               i += 1;
             }
           }

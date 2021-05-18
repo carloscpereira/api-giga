@@ -52,6 +52,7 @@ export default async (req, res, next) => {
       MotivoAdesao: Yup.number().default(268),
       RenovacaoAutomatica: Yup.boolean().default(false),
       DataAdesao: Yup.date().default(new Date()),
+      DataVencimento: Yup.date(),
       Vendedor: Yup.number(),
       Averbacao: Yup.boolean(),
       Corretora: Yup.number(),
