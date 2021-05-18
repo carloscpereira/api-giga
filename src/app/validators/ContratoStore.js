@@ -144,13 +144,7 @@ export default async (req, res, next) => {
           Yup.object()
             .shape({
               Produto: Yup.number().required(),
-              Beneficiarios: Yup.array()
-                .of(beneficiarioSchema)
-                .test('has-holder', 'O grupo de beneficiários precisa de apenas um titular', (value) => {
-                  const titular = value.filter((b) => b.Titular);
-
-                  return titular.length === 1;
-                }),
+              Beneficiarios: Yup.array().of(beneficiarioSchema),
             })
             .notRequired()
             .nullable()
