@@ -71,6 +71,7 @@ export default class MigrarContratoService {
       Valor,
     },
   }) {
+    let t = transaction;
     // Testa se a instancia de conexão com o banco de dados foi passada corretamente
     if (!connection || !(connection instanceof Sequelize)) {
       throw new Error('Não foi possível estabalecer conexão com o banco de dados');
@@ -78,54 +79,57 @@ export default class MigrarContratoService {
 
     // Testa se a instancia de transação foi mandada corretamente, caso não, cria uma nova instancia
     if (!transaction || !(transaction instanceof Transaction)) {
-      transaction = await connection.transaction();
+      t = await connection.transaction();
     }
     try {
       // Seleciona contrato atual ao qual será aplicado a migração
-      const contrato = await Contrato.findOne({
-        where: {
-          id: id_contrato,
-          statusid: 8,
-          tipocontratoid: { [Op.in]: [5, 9] },
-          datacancelamento: { [Op.is]: null },
+      const contrato = await Contrato.findOne(
+        {
+          where: {
+            id: id_contrato,
+            statusid: 8,
+            tipocontratoid: { [Op.in]: [5, 9] },
+            datacancelamento: { [Op.is]: null },
+          },
+          include: [
+            {
+              model: PessoaFisica,
+              as: 'responsavel_pessoafisica',
+              include: [
+                {
+                  model: CartaoCredito,
+                  as: 'cartoes',
+                },
+                {
+                  model: Conta,
+                  as: 'contas',
+                },
+              ],
+            },
+            { model: PessoaJuridica, as: 'responsavel_pessoajuridica' },
+            {
+              model: Titulo,
+              as: 'titulos',
+              include: [
+                {
+                  model: Parcela,
+                  as: 'parcelas',
+                  include: [
+                    { model: ParcelaAcrescimoDesconto, as: 'descontos' },
+                    { model: LotePagamento, as: 'lotes' },
+                  ],
+                },
+              ],
+            },
+            {
+              model: GrupoFamiliar,
+              as: 'gruposfamiliar',
+              include: [{ model: PessoaFisica, as: 'beneficiarios' }],
+            },
+          ],
         },
-        include: [
-          {
-            model: PessoaFisica,
-            as: 'responsavel_pessoafisica',
-            include: [
-              {
-                model: CartaoCredito,
-                as: 'cartoes',
-              },
-              {
-                model: Conta,
-                as: 'contas',
-              },
-            ],
-          },
-          { model: PessoaJuridica, as: 'responsavel_pessoajuridica' },
-          {
-            model: Titulo,
-            as: 'titulos',
-            include: [
-              {
-                model: Parcela,
-                as: 'parcelas',
-                include: [
-                  { model: ParcelaAcrescimoDesconto, as: 'descontos' },
-                  { model: LotePagamento, as: 'lotes' },
-                ],
-              },
-            ],
-          },
-          {
-            model: GrupoFamiliar,
-            as: 'gruposfamiliar',
-            include: [{ model: PessoaFisica, as: 'beneficiarios' }],
-          },
-        ],
-      });
+        { transaction: t }
+      );
       // Verifica se o contrato atual existe ou se está ápito para realizar a operação
       if (!contrato) {
         throw new Error('Contrato inexiste, cancelado ou impossibilitado de realizar operação');
@@ -136,71 +140,13 @@ export default class MigrarContratoService {
       const infoContrato = contratoIsPJ ? rfContrato.AssociadoPJ : rfContrato.AssociadoPF; // Armazena as informações do contrato atual
       const tituloVigenciaContrato = contrato.titulos.find((t) => {
         return t.statusid === 1 && moment().isBefore(t.dataperiodofinal) && moment().isAfter(t.dataperiodoinicial);
-      }); // Recupera o último título em vigencia do contrato
+      });
 
+      // Recupera o último título em vigencia do contrato
       const ultimaParcelaPaga = tituloVigenciaContrato.parcelas
         .filter((p) => p.statusgrupoid === '2')
         .sort((a, b) => parseInt(b.id, 10) - parseInt(a.id, 10))
         .shift(); // Recura a última parcela paga
-
-      // const proximaParcela = tituloVigenciaContrato.parcelas
-      //   .filter(
-      //     (p) =>
-      //       p.statusgrupoid === '1' &&
-      //       moment(p.datavencimento).isAfter(moment()) &&
-      //       p.descontos.length === 0 &&
-      //       p.lotes.length === 0
-      //   )
-      //   .sort((a, b) => parseInt(a.id, 10) - parseInt(b.id, 10))
-
-      // Regra do Giga para próxima parcela válida
-      const proximaParcelaValida = await connection.query(
-        `
-              SELECT parcela.* FROM parcela
-                INNER JOIN titulo ON parcela.tituloid = titulo.id
-                LEFT JOIN cn_fatura_empresa ON parcela.id = cn_fatura_empresa.parcelaid
-                LEFT JOIN parcelalote ON parcela.id = parcelalote.parcelaid
-                LEFT JOIN parcela_acrescimo_desconto ON parcela.id = parcela_acrescimo_desconto.parcelaid
-                WHERE  (parcela.datavencimento >= Current_Date + CASE
-                  WHEN (SELECT MAX(v.periodovencimento) FROM cn_versaoplano v
-                  WHERE v.id IN (SELECT b.versaoplanoid FROM cn_beneficiario b
-                    WHERE (b.ativo = '1') AND (b.contratoid = :P_ID_CONTRATO))) IS NULL THEN 0
-                  ELSE (SELECT MAX(v.periodovencimento) FROM cn_versaoplano v
-                  WHERE v.id IN (SELECT b.versaoplanoid FROM cn_beneficiario b
-                    WHERE (b.ativo = '1') AND (b.contratoid = :P_ID_CONTRATO))) END) AND
-                (parcela.statusgrupoid = 1) AND
-                (parcela.codigobarras IS NULL) AND
-                (parcela.statusarquivo IS NULL) AND
-                (cn_fatura_empresa.parcelaid IS NULL) AND
-                (parcelalote.parcelaid IS NULL) AND
-                (titulo.id = :P_ID_TITULO) AND
-                (parcela_acrescimo_desconto.parcelaid IS NULL) LIMIT 1
-            `,
-        {
-          type: QueryTypes.SELECT,
-          replacements: { P_ID_CONTRATO: contrato.id, P_ID_TITULO: tituloVigenciaContrato.id },
-          plain: true,
-          model: Parcela,
-        }
-      );
-
-      const regraFechamento = await RegraFechamento.findOne({
-        [Op.or]: [
-          {
-            tiposcontrato_id: contrato.tipocontratoid,
-            tipodecarteira_id: contrato.tipocarteiraid,
-            centrocusto_id: contrato.centrocustoid,
-            vencimento: infoContrato.diavencimento,
-          },
-        ],
-      });
-
-      if (
-        !proximaParcelaValida ||
-        moment(proximaParcelaValida.datavencimento).diff(moment(), 'days') <= regraFechamento.fechamento
-      ) {
-        throw new Error('Parcela fechada, não é possível adicionar beneficiarios nesse contrato esse mês');
-      }
 
       // Verificar parcelas em atraso
       const parcelasEmAtraso = _.flattenDeep(contrato.titulos.map((t) => t.parcelas)).filter(
@@ -231,11 +177,6 @@ export default class MigrarContratoService {
           pro_id_tipo_contrato: contrato.tipocontratoid,
         },
       });
-
-      // Verifica se o produto ao qual pretende migrar, é o mesmo que ele já se encontra
-      // if (produtoProposta.planoid === infoContrato.planoid && produtoProposta.versaoid === infoContrato.versaoplanoid) {
-      //   throw new Error('Não é possível realizar a migração para um plano com o mesmo produto e versão');
-      // }
 
       // Verifica se o produto está disponível para aquele tipo de contrato, caso não esteja, retorna um erro
       if (!produtoProposta) {
@@ -288,24 +229,6 @@ export default class MigrarContratoService {
           });
         }
       } else {
-        // const formatarBeneficiarios = Beneficiarios.map(
-        //   ({
-        //     Nome: nome,
-        //     RG: rg,
-        //     CPF: cpf,
-        //     DataNascimento: datanascimento,
-        //     Sexo: sexo,
-        //     OrgaoEmissor: orgaoemissor,
-        //     NomeDaMae: nomedamae,
-        //     Nacionalidade: nacionalidade,
-        //     EstadoCivil: estadocivil,
-        //     Vinculo,
-        //   }) => ({
-        //     pessoa: { nome, rg, cpf, datanascimento, sexo, orgaoemissor, nomedamae, nacionalidade, estadocivil },
-        //     vinculo: bv[Vinculo],
-        //   })
-        // );
-
         // eslint-disable-next-line no-restricted-syntax
         for (const beneficiario of Beneficiarios) {
           // eslint-disable-next-line no-await-in-loop
@@ -351,28 +274,6 @@ export default class MigrarContratoService {
           const verifyBeneficiario = beneficiariosContrato.find(({ cpf }) => cpf === beneficiario.CPF); // Seleciona pessoa caso ela pertença ao contrato
 
           if (verifyBeneficiario) {
-            // const pessoa = await Pessoa.findByPk(verifyBeneficiario.id);
-
-            // Adiciona o vinculo de pessoa física caso o beneficiario não tenha o vinculo
-            // await AdicionarVinculoService.execute({
-            //   atributos: beneficiario,
-            //   pessoa,
-            //   sequelize: connection,
-            //   transaction,
-            //   vinculo: bv.PESSOA_FISICA,
-            // });
-
-            // Adiciona os novos vinculos a pessoa, caso ela não tenha os vínculos
-            // await AdicionarVinculoService.execute({
-            //   atributos: {
-            //     ...beneficiario,
-            //   },
-            //   pessoa,
-            //   sequelize: connection,
-            //   transaction,
-            //   vinculo: formatarBeneficiarios.length > 1 ? bv[beneficiario.Vinculo || 'OUTROS'] : bv.TITULAR,
-            // });
-
             // Empurra os beneficiarios para o array de proposta
             beneficiariosProposta.push({
               beneficiario: verifyBeneficiario,
@@ -421,8 +322,10 @@ export default class MigrarContratoService {
           );
         }
 
+        // Diferença de dias da última parcela até hoje
         const diffParcela = Math.abs(moment().diff(ultimaParcelaPaga.datavencimento, 'days'));
         let valorPago = 0;
+
         if (diffParcela > 20) {
           valorPago = valorPropostaFinal;
           baixaPrimeiraParcelaProposta = true;
@@ -603,7 +506,7 @@ export default class MigrarContratoService {
           id_parcela: responseContrato.titulos[0].parcelas[0].id,
         });
       }
-      transaction.commit();
+      transaction.rollback();
     } catch (error) {
       transaction.rollback();
       throw error;
