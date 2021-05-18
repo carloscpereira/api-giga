@@ -25,13 +25,20 @@ class ProdutoController {
     const fields = Object.keys(query);
     const value = Object.values(query);
 
-    let querySql = `select distinct
-    "cn_produto".*,
-     coalesce("cn_planotipobeneficiario".valor,0) as "preco"
+    let querySql = `select distinct "cn_produto".*,
+    coalesce("cn_planotipobeneficiario".valor, 0) as "preco",
+    "cn_plano".descricao                          as "plano",
+    "cn_versaoplano".descricao                    as "versaoplano"
 from "cn_produto"
- inner join "cn_rolcoberturaplano" on "cn_rolcoberturaplano"."planoid" = "cn_produto"."planoid" and "cn_rolcoberturaplano"."versaoid" = "cn_produto"."versaoid"
- inner join "cn_tabelaprecoplano" on "cn_tabelaprecoplano".planoid = "cn_produto".planoid and "cn_tabelaprecoplano".versaoid = "cn_produto".versaoid
- left join "cn_planotipobeneficiario" on "cn_planotipobeneficiario"."tabelaprecoplanoid" = "cn_tabelaprecoplano"."id" and "cn_planotipobeneficiario"."tipobeneficiarioid" = 1`;
+inner join "cn_rolcoberturaplano" on "cn_rolcoberturaplano"."planoid" = "cn_produto"."planoid" and
+                                  "cn_rolcoberturaplano"."versaoid" = "cn_produto"."versaoid"
+inner join "cn_tabelaprecoplano" on "cn_tabelaprecoplano".planoid = "cn_produto".planoid and
+                                 "cn_tabelaprecoplano".versaoid = "cn_produto".versaoid
+inner join "cn_plano" on "cn_produto".planoid = "cn_plano".id
+inner join "cn_versaoplano" on "cn_produto".versaoid = "cn_versaoplano".id
+left join "cn_planotipobeneficiario"
+       on "cn_planotipobeneficiario"."tabelaprecoplanoid" = "cn_tabelaprecoplano"."id" and
+          "cn_planotipobeneficiario"."tipobeneficiarioid" = 1`;
 
     let andWhere = '';
 
