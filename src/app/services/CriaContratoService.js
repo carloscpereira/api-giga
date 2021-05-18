@@ -386,7 +386,7 @@ export default class CriaContratoService {
 
           const beneficiarios = [];
 
-          const beneficiarioTitular = body.Beneficiarios.find((ben) => ben.Titular);
+          const beneficiarioTitular = body.Beneficiarios.find((ben) => ben.Titular) || body.Beneficiarios[0];
 
           if (!beneficiarioTitular) throw new Error('É necessário ter um beneficiário titular');
 
@@ -413,7 +413,7 @@ export default class CriaContratoService {
               {
                 type: QueryTypes.SELECT,
                 replacements: {
-                  P_ID_TIPOBENEFICIARIO: beneficiario.Titular ? bv.TITULAR : bv[beneficiario.Vinculo],
+                  P_ID_TIPOBENEFICIARIO: beneficiario.Titular ? bv.TITULAR : parseInt(beneficiario.Vinculo, 10),
                   P_ID_PLANO: produto.planoid,
                   P_ID_VERSAO: produto.versaoid,
                   P_DT_ADESAO_BENEF: body.DataAdesao,
@@ -455,7 +455,7 @@ export default class CriaContratoService {
               sequelize,
               alteravel: alterarVinculo,
               transaction: t,
-              vinculo: beneficiario.Titular ? bv.TITULAR : bv[beneficiario.Vinculo],
+              vinculo: beneficiario.Titular ? bv.TITULAR : parseInt(beneficiario.Vinculo, 10),
             });
 
             if (beneficiario.Enderecos) {
@@ -472,7 +472,7 @@ export default class CriaContratoService {
                     cep: endereco.Cep,
                     tipoenderecoid: endereco.TipoEndereco || 1,
                     end_in_principal: endereco.Principal,
-                    vinculoid: beneficiario.Titular ? bv.TITULAR : bv[beneficiario.Vinculo],
+                    vinculoid: beneficiario.Titular ? bv.TITULAR : parseInt(beneficiario.Vinculo, 10),
                     pessoa,
                     sequelize,
                     transaction: t,
@@ -492,7 +492,7 @@ export default class CriaContratoService {
                     numero: tel.Numero,
                     ramal: tel.Ramal,
                     tel_in_principal: tel.Principal,
-                    vinculoid: beneficiario.Titular ? bv.TITULAR : bv[beneficiario.Vinculo],
+                    vinculoid: beneficiario.Titular ? bv.TITULAR : parseInt(beneficiario.Vinculo, 10),
                     tipotelefoneid: tel.TipoTelefone || 3,
                     pessoa,
                     sequelize,
@@ -511,7 +511,7 @@ export default class CriaContratoService {
                 beneficiario.Emails.map((email) =>
                   AdicionarEmailService.execute({
                     ema_in_principal: email.Principal,
-                    vinculoid: beneficiario.Titular ? bv.TITULAR : bv[beneficiario.Vinculo],
+                    vinculoid: beneficiario.Titular ? bv.TITULAR : parseInt(beneficiario.Vinculo, 10),
                     email: email.Email,
                     pessoa,
                     sequelize,
@@ -526,7 +526,7 @@ export default class CriaContratoService {
 
             beneficiarios.push({
               pessoa,
-              vinculo: beneficiario.Titular ? bv.TITULAR : bv[beneficiario.Vinculo],
+              vinculo: beneficiario.Titular ? bv.TITULAR : parseInt(beneficiario.Vinculo, 10),
               valor: valor ? valor.valor : null,
               valorLiquido: beneficiario.Valor,
             });
