@@ -629,14 +629,14 @@ export default class CriaContratoService {
                 where: {
                   numerocarteira: GeraCarteira({
                     operadora: operadoraid,
-                    sequenciaCorrect,
+                    sequencia: sequenciaCorrect,
                     tipoBeneficiario: tipoBeneficiario.id,
                   }),
                 },
                 transaction: t,
               });
 
-              if (existsCarteirinha === 0) {
+              if (existsCarteirinha > 0) {
                 sequenciaCorrect += 1;
                 // eslint-disable-next-line no-continue
                 continue;
