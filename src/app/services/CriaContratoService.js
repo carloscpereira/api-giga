@@ -72,15 +72,13 @@ export default class CriaContratoService {
           /**
            * Seleciona o Produto
            */
-          const produto = await Produto.findOne(
-            {
-              where: {
-                id: body.Produto,
-                pro_id_tipo_contrato: body.TipoContrato,
-              },
+          const produto = await Produto.findOne({
+            where: {
+              id: body.Produto,
+              pro_id_tipo_contrato: body.TipoContrato,
             },
-            { transaction: t }
-          );
+            transaction: t,
+          });
 
           // Verifica se o Produto existe
           if (!produto)
@@ -599,10 +597,7 @@ export default class CriaContratoService {
           // eslint-disable-next-line no-restricted-syntax
           for (const ben of beneficiarios) {
             // eslint-disable-next-line no-await-in-loop
-            const tipoBeneficiario = await TipoBeneficiario.findOne(
-              { where: { codigo: ben.vinculo } },
-              { transaction: t }
-            );
+            const tipoBeneficiario = await TipoBeneficiario.findOne({ where: { codigo: ben.vinculo }, transaction: t });
 
             // eslint-disable-next-line no-await-in-loop
             const [{ sequencia }] = await sequelize.query(
@@ -663,28 +658,24 @@ export default class CriaContratoService {
           /**
            * Modalidade de Pagamento
            */
-          const modPagamento = await ModalidadePagamento.findOne(
-            {
-              where: {
-                id: body.FormaPagamento.Modalidade,
-              },
+          const modPagamento = await ModalidadePagamento.findOne({
+            where: {
+              id: body.FormaPagamento.Modalidade,
             },
-            { transaction: t }
-          );
+            transaction: t,
+          });
 
           if (!modPagamento || !body.FormaPagamento.Modalidade) {
             throw new Error('É necessário informar uma modalidade de pagamento em FormaPagamento.Modalidade');
           }
 
-          const verifyCarteira = await TipoCarteira.findOne(
-            {
-              where: {
-                id: body.FormaPagamento.TipoCarteira,
-                modalidadepagamentoid: modPagamento.id,
-              },
+          const verifyCarteira = await TipoCarteira.findOne({
+            where: {
+              id: body.FormaPagamento.TipoCarteira,
+              modalidadepagamentoid: modPagamento.id,
             },
-            { transaction: t }
-          );
+            transaction: t,
+          });
 
           if (!verifyCarteira) throw new Error('A carteira não pertence a modalidade escolhida');
 
@@ -795,34 +786,32 @@ export default class CriaContratoService {
           // Verifica metodos de pagamento
           if (modPagamento.id === '3' || modPagamento.id === '10') {
             // Seleciona a regra fechamento
-            const regraFechamento = await RegraFechamento.findOne(
-              {
-                where: {
-                  [Op.and]: [
-                    {
-                      [Op.or]: [
-                        {
-                          centrocusto_id: {
-                            [Op.is]: null,
-                          },
+            const regraFechamento = await RegraFechamento.findOne({
+              where: {
+                [Op.and]: [
+                  {
+                    [Op.or]: [
+                      {
+                        centrocusto_id: {
+                          [Op.is]: null,
                         },
-                        {
-                          centrocusto_id: {
-                            [Op.eq]: centroCusto.id,
-                          },
-                        },
-                      ],
-                    },
-                    {
-                      tipodecarteira_id: {
-                        [Op.eq]: verifyCarteira.id,
                       },
+                      {
+                        centrocusto_id: {
+                          [Op.eq]: centroCusto.id,
+                        },
+                      },
+                    ],
+                  },
+                  {
+                    tipodecarteira_id: {
+                      [Op.eq]: verifyCarteira.id,
                     },
-                  ],
-                },
+                  },
+                ],
               },
-              { transaction: t }
-            );
+              transaction: t,
+            });
 
             // Verifica se existe alguma regra
             if (regraFechamento && !body.Averbacao) {

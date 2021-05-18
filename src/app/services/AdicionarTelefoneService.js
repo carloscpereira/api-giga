@@ -24,31 +24,27 @@ export default class AdicionarTelefoneService {
       t = await sequelize.transaction();
     }
 
-    const verifyExistsTelefone = await Telefone.findOne(
-      {
-        where: {
-          numero,
-          ramal,
-          dadosid: pessoa.id,
-        },
+    const verifyExistsTelefone = await Telefone.findOne({
+      where: {
+        numero,
+        ramal,
+        dadosid: pessoa.id,
       },
-      { transaction: t }
-    );
+      transaction: t,
+    });
 
     if (verifyExistsTelefone) {
       await verifyExistsTelefone.destroy({ transaction: t });
     }
 
     if (tel_in_principal) {
-      const verifyTelefonePrincipal = await Telefone.findOne(
-        {
-          where: {
-            tel_in_principal: true,
-            dadosid: pessoa.id,
-          },
+      const verifyTelefonePrincipal = await Telefone.findOne({
+        where: {
+          tel_in_principal: true,
+          dadosid: pessoa.id,
         },
-        { transaction: t }
-      );
+        transaction: t,
+      });
 
       if (verifyTelefonePrincipal)
         await verifyTelefonePrincipal.update({ tel_in_principal: false }, { transaction: t });

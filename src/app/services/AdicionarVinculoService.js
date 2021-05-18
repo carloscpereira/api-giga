@@ -45,17 +45,15 @@ export default class AdicinarVinculoPFService {
         t = await sequelize.transaction();
       }
 
-      const vinculoGet = await Vinculo.findOne(
-        {
-          where: {
-            [Op.or]: [
-              ...(typeof vinculo === 'number' ? [{ id: vinculo }] : []),
-              { descricao: { [Op.iLike]: `%${vinculo}%` } },
-            ],
-          },
+      const vinculoGet = await Vinculo.findOne({
+        where: {
+          [Op.or]: [
+            ...(typeof vinculo === 'number' ? [{ id: vinculo }] : []),
+            { descricao: { [Op.iLike]: `%${vinculo}%` } },
+          ],
         },
-        { transaction: t }
-      );
+        transaction: t,
+      });
 
       if (!vinculo) throw new Error('Vinculo não encontrado');
 

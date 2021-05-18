@@ -16,32 +16,28 @@ export default class AdicionarEmailService {
       t = await sequelize.transaction();
     }
 
-    const verifyExistsEmail = await Email.findOne(
-      {
-        where: {
-          descricao: {
-            [Op.iLike]: `%${email}%`,
-          },
-          dadosid: pessoa.id,
+    const verifyExistsEmail = await Email.findOne({
+      where: {
+        descricao: {
+          [Op.iLike]: `%${email}%`,
         },
+        dadosid: pessoa.id,
       },
-      { transaction: t }
-    );
+      transaction: t,
+    });
 
     if (verifyExistsEmail) {
       await verifyExistsEmail.destroy({ transaction: t });
     }
 
     if (ema_in_principal) {
-      const verifyEmailPrincipal = await Email.findOne(
-        {
-          where: {
-            ema_in_principal: true,
-            dadosid: pessoa.id,
-          },
+      const verifyEmailPrincipal = await Email.findOne({
+        where: {
+          ema_in_principal: true,
+          dadosid: pessoa.id,
         },
-        { transaction: t }
-      );
+        transaction: t,
+      });
 
       if (verifyEmailPrincipal) await verifyEmailPrincipal.update({ ema_in_principal: false }, { transaction: t });
     }

@@ -29,34 +29,30 @@ export default class AdicionarContaService {
       t = await sequelize.transaction();
     }
 
-    const verifyExistsConta = await Conta.findOne(
-      {
-        where: {
-          numero,
-          agenciaid,
-          tipocontaid,
-          digito,
-          operacao,
-          pessoaid: pessoa.id,
-        },
+    const verifyExistsConta = await Conta.findOne({
+      where: {
+        numero,
+        agenciaid,
+        tipocontaid,
+        digito,
+        operacao,
+        pessoaid: pessoa.id,
       },
-      { transaction: t }
-    );
+      transaction: t,
+    });
 
     if (verifyExistsConta) {
       await verifyExistsConta.destroy({ transaction: t });
     }
 
     if (con_in_principal) {
-      const verifyContaPrincipal = await Conta.findOne(
-        {
-          where: {
-            con_in_principal: true,
-            pessoaid: pessoa.id,
-          },
+      const verifyContaPrincipal = await Conta.findOne({
+        where: {
+          con_in_principal: true,
+          pessoaid: pessoa.id,
         },
-        { transaction: t }
-      );
+        transaction: t,
+      });
 
       if (verifyContaPrincipal) await verifyContaPrincipal.update({ con_in_principal: false }, { transaction: t });
     }

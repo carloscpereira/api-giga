@@ -26,31 +26,27 @@ export default class AdicionarCartaoCreditoService {
       t = await sequelize.transaction();
     }
 
-    const verifyExistsCartaoCredito = await CartaoCredito.findOne(
-      {
-        where: {
-          codigosegurancacartao,
-          validadecartao,
-          nome_titular,
-        },
+    const verifyExistsCartaoCredito = await CartaoCredito.findOne({
+      where: {
+        codigosegurancacartao,
+        validadecartao,
+        nome_titular,
       },
-      { transaction: t }
-    );
+      transaction: t,
+    });
 
     if (verifyExistsCartaoCredito) {
       await verifyExistsCartaoCredito.destroy({ transaction: t });
     }
 
     if (car_in_principal) {
-      const verifyCartaoCreditoPrincipal = await CartaoCredito.findOne(
-        {
-          where: {
-            car_in_principal: true,
-            dadosid: pessoa.id,
-          },
+      const verifyCartaoCreditoPrincipal = await CartaoCredito.findOne({
+        where: {
+          car_in_principal: true,
+          dadosid: pessoa.id,
         },
-        { transaction: t }
-      );
+        transaction: t,
+      });
 
       if (verifyCartaoCreditoPrincipal)
         await verifyCartaoCreditoPrincipal.update({ car_in_principal: false }, { transaction: t });
