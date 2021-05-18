@@ -1,7 +1,11 @@
+/* eslint-disable no-restricted-syntax */
+/* eslint-disable no-unused-vars */
 import * as Yup from 'yup';
 import { Sequelize, Op } from 'sequelize';
+import _ from 'lodash';
 
 import queryStringConverter from 'sequelize-querystring-converter';
+import { response } from 'express';
 import Contrato from '../models/Sequelize/Contrato';
 import TipoContrato from '../models/Sequelize/TipoContrato';
 import PessoaJuridica from '../models/Sequelize/PessoaJuridica';
@@ -217,9 +221,61 @@ class ContratoController {
   }
 
   async store(req, res) {
-    const contrato = await CriarContratoService.execute(req);
+    const {
+      formValidation: { Beneficiarios, Pagamentos, ResponsavelFinanceiro, ...rest },
+      sequelize,
+      operator: operadora,
+    } = req;
+    const transaction = await sequelize.transaction();
 
-    return res.json({ error: null, data: contrato });
+    try {
+      const fullValue = Beneficiarios.reduce((previous, current) => previous + parseInt(current.Valor, 10), 0);
+      const amountPaid = Pagamentos.reduce((previous, current) => previous + parseInt(current.Valor, 10), 0);
+
+      const diffPorcentage = Math.abs((amountPaid - fullValue) / fullValue);
+
+      const isSurcharge = fullValue < amountPaid;
+
+      const plans = Object.values(
+        _(Beneficiarios)
+          .groupBy((beneficiario) => beneficiario.Produto)
+          .value()
+      );
+      const contratos = [];
+
+      for (const [index, beneficiarios] of plans.entries()) {
+        const contrato = await CriarContratoService.execute({
+          transaction,
+          sequelize,
+          operadora,
+          formValidation: {
+            ...rest,
+            Produto: beneficiarios[0].Produto,
+            Beneficiarios: beneficiarios,
+            ResponsavelFinanceiro: {
+              ...ResponsavelFinanceiro,
+              ...(index === 0 ? { Enderecos: ResponsavelFinanceiro.Enderecos } : { Enderecos: [] }),
+              ...(index === 0 ? { Emails: ResponsavelFinanceiro.Emails } : { Emails: [] }),
+              ...(index === 0 ? { Telefones: ResponsavelFinanceiro.Telefones } : { Telefones: [] }),
+            },
+            Pagamentos: Pagamentos.map((pagamento) => ({
+              ...pagamento,
+              Valor: isSurcharge
+                ? pagamento.Valor + parseInt(pagamento.Valor, 10) * diffPorcentage
+                : pagamento.Valor - parseInt(pagamento.Valor, 10) * diffPorcentage,
+            })),
+          },
+        });
+
+        contratos.push(contrato);
+      }
+
+      await transaction.commit();
+      return res.json({ error: null, data: contratos });
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
   }
 
   async migrar(req, res) {
@@ -323,7 +379,7 @@ class ContratoController {
 
   async adicionarAssociado(req, res) {
     const {
-      body: { GrupoFamiliar: id_grupofamiliar, Vinculo: vinculo, ...beneficiario },
+      body: { GrupoFamiliar: id_grupofamiliar, Vinculo: vinculo, Pagamentos: pagamentos, ...beneficiario },
       params: { id: id_contrato },
       sequelize,
     } = req;
@@ -333,6 +389,7 @@ class ContratoController {
       id_contrato,
       id_grupofamiliar,
       sequelize,
+      pagamentos,
       vinculo,
     });
 

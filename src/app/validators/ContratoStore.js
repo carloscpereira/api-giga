@@ -31,6 +31,7 @@ export default async (req, res, next) => {
       Nome: Yup.string().transform(function transformValue(value) {
         return this.isType(value) && value !== null ? value.toUpperCase() : value;
       }),
+      Produto: Yup.number(),
       Vinculo: Yup.string().required(),
       Valor: Yup.number(),
       Titular: Yup.boolean().default(false),
@@ -57,9 +58,9 @@ export default async (req, res, next) => {
       PrazoVigencia: Yup.string()
         .matches(/BIENAL|ANUAL|DEZ MESES/)
         .default('BIENAL'),
-      Produto: Yup.number().when('TipoContrato', (validator, s) =>
-        validator === '5' ? s.required() : s.nullable().default(null)
-      ),
+      // Produto: Yup.number().when('TipoContrato', (validator, s) =>
+      //   validator === '5' ? s.required() : s.nullable().default(null)
+      // ),
       DataFechamento: Yup.date(),
       Convenio: Yup.string()
         .matches(/Pessoa Fisica|Empresa|Municipio|Estado|Federal/)
@@ -132,7 +133,7 @@ export default async (req, res, next) => {
         .test('has-holder', 'O grupo de beneficiários precisa de apenas um titular', (value) => {
           const titular = value.filter((b) => b.Titular);
 
-          return titular.length === 1;
+          return titular.length > 1;
         }),
       GrupoFamiliar: Yup.array()
         .ensure()
@@ -218,7 +219,7 @@ export default async (req, res, next) => {
     }
 
     req.formValidation = schema.cast(req.body);
-    console.log(schema.cast(req.body));
+    // console.log(schema.cast(req.body));
     return next();
   } catch (error) {
     if (error instanceof Yup.ValidationError) {

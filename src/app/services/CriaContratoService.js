@@ -424,8 +424,6 @@ export default class CriaContratoService {
               }
             );
 
-            console.log(valor);
-
             // eslint-disable-next-line no-await-in-loop
             const pessoa = await CriaPessoaFisicaService.execute({
               usuario: 'N',
@@ -596,7 +594,7 @@ export default class CriaContratoService {
             { transaction: t }
           );
 
-          const pessoaBeneficiarioTitular = beneficiarios.find((b) => b.vinculo === bv.TITULAR);
+          const pessoaBeneficiarioTitular = beneficiarios.find((b) => b.vinculo === bv.TITULAR) || beneficiarios[0];
 
           // eslint-disable-next-line no-restricted-syntax
           for (const ben of beneficiarios) {
