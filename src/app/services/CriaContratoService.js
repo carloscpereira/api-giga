@@ -576,7 +576,9 @@ export default class CriaContratoService {
               tipocarteiraid: carteirinha.id,
               versaoplanoid: produto.versaoid,
               diavencimento: body.FormaPagamento.DiaVencimentoMes,
-              datavencimento: moment(body.DataAdesao).format(),
+              datavencimento: body.DataVencimento
+                ? moment(body.DataVencimento).format()
+                : moment(body.DataAdesao).format(),
               tipodecarteiraid: body.TipoCarteira,
               qtdparcela: infoVigencia.mesesvigencia,
               valorcontrato: valorContratobruto * infoVigencia.mesesvigencia,
