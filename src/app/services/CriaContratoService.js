@@ -621,7 +621,7 @@ export default class CriaContratoService {
               }
             );
 
-            let sequenciaCorrect = parseInt(sequencia, 10);
+            let sequenciaCorrect = sequencia ? parseInt(sequencia, 10) : 1;
 
             while (true) {
               const existsCarteirinha = await BeneficiarioModels.count({
