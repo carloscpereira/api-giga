@@ -129,13 +129,7 @@ export default async (req, res, next) => {
           })
           .when('Modalidade', (validator, s) => (validator === 3 ? s.required() : s.nullable().default(null))),
       }),
-      Beneficiarios: Yup.array()
-        .of(beneficiarioSchema)
-        .test('has-holder', 'O grupo de beneficiários precisa de apenas um titular', (value) => {
-          const titular = value.filter((b) => b.Titular);
-
-          return titular.length > 1;
-        }),
+      Beneficiarios: Yup.array().of(beneficiarioSchema),
       GrupoFamiliar: Yup.array()
         .ensure()
         .compact()
