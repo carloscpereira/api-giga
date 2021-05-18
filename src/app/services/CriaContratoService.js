@@ -14,6 +14,7 @@ import RegraFechamento from '../models/Sequelize/RegraFechamento';
 import CentroCusto from '../models/Sequelize/CentroCusto';
 import Produto from '../models/Sequelize/Produto';
 import TipoBeneficiario from '../models/Sequelize/TipoBeneficiario';
+import BeneficiarioModels from '../models/Sequelize/Beneficiario';
 
 import Parcela from '../models/Sequelize/Parcela';
 import TipoCarteira from '../models/Sequelize/TipoCarteira';
@@ -620,6 +621,28 @@ export default class CriaContratoService {
               }
             );
 
+            let sequenciaCorrect = parseInt(sequencia, 10);
+
+            while (true) {
+              const existsCarteirinha = await BeneficiarioModels.count({
+                where: {
+                  numerocarteira: GeraCarteira({
+                    operadora: operadoraid,
+                    sequenciaCorrect,
+                    tipoBeneficiario: tipoBeneficiario.id,
+                  }),
+                },
+                transaction: t,
+              });
+
+              if (existsCarteirinha === 0) {
+                sequenciaCorrect += 1;
+                // eslint-disable-next-line no-continue
+                continue;
+              }
+              break;
+            }
+
             const valor = ben.valor || defaultValor;
             // eslint-disable-next-line no-await-in-loop
             await grupoFamiliar.addPessoa(ben.pessoa, {
@@ -634,11 +657,11 @@ export default class CriaContratoService {
                 valor,
                 numerocarteira: GeraCarteira({
                   operadora: operadoraid,
-                  sequencia,
+                  sequencia: sequenciaCorrect,
                   tipoBeneficiario: tipoBeneficiario.id,
                 }),
                 via: 'A',
-                sequencia,
+                sequencia: sequenciaCorrect,
                 ativo: 1,
                 responsavelgrupo: pessoaBeneficiarioTitular.pessoa.id,
                 descontovalor: ben.valorLiquido ? valor - ben.valorLiquido : 0,
