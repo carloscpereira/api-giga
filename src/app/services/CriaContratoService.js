@@ -573,6 +573,8 @@ export default class CriaContratoService {
             0
           );
 
+          const qtdParcelas = body.FormaPagamento.Parcelas || infoVigencia.mesesvigencia;
+
           await contrato.setResponsavelpf(responsavelFinanceiro, {
             through: {
               planoid: produto.planoid,
@@ -583,9 +585,9 @@ export default class CriaContratoService {
                 ? moment(body.DataVencimento).format()
                 : moment(body.DataAdesao).format(),
               tipodecarteiraid: body.TipoCarteira,
-              qtdparcela: infoVigencia.mesesvigencia,
+              qtdparcela: qtdParcelas,
               valorcontrato: valorContratobruto * infoVigencia.mesesvigencia,
-              valormes: valorContratoLiquido,
+              valormes: (valorContratobruto * infoVigencia.mesesvigencia) / qtdParcelas,
               valorliquido: valorContratoLiquido,
               valordesconto: (valorContratobruto - valorContratoLiquido) * infoVigencia.mesesvigencia,
             },
@@ -722,7 +724,7 @@ export default class CriaContratoService {
               numerocontratoid: contrato.id,
               numerodocumento: contrato.numerocontrato,
               valor: valorContratoLiquido * infoVigencia.mesesvigencia,
-              numerototalparcelas: infoVigencia.mesesvigencia,
+              numerototalparcelas: qtdParcelas,
               numerodiavencimento: body.FormaPagamento.DiaVencimentoMes,
               ...(centroCusto ? { centrocustoid: centroCusto.id } : {}),
               datavencimento: moment(moment(body.FormaPagamento.DiaVencimentoMes, 'DD').format())
@@ -746,7 +748,7 @@ export default class CriaContratoService {
 
           let i = 1;
           let j = 1;
-          let mesVigencia = infoVigencia.mesesvigencia;
+          let mesVigencia = qtdParcelas;
 
           if (body.Pagamentos && body.DataPagamento) {
             mesVigencia -= 1;
@@ -763,8 +765,8 @@ export default class CriaContratoService {
                 datavencimento: moment(dataVencimento, 'YYYY-MM-DD').format(),
                 datacadastramento: new Date(),
                 statusgrupoid: 1,
-                valor: valorContratoLiquido,
-                valor_bruto: valorContratoLiquido,
+                valor: (valorContratoLiquido * infoVigencia.mesesvigencia) / qtdParcelas,
+                valor_bruto: (valorContratoLiquido * infoVigencia.mesesvigencia) / qtdParcelas,
                 pcl_in_cobranca: false,
               },
               { transaction: t }
@@ -794,8 +796,8 @@ export default class CriaContratoService {
                   .format(),
                 datacadastramento: new Date(),
                 statusgrupoid: 1,
-                valor: valorContratoLiquido,
-                valor_bruto: valorContratoLiquido,
+                valor: (valorContratoLiquido * infoVigencia.mesesvigencia) / qtdParcelas,
+                valor_bruto: (valorContratoLiquido * infoVigencia.mesesvigencia) / qtdParcelas,
                 pcl_in_cobranca: false,
               },
               { transaction: t }
@@ -920,7 +922,9 @@ export default class CriaContratoService {
         }
       }
     } catch (error) {
-      if (!transaction) await t.rollback();
+      if (!transaction) {
+        await t.rollback();
+      }
       throw error;
     }
   }

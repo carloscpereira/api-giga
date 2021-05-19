@@ -105,6 +105,7 @@ export default async (req, res, next) => {
         TipoCarteira: Yup.number().integer().required(),
         DiaVencimentoMes: Yup.number().integer().default(10),
         Modalidade: Yup.number().integer().required(),
+        Parcelas: Yup.number().integer(),
         CartaoCredito: Yup.object()
           .shape({
             Numero: Yup.string().required(),

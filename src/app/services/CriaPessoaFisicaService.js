@@ -45,6 +45,7 @@ export default class CriaPessoaFisicaService {
       ],
       transaction: t,
     });
+
     const estadoCivil = await EstadoCivil.findByPk(estadocivil, { transaction: t });
 
     let pessoa;
