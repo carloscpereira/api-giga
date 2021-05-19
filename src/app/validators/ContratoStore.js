@@ -106,18 +106,14 @@ export default async (req, res, next) => {
         DiaVencimentoMes: Yup.number().integer().default(10),
         Modalidade: Yup.number().integer().required(),
         Parcelas: Yup.number().integer(),
-        CartaoCredito: Yup.object()
-          .shape({
-            Numero: Yup.string().required(),
-            CodigoSeguranca: Yup.number().integer().required(),
-            TipoCartao: Yup.number().integer().required(),
-            Validade: Yup.date().required(),
-            Titular: Yup.string().required(),
-            Principal: Yup.boolean().default(true),
-          })
-          .when('Modalidade', (validator, s) =>
-            validator === 2 || validator === 34 ? s.required() : s.nullable().default(null)
-          ),
+        CartaoCredito: Yup.object().shape({
+          Numero: Yup.string(),
+          CodigoSeguranca: Yup.number().integer(),
+          TipoCartao: Yup.number().integer(),
+          Validade: Yup.date(),
+          Titular: Yup.string(),
+          Principal: Yup.boolean(),
+        }),
         Conta: Yup.object()
           .shape({
             TipoConta: Yup.number().integer().required(),
