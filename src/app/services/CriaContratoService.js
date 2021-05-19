@@ -625,18 +625,21 @@ export default class CriaContratoService {
 
             while (true) {
               console.log(`estou aqui ${sequenciaCorrect}`);
-              const existsCarteirinha = await BeneficiarioModels.count({
-                where: {
-                  numerocarteira: GeraCarteira({
-                    operadora: operadoraid,
-                    sequencia: sequenciaCorrect,
-                    tipoBeneficiario: tipoBeneficiario.id,
-                  }),
+              const existsCarteirinha = await BeneficiarioModels.count(
+                {
+                  where: {
+                    numerocarteira: GeraCarteira({
+                      operadora: operadoraid,
+                      sequencia: sequenciaCorrect,
+                      tipoBeneficiario: tipoBeneficiario.id,
+                    }),
+                  },
+                  transaction: t,
                 },
-                transaction: t,
-              });
+                { transaction: t }
+              );
 
-              if (existsCarteirinha > 0) {
+              if (existsCarteirinha !== 0) {
                 sequenciaCorrect += 1;
                 // eslint-disable-next-line no-continue
                 continue;
@@ -767,7 +770,10 @@ export default class CriaContratoService {
 
             j += 1;
 
-            if (moment(dataVencimento, 'YYYY-MM-DD').isSame(moment(body.FormaPagamento.DiaVencimentoMes, 'DD'))) {
+            if (
+              moment(dataVencimento, 'YYYY-MM-DD').isSame(moment(body.FormaPagamento.DiaVencimentoMes, 'DD')) ||
+              moment(dataVencimento, 'YYYY-MM-DD').isAfter(moment(body.FormaPagamento.DiaVencimentoMes, 'DD'))
+            ) {
               i += 1;
             }
           }
