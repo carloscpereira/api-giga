@@ -229,8 +229,8 @@ class ContratoController {
     const transaction = await sequelize.transaction();
 
     try {
-      const fullValue = Beneficiarios.reduce((previous, current) => previous + parseInt(current.Valor, 10), 0);
-      const amountPaid = Pagamentos.reduce((previous, current) => previous + parseInt(current.Valor, 10), 0);
+      const fullValue = Beneficiarios.reduce((previous, current) => previous + parseFloat(current.Valor), 0);
+      const amountPaid = Pagamentos.reduce((previous, current) => previous + parseFloat(current.Valor), 0);
 
       const diffPorcentage = Math.abs((amountPaid - fullValue) / fullValue);
 
@@ -241,6 +241,9 @@ class ContratoController {
           .groupBy((beneficiario) => beneficiario.Produto)
           .value()
       );
+
+      console.log(plans.length);
+
       const contratos = [];
 
       for (const [index, beneficiarios] of plans.entries()) {
@@ -261,12 +264,11 @@ class ContratoController {
             Pagamentos: Pagamentos.map((pagamento) => ({
               ...pagamento,
               Valor: isSurcharge
-                ? pagamento.Valor + parseInt(pagamento.Valor, 10) * diffPorcentage
-                : pagamento.Valor - parseInt(pagamento.Valor, 10) * diffPorcentage,
+                ? pagamento.Valor + parseFloat(pagamento.Valor) * diffPorcentage
+                : pagamento.Valor - parseFloat(pagamento.Valor) * diffPorcentage,
             })),
           },
         });
-
         contratos.push(contrato);
       }
 
