@@ -439,6 +439,8 @@ export default class CriaContratoService {
               transaction: t,
             });
 
+            await pessoa.setTiposcontrato([body.TipoContrato], { transaction: t });
+
             // eslint-disable-next-line no-await-in-loop
             await pessoa.addOrganogramas([centroCusto], { transaction: t });
 
