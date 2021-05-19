@@ -805,7 +805,7 @@ export default class CriaContratoService {
           const parcelas = await titulo.getParcelas({ transaction: t });
 
           if (body.Pagamentos) {
-            const firstInstallment = parcelas[0];
+            const firstInstallment = parcelas.sort((a, b) => parseInt(a.numero, 10) - parseInt(b.numero, 10))[0];
             await BaixarParcelaService.execute({
               transaction: t,
               forma_pagamento: body.Pagamentos,
