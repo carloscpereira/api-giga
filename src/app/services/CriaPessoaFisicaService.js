@@ -51,16 +51,20 @@ export default class CriaPessoaFisicaService {
     let pessoa;
 
     if (personExists) {
-      personExists.dadospessoafisica.nome = nome || personExists.dadospessoafisica.nome;
+      personExists.dadospessoafisica.nome = nome ? nome.toUpperCase() : personExists.dadospessoafisica.nome;
       personExists.dadospessoafisica.rg = rg || personExists.dadospessoafisica.rg;
       personExists.dadospessoafisica.cpf = cpf || personExists.dadospessoafisica.cpf;
       personExists.dadospessoafisica.estadocivilid =
         (estadoCivil ? estadoCivil.id : null) || personExists.dadospessoafisica.estadocivilid;
-      personExists.dadospessoafisica.nacionalidade = nacionalidade || personExists.dadospessoafisica.nacionalidade;
+      personExists.dadospessoafisica.nacionalidade = nacionalidade
+        ? nacionalidade.toUpperCase()
+        : personExists.dadospessoafisica.nacionalidade;
       personExists.dadospessoafisica.datanascimento = datanascimento || personExists.dadospessoafisica.datanascimento;
       personExists.dadospessoafisica.sexo = sexo || personExists.dadospessoafisica.sexo;
       personExists.dadospessoafisica.orgaoemissor = orgaoemissor || personExists.dadospessoafisica.orgaoemissor;
-      personExists.dadospessoafisica.nomedamae = nomedamae || personExists.dadospessoafisica.nomedamae;
+      personExists.dadospessoafisica.nomedamae = nomedamae
+        ? nomedamae.toUpperCase()
+        : personExists.dadospessoafisica.nomedamae;
 
       await personExists.save({ transaction: t });
 
@@ -77,15 +81,15 @@ export default class CriaPessoaFisicaService {
         {
           id: pessoaid,
           dadospessoafisica: {
-            nome,
+            nome: nome ? nome.toUpperCase() : nome,
             rg,
             cpf,
             estadocivilid: estadoCivil ? estadoCivil.id : null,
-            nacionalidade,
+            nacionalidade: nacionalidade ? nacionalidade.toUpperCase() : nacionalidade,
             datanascimento,
             sexo,
             orgaoemissor,
-            nomedamae,
+            nomedamae: nomedamae ? nomedamae.toUpperCase() : nomedamae,
           },
         },
         { include: [{ model: PessoaFisica, as: 'dadospessoafisica' }], transaction: t }
