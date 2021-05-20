@@ -106,14 +106,17 @@ export default async (req, res, next) => {
         DiaVencimentoMes: Yup.number().integer().default(10),
         Modalidade: Yup.number().integer().required(),
         Parcelas: Yup.number().integer(),
-        CartaoCredito: Yup.object().shape({
-          Numero: Yup.string(),
-          CodigoSeguranca: Yup.number().integer(),
-          TipoCartao: Yup.number().integer(),
-          Validade: Yup.date(),
-          Titular: Yup.string(),
-          Principal: Yup.boolean(),
-        }),
+        CartaoCredito: Yup.object()
+          .shape({
+            Numero: Yup.string(),
+            CodigoSeguranca: Yup.number().integer(),
+            TipoCartao: Yup.number().integer(),
+            Validade: Yup.date(),
+            Titular: Yup.string(),
+            Principal: Yup.boolean(),
+          })
+          .nullable()
+          .default(null),
         Conta: Yup.object()
           .shape({
             TipoConta: Yup.number().integer().required(),
