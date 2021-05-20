@@ -144,6 +144,10 @@ export default class CriaContratoService {
             transaction: t,
           });
 
+          const responsavelIsTitular = !!body.Beneficiarios.find(
+            ({ CPF, Titular }) => CPF === body.ResponsavelFinanceiro.CPF && Titular
+          );
+
           await responsavelFinanceiro.addOrganogramas(centroCusto, { transaction: t });
 
           await responsavelFinanceiro.setTiposcontrato([body.TipoContrato], { transaction: t });
@@ -240,7 +244,7 @@ export default class CriaContratoService {
                   pessoa: responsavelFinanceiro,
                   sequelize,
                   tipoenderecoid: endereco.TipoEndereco || 1,
-                  vinculoid: bv.REPONSAVEL_FINANCEIRO,
+                  vinculoid: responsavelIsTitular ? bv.TITULAR : bv.REPONSAVEL_FINANCEIRO,
                   transaction: t,
                 })
               )
@@ -256,7 +260,7 @@ export default class CriaContratoService {
                   numero: tel.Numero,
                   ramal: tel.Ramal,
                   tel_in_principal: tel.Principal,
-                  vinculoid: bv.REPONSAVEL_FINANCEIRO,
+                  vinculoid: responsavelIsTitular ? bv.TITULAR : bv.REPONSAVEL_FINANCEIRO,
                   tipotelefoneid: tel.TipoTelefone || 3,
                   pessoa: responsavelFinanceiro,
                   sequelize,
@@ -270,12 +274,12 @@ export default class CriaContratoService {
           }
 
           if (body.ResponsavelFinanceiro.Emails) {
-            Promise.all(
+            await Promise.all(
               body.ResponsavelFinanceiro.Emails.map((email) =>
                 AdicionarEmailService.execute({
                   ema_in_principal: email.Principal,
                   dadosid: responsavelFinanceiro.id,
-                  vinculoid: bv.REPONSAVEL_FINANCEIRO,
+                  vinculoid: responsavelIsTitular ? bv.TITULAR : bv.REPONSAVEL_FINANCEIRO,
                   pessoa: responsavelFinanceiro,
                   email: email.Email,
                   sequelize,
@@ -482,9 +486,28 @@ export default class CriaContratoService {
                   })
                 )
               );
-
-              // eslint-disable-next-line no-await-in-loop
-              // await pessoa.addEnderecos(enderecos, { transaction: t });
+            } else if (body.ResponsavelFinanceiro.Enderecos) {
+              await Promise.all(
+                body.ResponsavelFinanceiro.Enderecos.map((endereco) =>
+                  // eslint-disable-next-line no-await-in-loop
+                  // eslint-disable-next-line no-return-await
+                  AdicionarEnderecoService.execute({
+                    bairro: endereco.Bairro,
+                    cidade: endereco.Cidade,
+                    estado: endereco.Estado,
+                    logradouro: endereco.Logradouro,
+                    complemento: endereco.Complemento,
+                    numero: endereco.Numero,
+                    cep: endereco.Cep,
+                    end_in_principal: endereco.Principal,
+                    pessoa,
+                    sequelize,
+                    tipoenderecoid: endereco.TipoEndereco || 1,
+                    vinculoid: beneficiario.Titular ? bv.TITULAR : parseInt(beneficiario.Vinculo, 10),
+                    transaction: t,
+                  })
+                )
+              );
             }
 
             if (beneficiario.Telefones) {
@@ -503,9 +526,21 @@ export default class CriaContratoService {
                   })
                 )
               );
-
-              // eslint-disable-next-line no-await-in-loop
-              // await pessoa.addTelefones(telefones, { transaction: t });
+            } else if (body.ResponsavelFinanceiro.Telefones) {
+              await Promise.all(
+                body.ResponsavelFinanceiro.Telefones.map((tel) =>
+                  AdicionarTelefoneService.execute({
+                    numero: tel.Numero,
+                    ramal: tel.Ramal,
+                    tel_in_principal: tel.Principal,
+                    vinculoid: beneficiario.Titular ? bv.TITULAR : parseInt(beneficiario.Vinculo, 10),
+                    tipotelefoneid: tel.TipoTelefone || 3,
+                    pessoa,
+                    sequelize,
+                    transaction: t,
+                  })
+                )
+              );
             }
 
             if (beneficiario.Emails) {
@@ -523,8 +558,21 @@ export default class CriaContratoService {
                   })
                 )
               );
-
-              // await pessoa.addEmails(emails, { transaction: t });
+            } else if (body.ResponsavelFinanceiro.Emails) {
+              await Promise.all(
+                body.ResponsavelFinanceiro.Emails.map((email) =>
+                  AdicionarEmailService.execute({
+                    ema_in_principal: email.Principal,
+                    dadosid: pessoa.id,
+                    vinculoid: beneficiario.Titular ? bv.TITULAR : parseInt(beneficiario.Vinculo, 10),
+                    pessoa,
+                    email: email.Email,
+                    sequelize,
+                    tipoemail: email.TipoEmail || 3,
+                    transaction: t,
+                  })
+                )
+              );
             }
 
             beneficiarios.push({
