@@ -1,7 +1,7 @@
 /* eslint-disable no-restricted-syntax */
 /* eslint-disable no-unused-vars */
 import * as Yup from 'yup';
-import { Sequelize, Op } from 'sequelize';
+import { Sequelize, Op, QueryTypes } from 'sequelize';
 import _ from 'lodash';
 
 import queryStringConverter from 'sequelize-querystring-converter';
@@ -229,7 +229,18 @@ class ContratoController {
     const transaction = await sequelize.transaction();
 
     try {
-      const fullValue = Beneficiarios.reduce((previous, current) => previous + parseFloat(current.Valor), 0);
+      const [
+        infoVigencia,
+      ] = await sequelize.query(
+        'SELECT * FROM cn_regravigenciacontrato WHERE rvc_ds_vigencia_contrato ILIKE :vigencia LIMIT 1',
+        { replacements: { vigencia: rest.PrazoVigencia }, type: QueryTypes.SELECT, transaction }
+      );
+
+      const fullValue =
+        (Beneficiarios.reduce((previous, current) => previous + parseFloat(current.Valor), 0) *
+          parseInt(infoVigencia.mesesvigencia, 10)) /
+        parseInt(rest.FormaPagamento.Parcelas, 10);
+
       const amountPaid = Pagamentos
         ? Pagamentos.reduce((previous, current) => previous + parseFloat(current.Valor), 0)
         : 0;
