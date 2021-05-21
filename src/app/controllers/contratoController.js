@@ -230,7 +230,9 @@ class ContratoController {
 
     try {
       const fullValue = Beneficiarios.reduce((previous, current) => previous + parseFloat(current.Valor), 0);
-      const amountPaid = Pagamentos.reduce((previous, current) => previous + parseFloat(current.Valor), 0);
+      const amountPaid = Pagamentos
+        ? Pagamentos.reduce((previous, current) => previous + parseFloat(current.Valor), 0)
+        : 0;
 
       const diffPorcentage = Math.abs((amountPaid - fullValue) / fullValue);
 
@@ -261,18 +263,22 @@ class ContratoController {
               ...(index === 0 ? { Emails: ResponsavelFinanceiro.Emails } : { Emails: [] }),
               ...(index === 0 ? { Telefones: ResponsavelFinanceiro.Telefones } : { Telefones: [] }),
             },
-            Pagamentos: Pagamentos.map((pagamento) => ({
-              ...pagamento,
-              Valor: isSurcharge
-                ? pagamento.Valor + parseFloat(pagamento.Valor) * diffPorcentage
-                : pagamento.Valor - parseFloat(pagamento.Valor) * diffPorcentage,
-            })),
+            ...(Pagamentos
+              ? {
+                  Pagamentos: Pagamentos.map((pagamento) => ({
+                    ...pagamento,
+                    Valor: isSurcharge
+                      ? pagamento.Valor + parseFloat(pagamento.Valor) * diffPorcentage
+                      : pagamento.Valor - parseFloat(pagamento.Valor) * diffPorcentage,
+                  })),
+                }
+              : {}),
           },
         });
         contratos.push(contrato);
       }
 
-      await transaction.commit();
+      await transaction.rollback();
       return res.json({ error: null, data: contratos });
     } catch (error) {
       await transaction.rollback();

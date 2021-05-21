@@ -119,15 +119,16 @@ export default async (req, res, next) => {
           .default(null),
         Conta: Yup.object()
           .shape({
-            TipoConta: Yup.number().integer().required(),
+            TipoConta: Yup.number().integer(),
             Operacao: Yup.string().nullable(),
-            Agencia: Yup.number().integer().required(),
-            Digito: Yup.string().required(),
-            Numero: Yup.string().required(),
+            Agencia: Yup.number().integer(),
+            Digito: Yup.string(),
+            Numero: Yup.string(),
             Principal: Yup.boolean().default(true),
             Identificacao: Yup.string(),
           })
-          .when('Modalidade', (validator, s) => (validator === 3 ? s.required() : s.nullable().default(null))),
+          .nullable()
+          .default(null),
       }),
       Beneficiarios: Yup.array().of(beneficiarioSchema),
       GrupoFamiliar: Yup.array()
