@@ -767,6 +767,7 @@ export default class CriaContratoService {
             {
               vinculopessoaid: 4,
               cmfid: 18,
+              grupocmfid: 4,
               tipodocumentoid: 1,
               statusid: 1,
               numerocontratoid: contrato.id,
@@ -786,9 +787,8 @@ export default class CriaContratoService {
               tipopessoa: 'F',
               pessoaid: responsavelFinanceiro.id,
               pessoausuarioid: 1,
-              tipodecarteiraid: body.TipoCarteira,
+              tipodecarteiraid: verifyCarteira.id,
               obs: 'Título gerado apartir da api giga.',
-              grupocmfid: 4,
               ciclocontrato: 1,
             },
             { transaction: t }
