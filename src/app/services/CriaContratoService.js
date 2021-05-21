@@ -613,7 +613,7 @@ export default class CriaContratoService {
           );
 
           const valorContratobruto = beneficiarios.reduce((ant, pos) => {
-            return ant + (pos.valor || defaultValor);
+            return ant + (pos.valor || pos.valorLiquido || defaultValor);
           }, 0);
 
           const valorContratoLiquido = beneficiarios.reduce(
@@ -634,9 +634,9 @@ export default class CriaContratoService {
                 : moment(body.DataAdesao).format(),
               tipodecarteiraid: body.TipoCarteira,
               qtdparcela: qtdParcelas,
-              valorcontrato: valorContratobruto * infoVigencia.mesesvigencia,
-              valormes: (valorContratobruto * infoVigencia.mesesvigencia) / qtdParcelas,
-              valorliquido: valorContratoLiquido,
+              valorcontrato: valorContratoLiquido * infoVigencia.mesesvigencia,
+              valormes: (valorContratoLiquido * infoVigencia.mesesvigencia) / qtdParcelas,
+              valorliquido: (valorContratoLiquido * infoVigencia.mesesvigencia) / qtdParcelas,
               valordesconto: (valorContratobruto - valorContratoLiquido) * infoVigencia.mesesvigencia,
             },
             transaction: t,
@@ -794,7 +794,7 @@ export default class CriaContratoService {
             { transaction: t }
           );
 
-          let i = 1;
+          let addMonth = 1;
           let j = 1;
           let mesVigencia = qtdParcelas;
 
@@ -808,7 +808,6 @@ export default class CriaContratoService {
                 pessoausuarioid: 1,
                 tituloid: titulo.id,
                 tipodocumentoid: 1,
-                numerodocumento: i.toString().padStart(2, '0'),
                 numero: j,
                 datavencimento: moment(dataVencimento, 'YYYY-MM-DD').format(),
                 datacadastramento: new Date(),
@@ -826,21 +825,20 @@ export default class CriaContratoService {
               moment(dataVencimento, 'YYYY-MM-DD').isSame(moment(body.FormaPagamento.DiaVencimentoMes, 'DD')) ||
               moment(dataVencimento, 'YYYY-MM-DD').isAfter(moment(body.FormaPagamento.DiaVencimentoMes, 'DD'))
             ) {
-              i += 1;
+              addMonth += 1;
             }
           }
 
-          for (i; i <= mesVigencia; i += 1) {
+          for (let i = 1; i <= mesVigencia; i += 1) {
             // eslint-disable-next-line no-await-in-loop
             await Parcela.create(
               {
                 pessoausuarioid: 1,
                 tituloid: titulo.id,
                 tipodocumentoid: 1,
-                numerodocumento: i.toString().padStart(2, '0'),
                 numero: j,
                 datavencimento: moment(body.FormaPagamento.DiaVencimentoMes, 'DD')
-                  .add(i - 1, 'months')
+                  .add(addMonth - 1, 'months')
                   .format(),
                 datacadastramento: new Date(),
                 statusgrupoid: 1,
@@ -850,6 +848,8 @@ export default class CriaContratoService {
               },
               { transaction: t }
             );
+
+            addMonth += 1;
 
             j += 1;
           }

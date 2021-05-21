@@ -42,9 +42,9 @@ export default async (req, res, next) => {
       EstadoCivil: Yup.number(),
       OrgaoEmissor: Yup.string().required(),
       Nacionalidade: Yup.string().required(),
-      Enderecos: Yup.array().of(enderecoSchema),
-      Emails: Yup.array().ensure().compact().of(emailSchema),
-      Telefones: Yup.array().ensure().compact().of(telefoneSchema),
+      Enderecos: Yup.array().of(enderecoSchema).nullable().default(null),
+      Emails: Yup.array().ensure().compact().of(emailSchema).nullable().default(null),
+      Telefones: Yup.array().ensure().compact().of(telefoneSchema).nullable().default(null),
     });
 
     const schema = Yup.object().shape({

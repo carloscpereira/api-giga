@@ -29,75 +29,82 @@ export default class CriaPessoaFisicaService {
     if (!transaction || !(transaction instanceof Transaction)) {
       t = await sequelize.transaction();
     }
-
-    const personExists = await Pessoa.findOne({
-      where: {
-        ...(id ? { id } : {}),
-      },
-      include: [
-        {
-          model: PessoaFisica,
-          as: 'dadospessoafisica',
-          where: {
-            ...(cpf && !id ? { cpf } : {}),
-          },
+    try {
+      const personExists = await Pessoa.findOne({
+        where: {
+          ...(id ? { id } : {}),
         },
-      ],
-      transaction: t,
-    });
-
-    const estadoCivil = await EstadoCivil.findByPk(estadocivil, { transaction: t });
-
-    let pessoa;
-
-    if (personExists) {
-      personExists.dadospessoafisica.nome = nome ? nome.toUpperCase() : personExists.dadospessoafisica.nome;
-      personExists.dadospessoafisica.rg = rg || personExists.dadospessoafisica.rg;
-      personExists.dadospessoafisica.cpf = cpf || personExists.dadospessoafisica.cpf;
-      personExists.dadospessoafisica.estadocivilid =
-        (estadoCivil ? estadoCivil.id : null) || personExists.dadospessoafisica.estadocivilid;
-      personExists.dadospessoafisica.nacionalidade = nacionalidade
-        ? nacionalidade.toUpperCase()
-        : personExists.dadospessoafisica.nacionalidade;
-      personExists.dadospessoafisica.datanascimento = datanascimento || personExists.dadospessoafisica.datanascimento;
-      personExists.dadospessoafisica.sexo = sexo || personExists.dadospessoafisica.sexo;
-      personExists.dadospessoafisica.orgaoemissor = orgaoemissor || personExists.dadospessoafisica.orgaoemissor;
-      personExists.dadospessoafisica.nomedamae = nomedamae
-        ? nomedamae.toUpperCase()
-        : personExists.dadospessoafisica.nomedamae;
-
-      await personExists.save({ transaction: t });
-
-      pessoa = personExists;
-    } else {
-      let pessoaid = await sequelize.query("SELECT NEXTVAL('sp_dados_pessoa_seq') AS id", {
-        type: QueryTypes.SELECT,
+        include: [
+          {
+            model: PessoaFisica,
+            as: 'dadospessoafisica',
+            where: {
+              ...(cpf && !id ? { cpf } : {}),
+            },
+          },
+        ],
         transaction: t,
       });
 
-      pessoaid = pessoaid.shift().id;
+      const estadoCivil = await EstadoCivil.findByPk(estadocivil, { transaction: t });
 
-      pessoa = await Pessoa.create(
-        {
-          id: pessoaid,
-          dadospessoafisica: {
-            nome: nome ? nome.toUpperCase() : nome,
-            rg,
-            cpf,
-            estadocivilid: estadoCivil ? estadoCivil.id : null,
-            nacionalidade: nacionalidade ? nacionalidade.toUpperCase() : nacionalidade,
-            datanascimento,
-            sexo,
-            orgaoemissor,
-            nomedamae: nomedamae ? nomedamae.toUpperCase() : nomedamae,
+      let pessoa;
+
+      if (personExists) {
+        personExists.dadospessoafisica.nome = nome ? nome.toUpperCase() : personExists.dadospessoafisica.nome;
+        personExists.dadospessoafisica.rg = rg || personExists.dadospessoafisica.rg;
+        personExists.dadospessoafisica.cpf = cpf || personExists.dadospessoafisica.cpf;
+        personExists.dadospessoafisica.estadocivilid =
+          (estadoCivil ? estadoCivil.id : null) || personExists.dadospessoafisica.estadocivilid;
+        personExists.dadospessoafisica.nacionalidade = nacionalidade
+          ? nacionalidade.toUpperCase()
+          : personExists.dadospessoafisica.nacionalidade;
+        personExists.dadospessoafisica.datanascimento = datanascimento || personExists.dadospessoafisica.datanascimento;
+        personExists.dadospessoafisica.sexo = sexo || personExists.dadospessoafisica.sexo;
+        personExists.dadospessoafisica.orgaoemissor = orgaoemissor || personExists.dadospessoafisica.orgaoemissor;
+        personExists.dadospessoafisica.nomedamae = nomedamae
+          ? nomedamae.toUpperCase()
+          : personExists.dadospessoafisica.nomedamae;
+
+        await personExists.save({ transaction: t });
+
+        pessoa = personExists;
+      } else {
+        let pessoaid = await sequelize.query("SELECT NEXTVAL('sp_dados_pessoa_seq') AS id", {
+          type: QueryTypes.SELECT,
+          transaction: t,
+        });
+
+        pessoaid = pessoaid.shift().id;
+
+        pessoa = await Pessoa.create(
+          {
+            id: pessoaid,
+            dadospessoafisica: {
+              nome: nome ? nome.toUpperCase() : nome,
+              rg,
+              cpf,
+              estadocivilid: estadoCivil ? estadoCivil.id : null,
+              nacionalidade: nacionalidade ? nacionalidade.toUpperCase() : nacionalidade,
+              datanascimento,
+              sexo,
+              orgaoemissor,
+              nomedamae: nomedamae ? nomedamae.toUpperCase() : nomedamae,
+            },
           },
-        },
-        { include: [{ model: PessoaFisica, as: 'dadospessoafisica' }], transaction: t }
-      );
+          { include: [{ model: PessoaFisica, as: 'dadospessoafisica' }], transaction: t }
+        );
+      }
+      if (!transaction) {
+        await t.commit();
+      }
+      return pessoa;
+    } catch (err) {
+      if (!transaction) {
+        await t.rollback();
+      }
+
+      throw err;
     }
-    if (!transaction) {
-      await t.commit();
-    }
-    return pessoa;
   }
 }
