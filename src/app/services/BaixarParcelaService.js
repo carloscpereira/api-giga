@@ -215,7 +215,7 @@ export default class BaixarParcelaService {
         if (descontosPagamento) {
           // eslint-disable-next-line no-restricted-syntax
           for (const desconto of descontosPagamento) {
-            const cmfid = await CMF.findByPk(desconto.CMFID);
+            const cmfid = await CMF.findByPk(desconto.CMFID, { transaction: t });
 
             if (!cmfid) {
               throw new Error('Não foi possível localizar o Centro de Movimentacao Financeiro espeficado');
@@ -242,7 +242,7 @@ export default class BaixarParcelaService {
         if (acrescimosPagamento) {
           // eslint-disable-next-line no-restricted-syntax
           for (const acrescimo of acrescimosPagamento) {
-            const cmfid = await CMF.findByPk(acrescimo.CMFID);
+            const cmfid = await CMF.findByPk(acrescimo.CMFID, { transaction: t });
 
             if (!cmfid) {
               throw new Error('Não foi possível localizar o Centro de Movimentacao Financeiro espeficado');
@@ -284,7 +284,7 @@ export default class BaixarParcelaService {
       return lote;
     } catch (error) {
       if (!transaction) await t.rollback();
-      return error;
+      throw error;
     }
   }
 }
