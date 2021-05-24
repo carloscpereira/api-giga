@@ -333,11 +333,11 @@ export default class MigrarContratoService {
           valorPago = valorPropostaFinal - infoContrato.valormes;
 
           // Remove Baixa de ultima parcela paga
-          await RemoverBaixaParcelaService.execute({ transaction, connection, id_parcela: ultimaParcelaPaga.id });
+          await RemoverBaixaParcelaService.execute({ transaction: t, connection, id_parcela: ultimaParcelaPaga.id });
 
           // Baixa a parcela com o novo valor
           await BaixarParcelaService.execute({
-            transaction,
+            transaction: t,
             connection,
             id_parcela: ultimaParcelaPaga.id,
             data_pagamento: new Date(),
@@ -383,7 +383,7 @@ export default class MigrarContratoService {
           // Cria contrato similar ao antigo
           await CriaContratoService.execute({
             sequelize: connection,
-            transaction,
+            transaction: t,
             alterarVinculo: false,
             formValidation: {
               TipoContrato: contrato.tipocontratoid,
@@ -427,7 +427,7 @@ export default class MigrarContratoService {
             },
           });
           // Cancela contrato antigo
-          await CancelarContratoService.execute({ transaction, sequelize: connection, id: contrato.id });
+          await CancelarContratoService.execute({ transaction: t, sequelize: connection, id: contrato.id });
         } else {
           // Remove beneficiarios que estão migrando de plano
           // eslint-disable-next-line no-restricted-syntax
@@ -436,17 +436,17 @@ export default class MigrarContratoService {
               id_beneficiario: b.beneficiario.id,
               id_contrato: contrato.id,
               sequelize: connection,
-              transaction,
+              transaction: t,
             });
           }
         }
       } else {
-        await CancelarContratoService.execute({ transaction, sequelize: connection, id: contrato.id });
+        await CancelarContratoService.execute({ transaction: t, sequelize: connection, id: contrato.id });
       }
 
       const newContrato = await CriaContratoService.execute({
         sequelize: connection,
-        transaction,
+        transaction: t,
         alterarVinculo: false,
         formValidation: {
           TipoContrato: 9,
@@ -501,14 +501,22 @@ export default class MigrarContratoService {
         await BaixarParcelaService.execute({
           id_contrato: newContrato.id,
           connection,
-          transaction,
+          transaction: t,
           forma_pagamento: Pagamentos,
           id_parcela: responseContrato.titulos[0].parcelas[0].id,
         });
       }
-      transaction.rollback();
+
+      if (!transaction) {
+        await t.rollback();
+      }
+
+      return [];
     } catch (error) {
-      transaction.rollback();
+      if (!transaction) {
+        await t.rollback();
+      }
+
       throw error;
     }
   }
