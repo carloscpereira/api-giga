@@ -631,7 +631,7 @@ export default class CriaContratoService {
               diavencimento: body.FormaPagamento.DiaVencimentoMes,
               datavencimento: body.DataVencimento
                 ? moment(body.DataVencimento).format()
-                : moment(body.DataAdesao).format(),
+                : moment(body.FormaPagamento.DiaVencimentoMes, 'DD').format(),
               tipodecarteiraid: body.TipoCarteira,
               qtdparcela: qtdParcelas,
               valorcontrato: valorContratoLiquido * infoVigencia.mesesvigencia,
