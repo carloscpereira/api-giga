@@ -260,6 +260,10 @@ class ContratoController {
       const contratos = [];
 
       for (const [index, beneficiarios] of plans.entries()) {
+        const pagamentoContrato = parseFloat(
+          beneficiarios.reduce((previous, current) => previous + parseFloat(current.Valor), 0)
+        );
+
         const contrato = await CriarContratoService.execute({
           transaction,
           sequelize,
@@ -279,8 +283,8 @@ class ContratoController {
                   Pagamentos: Pagamentos.map((pagamento) => ({
                     ...pagamento,
                     Valor: isSurcharge
-                      ? pagamento.Valor + parseFloat(pagamento.Valor) * diffPorcentage
-                      : pagamento.Valor - parseFloat(pagamento.Valor) * diffPorcentage,
+                      ? pagamentoContrato + pagamentoContrato * diffPorcentage
+                      : pagamentoContrato - pagamentoContrato * diffPorcentage,
                   })),
                 }
               : {}),
@@ -289,7 +293,7 @@ class ContratoController {
         contratos.push(contrato);
       }
 
-      await transaction.commit();
+      await transaction.rollback();
       return res.json({ error: null, data: contratos });
     } catch (error) {
       await transaction.rollback();

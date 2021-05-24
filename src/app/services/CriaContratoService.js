@@ -465,7 +465,7 @@ export default class CriaContratoService {
               vinculo: beneficiario.Titular ? bv.TITULAR : parseInt(beneficiario.Vinculo, 10),
             });
 
-            if (beneficiario.Enderecos) {
+            if (beneficiario.Enderecos && Array.isArray(beneficiario.Enderecos) && beneficiario.Enderecos.length > 0) {
               // eslint-disable-next-line no-await-in-loop
               await Promise.all(
                 beneficiario.Enderecos.map((endereco) =>
@@ -510,7 +510,7 @@ export default class CriaContratoService {
               );
             }
 
-            if (beneficiario.Telefones) {
+            if (beneficiario.Telefones && Array.isArray(beneficiario.Telefones) && beneficiario.Telefones.length > 0) {
               // eslint-disable-next-line no-await-in-loop
               await Promise.all(
                 beneficiario.Telefones.map((tel) =>
@@ -543,7 +543,7 @@ export default class CriaContratoService {
               );
             }
 
-            if (beneficiario.Emails) {
+            if (beneficiario.Emails && Array.isArray(beneficiario.Emails) && beneficiario.Emails.length > 0) {
               // eslint-disable-next-line no-await-in-loop
               await Promise.all(
                 beneficiario.Emails.map((email) =>
