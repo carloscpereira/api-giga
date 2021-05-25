@@ -235,7 +235,7 @@ export default class MigrarContratoService {
         for (const beneficiario of Beneficiarios) {
           // eslint-disable-next-line no-await-in-loop
           const tipoBeneficiario = await TipoBeneficiario.findOne({
-            where: { codigo: bv[beneficiario.Vinculo || 'OUTROS'] },
+            where: { codigo: parseInt(beneficiario.Vinculo, 10) },
           }); // Seleciona o tipo de beneficiario para fazer a cotação do valor do plano
 
           // Seleciona o valor do plano para aquele beneficiario
