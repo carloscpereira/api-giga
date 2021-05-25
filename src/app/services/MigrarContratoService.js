@@ -1,4 +1,5 @@
 import { Transaction, Sequelize, Op, QueryTypes } from 'sequelize';
+import { parseISO, isAfter, isBefore } from 'date-fns';
 import moment from 'moment';
 import _ from 'lodash';
 
@@ -149,14 +150,15 @@ export default class MigrarContratoService {
         .shift(); // Recura a última parcela paga
 
       // Verificar parcelas em atraso
-      const parcelasEmAtraso = _.flattenDeep(contrato.titulos.map((t) => t.parcelas)).filter(
-        (p) => p.statusgrupoid === '1' && moment().isAfter(p.datavencimento)
-      );
+      const parcelasEmAtraso = contrato.titulos
+        .map((titulo) => titulo.parcelas)
+        .flat(Infinity)
+        .filter((p) => p.statusgrupoid === '1' && moment().isBefore(p.datavencimento));
 
       // Verifica se o contrato é adimplente
-      if (parcelasEmAtraso) {
-        throw new Error('Contrato Inadimplente');
-      }
+      // if (parcelasEmAtraso) {
+      //   throw new Error('Contrato Inadimplente');
+      // }
 
       const beneficiariosContrato = _.flattenDeep(contrato.gruposfamiliar.map(({ beneficiarios }) => beneficiarios)); // Armazena beneficiarios do contrato atual
 
