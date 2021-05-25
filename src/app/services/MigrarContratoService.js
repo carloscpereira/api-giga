@@ -1,5 +1,5 @@
 import { Transaction, Sequelize, Op, QueryTypes } from 'sequelize';
-import { parseISO, isAfter, isBefore } from 'date-fns';
+import { parseISO, isAfter, isBefore, startOfDay } from 'date-fns';
 import moment from 'moment';
 import _ from 'lodash';
 
@@ -82,6 +82,7 @@ export default class MigrarContratoService {
     if (!transaction || !(transaction instanceof Transaction)) {
       t = await connection.transaction();
     }
+
     try {
       // Seleciona contrato atual ao qual será aplicado a migração
       const contrato = await Contrato.findOne(
@@ -139,8 +140,12 @@ export default class MigrarContratoService {
       const contratoIsPJ = contrato.tipocontratoid === 9; // Label para verificar se o contrato atual pertence a Pessoa Física ou Pessoa Jurídica
       const rfContrato = contratoIsPJ ? contrato.responsavel_pessoajuridica[0] : contrato.responsavel_pessoafisica[0]; // Armazena as informações do responsável financeiro do contrato atual
       const infoContrato = contratoIsPJ ? rfContrato.AssociadoPJ : rfContrato.AssociadoPF; // Armazena as informações do contrato atual
-      const tituloVigenciaContrato = contrato.titulos.find((t) => {
-        return t.statusid === 1 && moment().isBefore(t.dataperiodofinal) && moment().isAfter(t.dataperiodoinicial);
+      const tituloVigenciaContrato = contrato.titulos.find((titulo) => {
+        const parseEndDate = startOfDay(titulo.dataperiodofinal);
+        const parseStartDate = startOfDay(titulo.dataperiodoinicial);
+        const dateNow = startOfDay(new Date());
+
+        return titulo.statusid === 1 && isBefore(dateNow, parseEndDate) && isAfter(dateNow, parseStartDate);
       });
 
       // Recupera o último título em vigencia do contrato
@@ -153,14 +158,19 @@ export default class MigrarContratoService {
       const parcelasEmAtraso = contrato.titulos
         .map((titulo) => titulo.parcelas)
         .flat(Infinity)
-        .filter((p) => p.statusgrupoid === '1' && moment().isBefore(p.datavencimento));
+        .filter(({ statusgrupoid, datavencimento }) => {
+          const parseVencimento = startOfDay(parseISO(datavencimento));
+          const dateNow = startOfDay(new Date());
+
+          return statusgrupoid === '1' && isBefore(parseVencimento, dateNow);
+        });
 
       // Verifica se o contrato é adimplente
-      // if (parcelasEmAtraso) {
-      //   throw new Error('Contrato Inadimplente');
-      // }
+      if (parcelasEmAtraso && parcelasEmAtraso.length !== 0) {
+        throw new Error('Contrato Inadimplente');
+      }
 
-      const beneficiariosContrato = _.flattenDeep(contrato.gruposfamiliar.map(({ beneficiarios }) => beneficiarios)); // Armazena beneficiarios do contrato atual
+      const beneficiariosContrato = contrato.gruposfamiliar.map(({ beneficiarios }) => beneficiarios).flat(Infinity); // Armazena beneficiarios do contrato atual
 
       // Testa se o contrato tem algum titulo em vigencia (ativo)
       if (!tituloVigenciaContrato) {
@@ -286,6 +296,7 @@ export default class MigrarContratoService {
           }
         }
       }
+
       // Verifica se existem beneficiários para efetuar a migração
       if (!beneficiariosProposta || beneficiariosProposta.length === 0) {
         throw new Error('É necessário selecionar beneficiários do contrato para realizar a migração');
@@ -299,6 +310,7 @@ export default class MigrarContratoService {
         Vinculo: TipoVinculo[b.beneficiario.Beneficiario.tipobeneficiarioid],
         TipoVinculoID: b.beneficiario.Beneficiario.tipobeneficiarioid,
         Valor: b.valor,
+        Produto: parseInt(produtoProposta.id, 10),
         RG: b.beneficiario.rg,
         CPF: b.beneficiario.cpf,
         DataNascimento: b.beneficiario.datanascimento,
@@ -307,48 +319,48 @@ export default class MigrarContratoService {
         Nacionalidade: b.beneficiario.nacionalidade,
       }));
 
-      const valorPropostaFinal =
-        valorProposta +
-        beneficiariosNaoInclusos.reduce(
-          (ant, pos) => ant + parseFloat(pos.Beneficiario.valor - pos.Beneficiario.descontovalor),
-          0
-        );
+      // const valorPropostaFinal =
+      //   valorProposta +
+      //   beneficiariosNaoInclusos.reduce(
+      //     (ant, pos) => ant + parseFloat(pos.Beneficiario.valor - pos.Beneficiario.descontovalor),
+      //     0
+      //   );
 
-      let baixaPrimeiraParcelaProposta = false;
+      // const baixaPrimeiraParcelaProposta = false;
 
       // Verifica se o valor do plano é maior que o valor já pago
-      if (valorPropostaFinal > infoContrato.valormes) {
-        if (!FormaPagamento) {
-          throw new Error(
-            'É necessário informar o valor pago de diferença ou integral, para efetuar a migração do contrato.'
-          );
-        }
+      // if (valorPropostaFinal > infoContrato.valormes) {
+      //   if (!FormaPagamento) {
+      //     throw new Error(
+      //       'É necessário informar o valor pago de diferença ou integral, para efetuar a migração do contrato.'
+      //     );
+      //   }
 
-        // Diferença de dias da última parcela até hoje
-        const diffParcela = Math.abs(moment().diff(ultimaParcelaPaga.datavencimento, 'days'));
-        let valorPago = 0;
+      //   // Diferença de dias da última parcela até hoje
+      //   const diffParcela = Math.abs(moment().diff(ultimaParcelaPaga.datavencimento, 'days'));
+      //   let valorPago = 0;
 
-        if (diffParcela > 20) {
-          valorPago = valorPropostaFinal;
-          baixaPrimeiraParcelaProposta = true;
-        } else {
-          valorPago = valorPropostaFinal - infoContrato.valormes;
+      //   if (diffParcela > 20) {
+      //     valorPago = valorPropostaFinal;
+      //     baixaPrimeiraParcelaProposta = true;
+      //   } else {
+      //     valorPago = valorPropostaFinal - infoContrato.valormes;
 
-          // Remove Baixa de ultima parcela paga
-          await RemoverBaixaParcelaService.execute({ transaction: t, connection, id_parcela: ultimaParcelaPaga.id });
+      //     // Remove Baixa de ultima parcela paga
+      //     await RemoverBaixaParcelaService.execute({ transaction: t, connection, id_parcela: ultimaParcelaPaga.id });
 
-          // Baixa a parcela com o novo valor
-          await BaixarParcelaService.execute({
-            transaction: t,
-            connection,
-            id_parcela: ultimaParcelaPaga.id,
-            data_pagamento: new Date(),
-            id_contrato: contrato.id,
-            forma_pagamento: Pagamentos,
-            acrescimos: { CMFID: 1, Valor: valorPago },
-          });
-        }
-      }
+      //     // Baixa a parcela com o novo valor
+      //     await BaixarParcelaService.execute({
+      //       transaction: t,
+      //       connection,
+      //       id_parcela: ultimaParcelaPaga.id,
+      //       data_pagamento: new Date(),
+      //       id_contrato: contrato.id,
+      //       forma_pagamento: Pagamentos,
+      //       acrescimos: { CMFID: 1, Valor: valorPago },
+      //     });
+      //   }
+      // }
 
       const estadoCivilRF = await EstadoCivil.findByPk(rfContrato.estadocivilid);
       const tipoDeCarteiraRF = await TipoCarteira.findByPk(contrato.tipodecarteiracontratoid);
@@ -356,105 +368,123 @@ export default class MigrarContratoService {
       const cartaoRF = rfContrato.cartoes ? rfContrato.cartoes.find((c) => c.car_in_principal) : null;
       const contaRF = rfContrato.contas ? rfContrato.contas.find((c) => c.con_in_principal) : null;
 
-      if (beneficiariosNaoInclusos.length > 1) {
-        const checkTitular = beneficiariosProposta.find((b) => b.beneficiario.Beneficiario.tipobeneficiarioid === '1');
-        if (checkTitular) {
-          // Formata beneficiarios não inclusos
-          const formataBeneficiariosNaoInclusos = beneficiariosNaoInclusos.map((b) => ({
-            Nome: b.nome,
-            Vinculo: TipoVinculo[b.Beneficiario.tipobeneficiarioid],
-            TipoVinculoID: b.Beneficiario.tipobeneficiarioid,
-            Valor: b.Beneficiario.valor,
-            RG: b.rg,
-            CPF: b.cpf,
-            DataNascimento: b.datanascimento,
-            Sexo: b.sexo,
-            OrgaoEmissor: b.orgaoemissor,
-            Nacionalidade: b.nacionalidade,
-          }));
-          // Sorteia um novo titular
-          formataBeneficiariosNaoInclusos[0].Vinculo = 'TITULAR';
-          formataBeneficiariosNaoInclusos[0].Titular = true;
-          const oldTitular = beneficiariosContrato.find((b) => b.Beneficiario.tipobeneficiarioid === '1');
-          const oldProduto = await Produto.findOne({
-            where: {
-              planoid: oldTitular.Beneficiario.planoid,
-              versaoid: oldTitular.Beneficiario.versaoplanoid,
-            },
-          });
-          // Cria contrato similar ao antigo
-          await CriaContratoService.execute({
+      if (beneficiariosNaoInclusos.length === 0) {
+        await CancelarContratoService.execute({ transaction: t, sequelize: connection, id: contrato.id });
+      } else {
+        // eslint-disable-next-line no-restricted-syntax
+        for (const b of beneficiariosProposta) {
+          await RemoveMembroContratoService.execute({
+            id_beneficiario: b.beneficiario.id,
+            id_contrato: contrato.id,
             sequelize: connection,
             transaction: t,
-            alterarVinculo: false,
-            formValidation: {
-              TipoContrato: contrato.tipocontratoid,
-              Vendedor,
-              Corretora,
-              Produto: oldProduto.id,
-              ResponsavelFinanceiro: {
-                TipoPessoa: 'F',
-                Nome: rfContrato.nome,
-                RG: rfContrato.rg,
-                CPF: rfContrato.cpf,
-                DataNascimento: rfContrato.datanascimento,
-                Sexo: rfContrato.sexo,
-                EstadoCivil: estadoCivilRF.descricao,
-                OrgaoEmissor: rfContrato.orgaoemissor,
-                Nacionalidade: rfContrato.nacionalidade,
-                NomeDaMae: rfContrato.nomedamae,
-              },
-              FormaPagamento: {
-                TipoCarteira: contrato.tipodecarteiracontratoid,
-                DiaVencimentoMes: infoContrato.diavencimento,
-                Modalidade: tipoDeCarteiraRF.modalidadepagamentoid,
-                CartaoCredito: {
-                  Numero: cartaoRF ? cartaoRF.numerocartao : null,
-                  CodigoSeguranca: cartaoRF ? cartaoRF.codigosegurancacartao : null,
-                  TipoCartao: cartaoRF ? cartaoRF.tipocartaoid : null,
-                  Validade: cartaoRF ? cartaoRF.validadedecartao : null,
-                  Titular: cartaoRF ? cartaoRF.nome_titular : null,
-                  Principal: true,
-                },
-                Conta: {
-                  TipoConta: contaRF ? contaRF.tipocontaid : null,
-                  Operacao: contaRF ? contaRF.operacao : null,
-                  Agencia: contaRF ? contaRF.agenciaid : null,
-                  Digito: contaRF ? contaRF.digito : null,
-                  Numero: contaRF ? contaRF.numero : null,
-                  Principal: true,
-                },
-              },
-              Beneficiarios: formataBeneficiariosNaoInclusos,
-            },
           });
-          // Cancela contrato antigo
-          await CancelarContratoService.execute({ transaction: t, sequelize: connection, id: contrato.id });
-        } else {
-          // Remove beneficiarios que estão migrando de plano
-          // eslint-disable-next-line no-restricted-syntax
-          for (const b of beneficiariosProposta) {
-            await RemoveMembroContratoService.execute({
-              id_beneficiario: b.beneficiario.id,
-              id_contrato: contrato.id,
-              sequelize: connection,
-              transaction: t,
-            });
-          }
         }
-      } else {
-        await CancelarContratoService.execute({ transaction: t, sequelize: connection, id: contrato.id });
       }
+
+      // if (beneficiariosNaoInclusos.length > 1) {
+      //   const checkTitular = beneficiariosProposta.find((b) => b.beneficiario.Beneficiario.tipobeneficiarioid === '1');
+      //   if (checkTitular) {
+      //     // Formata beneficiarios não inclusos
+      //     const formataBeneficiariosNaoInclusos = beneficiariosNaoInclusos.map((b) => ({
+      //       Nome: b.nome,
+      //       Vinculo: TipoVinculo[b.Beneficiario.tipobeneficiarioid],
+      //       TipoVinculoID: b.Beneficiario.tipobeneficiarioid,
+      //       Valor: b.Beneficiario.valor,
+      //       RG: b.rg,
+      //       CPF: b.cpf,
+      //       DataNascimento: b.datanascimento,
+      //       Sexo: b.sexo,
+      //       OrgaoEmissor: b.orgaoemissor,
+      //       Nacionalidade: b.nacionalidade,
+      //     }));
+      //     // Sorteia um novo titular
+      //     formataBeneficiariosNaoInclusos[0].Vinculo = 'TITULAR';
+      //     formataBeneficiariosNaoInclusos[0].Titular = true;
+      //     const oldTitular = beneficiariosContrato.find((b) => b.Beneficiario.tipobeneficiarioid === '1');
+      //     const oldProduto = await Produto.findOne({
+      //       where: {
+      //         planoid: oldTitular.Beneficiario.planoid,
+      //         versaoid: oldTitular.Beneficiario.versaoplanoid,
+      //       },
+      //     });
+      //     // Cria contrato similar ao antigo
+      //     await CriaContratoService.execute({
+      //       sequelize: connection,
+      //       transaction: t,
+      //       alterarVinculo: false,
+      //       formValidation: {
+      //         TipoContrato: contrato.tipocontratoid,
+      //         Vendedor,
+      //         Corretora,
+      //         Produto: oldProduto.id,
+      //         ResponsavelFinanceiro: {
+      //           TipoPessoa: 'F',
+      //           Nome: rfContrato.nome,
+      //           RG: rfContrato.rg,
+      //           CPF: rfContrato.cpf,
+      //           DataNascimento: rfContrato.datanascimento,
+      //           Sexo: rfContrato.sexo,
+      //           EstadoCivil: estadoCivilRF.descricao,
+      //           OrgaoEmissor: rfContrato.orgaoemissor,
+      //           Nacionalidade: rfContrato.nacionalidade,
+      //           NomeDaMae: rfContrato.nomedamae,
+      //         },
+      //         FormaPagamento: {
+      //           TipoCarteira: contrato.tipodecarteiracontratoid,
+      //           DiaVencimentoMes: infoContrato.diavencimento,
+      //           Modalidade: tipoDeCarteiraRF.modalidadepagamentoid,
+      //           CartaoCredito: {
+      //             Numero: cartaoRF ? cartaoRF.numerocartao : null,
+      //             CodigoSeguranca: cartaoRF ? cartaoRF.codigosegurancacartao : null,
+      //             TipoCartao: cartaoRF ? cartaoRF.tipocartaoid : null,
+      //             Validade: cartaoRF ? cartaoRF.validadedecartao : null,
+      //             Titular: cartaoRF ? cartaoRF.nome_titular : null,
+      //             Principal: true,
+      //           },
+      //           Conta: {
+      //             TipoConta: contaRF ? contaRF.tipocontaid : null,
+      //             Operacao: contaRF ? contaRF.operacao : null,
+      //             Agencia: contaRF ? contaRF.agenciaid : null,
+      //             Digito: contaRF ? contaRF.digito : null,
+      //             Numero: contaRF ? contaRF.numero : null,
+      //             Principal: true,
+      //           },
+      //         },
+      //         Beneficiarios: formataBeneficiariosNaoInclusos,
+      //       },
+      //     });
+      //     // Cancela contrato antigo
+      //     await CancelarContratoService.execute({ transaction: t, sequelize: connection, id: contrato.id });
+      //   } else {
+      //     // Remove beneficiarios que estão migrando de plano
+      //     // eslint-disable-next-line no-restricted-syntax
+      //     for (const b of beneficiariosProposta) {
+      //       await RemoveMembroContratoService.execute({
+      //         id_beneficiario: b.beneficiario.id,
+      //         id_contrato: contrato.id,
+      //         sequelize: connection,
+      //         transaction: t,
+      //       });
+      //     }
+      //   }
+      // } else {
+      //   await CancelarContratoService.execute({ transaction: t, sequelize: connection, id: contrato.id });
+      // }
 
       const newContrato = await CriaContratoService.execute({
         sequelize: connection,
         transaction: t,
         alterarVinculo: false,
         formValidation: {
-          TipoContrato: 9,
+          TipoContrato: contrato.tipocontratoid,
           Vendedor,
           Corretora,
-          Produto: produtoProposta.id,
+          PrazoVigencia: 'BIENAL',
+          DataAdesao: new Date(),
+          Convenio: 'Pessoa Fisica',
+          CentroCusto: '194',
+          Produto: parseInt(produtoProposta.id, 10),
           ResponsavelFinanceiro: {
             TipoPessoa: 'F',
             Nome: rfContrato.nome,
@@ -462,7 +492,7 @@ export default class MigrarContratoService {
             CPF: rfContrato.cpf,
             DataNascimento: rfContrato.datanascimento,
             Sexo: rfContrato.sexo,
-            EstadoCivil: estadoCivilRF.descricao,
+            EstadoCivil: estadoCivilRF.id,
             OrgaoEmissor: rfContrato.orgaoemissor,
             Nacionalidade: rfContrato.nacionalidade,
             NomeDaMae: rfContrato.nomedamae,
@@ -471,49 +501,33 @@ export default class MigrarContratoService {
             TipoCarteira: contrato.tipodecarteiracontratoid,
             DiaVencimentoMes: infoContrato.diavencimento,
             Modalidade: tipoDeCarteiraRF.modalidadepagamentoid,
-            CartaoCredito: {
-              Numero: cartaoRF.numerocartao,
-              CodigoSeguranca: cartaoRF.codigosegurancacartao,
-              TipoCartao: cartaoRF.tipocartaoid,
-              Validade: cartaoRF.validadedecartao,
-              Titular: cartaoRF.nome_titular,
-              Principal: true,
-            },
-            Conta: {
-              TipoConta: contaRF.tipocontaid,
-              Operacao: contaRF.operacao,
-              Agencia: contaRF.agenciaid,
-              Digito: contaRF.digito,
-              Numero: contaRF.numero,
-              Principal: true,
-            },
           },
           Beneficiarios: formatarBeneficiraiosSubmit,
         },
       });
 
-      if (baixaPrimeiraParcelaProposta) {
-        const responseContrato = await Contrato.findOne({
-          where: {
-            id: newContrato.id,
-          },
-          include: [{ model: Titulo, as: 'titulos', include: [{ model: Parcela, as: 'parcelas' }] }],
-        });
+      // if (baixaPrimeiraParcelaProposta) {
+      //   const responseContrato = await Contrato.findOne({
+      //     where: {
+      //       id: newContrato.id,
+      //     },
+      //     include: [{ model: Titulo, as: 'titulos', include: [{ model: Parcela, as: 'parcelas' }] }],
+      //   });
 
-        await BaixarParcelaService.execute({
-          id_contrato: newContrato.id,
-          connection,
-          transaction: t,
-          forma_pagamento: Pagamentos,
-          id_parcela: responseContrato.titulos[0].parcelas[0].id,
-        });
-      }
+      //   await BaixarParcelaService.execute({
+      //     id_contrato: newContrato.id,
+      //     connection,
+      //     transaction: t,
+      //     forma_pagamento: Pagamentos,
+      //     id_parcela: responseContrato.titulos[0].parcelas[0].id,
+      //   });
+      // }
 
       if (!transaction) {
         await t.rollback();
       }
 
-      return [];
+      return newContrato;
     } catch (error) {
       if (!transaction) {
         await t.rollback();
