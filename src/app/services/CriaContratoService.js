@@ -640,7 +640,7 @@ export default class CriaContratoService {
               planoid: produto.planoid,
               tipocarteiraid: carteirinha.id,
               versaoplanoid: produto.versaoid,
-              diavencimento: body.FormaPagamento.DiaVencimentoMes,
+              diavencimento: parseInt(body.FormaPagamento.DiaVencimentoMes, 10),
               datavencimento: body.DataVencimento
                 ? moment(body.DataVencimento).format()
                 : moment(body.FormaPagamento.DiaVencimentoMes, 'DD').format(),
