@@ -70,6 +70,15 @@ export default class CriaContratoService {
           CriarContratoEmpresa(body);
           return true;
         default: {
+          if (
+            (parseInt(body.FormaPagamento.Modalidade, 10) === 7 ||
+              parseInt(body.FormaPagamento.Modalidade, 10) === 34 ||
+              parseInt(body.FormaPagamento.Modalidade, 10) === 2) &&
+            !body.Pagamentos
+          ) {
+            throw new Error('É necessário ter pago a primeira parcela para a modalidade informada');
+          }
+
           /**
            * Seleciona o Produto
            */
@@ -292,8 +301,10 @@ export default class CriaContratoService {
             // responsavelFinanceiro.addEmails(emails, { transaction: t });
           }
 
+          let cartaoCredito = null;
+
           if (body.FormaPagamento.CartaoCredito) {
-            await AdicionarCartaoCreditoService.execute({
+            cartaoCredito = await AdicionarCartaoCreditoService.execute({
               pessoa: responsavelFinanceiro,
               transaction: t,
               sequelize,
@@ -378,6 +389,7 @@ export default class CriaContratoService {
               con_in_renovacao_auto: body.RenovacaoAutomatica,
               importado: 'N',
               localid: 1,
+              ...(cartaoCredito ? { cartaoid: cartaoCredito.id } : {}),
               bloqueadopesquisa: false,
             },
             { transaction: t }
