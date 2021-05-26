@@ -260,9 +260,10 @@ class ContratoController {
       const contratos = [];
 
       for (const [index, beneficiarios] of plans.entries()) {
-        const pagamentoContrato = parseFloat(
-          beneficiarios.reduce((previous, current) => previous + parseFloat(current.Valor), 0)
-        );
+        const pagamentoContrato =
+          (parseFloat(beneficiarios.reduce((previous, current) => previous + parseFloat(current.Valor), 0)) *
+            parseInt(infoVigencia.mesesvigencia, 10)) /
+          parseInt(rest.FormaPagamento.Parcelas, 10);
 
         const contrato = await CriarContratoService.execute({
           transaction,
