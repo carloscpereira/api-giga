@@ -834,14 +834,20 @@ export default class CriaContratoService {
             j += 1;
 
             if (
-              moment(dataVencimento, 'YYYY-MM-DD').isSame(moment(body.FormaPagamento.DiaVencimentoMes, 'DD')) ||
-              moment(dataVencimento, 'YYYY-MM-DD').isAfter(moment(body.FormaPagamento.DiaVencimentoMes, 'DD'))
+              moment(dataVencimento, 'YYYY-MM-DD').isSame(
+                moment(dataVencimento, 'YYYY-MM-DD').set('date', parseInt(body.FormaPagamento.DiaVencimentoMes, 10))
+              ) ||
+              moment(dataVencimento, 'YYYY-MM-DD').isAfter(
+                moment(dataVencimento, 'YYYY-MM-DD').set('date', parseInt(body.FormaPagamento.DiaVencimentoMes, 10))
+              )
             ) {
               addMonth += 1;
             }
           }
 
           for (let i = 1; i <= mesVigencia; i += 1) {
+            const dataVencimento = body.DataVencimento || body.DataPagamento || new Date();
+
             // eslint-disable-next-line no-await-in-loop
             await Parcela.create(
               {
@@ -849,7 +855,8 @@ export default class CriaContratoService {
                 tituloid: titulo.id,
                 tipodocumentoid: 1,
                 numero: j,
-                datavencimento: moment(body.FormaPagamento.DiaVencimentoMes, 'DD')
+                datavencimento: moment(dataVencimento, 'YYYY-MM-DD')
+                  .set('date', parseInt(body.FormaPagamento.DiaVencimentoMes, 10))
                   .add(addMonth - 1, 'months')
                   .format(),
                 datacadastramento: new Date(),
