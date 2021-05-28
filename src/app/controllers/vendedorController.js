@@ -15,13 +15,15 @@ class VinculoController {
       SELECT sp_dadospessoafisica.id,
             sp_dadospessoafisica.nome,
             sp_dadospessoafisica.cpf,
-            cn_corretorpf.id as corretorid
+            cn_corretorpf.id as corretorid,
+            sp_dadospessoajuridica.razaosocial AS nome_corretora
       FROM   sp_dadospessoafisica
             INNER JOIN cn_grupocorretores
                     ON cn_grupocorretores.corretorvendedor = sp_dadospessoafisica.id
             INNER JOIN cn_corretorpf
                     ON cn_corretorpf.corretorapjid =
                         cn_grupocorretores.corretorpessoaj
+            INNER JOIN sp_dadospessoajuridica ON sp_dadospessoajuridica.id = cn_corretorpf.corretorapjid
       WHERE  ( cn_grupocorretores.corretorvendedor IS NOT NULL )
           ${(id && 'AND sp_dadospessoafisica.id = :pessoaid') || ''}
           ${(cpf && 'AND sp_dadospessoafisica.cpf = :pessoacpf') || ''}
