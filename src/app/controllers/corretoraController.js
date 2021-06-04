@@ -12,7 +12,9 @@ class ContratoController {
     } else if (nome_corretora) {
       query = `WHERE sp_dadospessoajuridica.razaosocial ILIKE '%${nome_corretora}%'`;
     } else if (id) {
-      query = `WHERE cn_corretorpf.id = ${id} `;
+      const countId = id.split(',');
+
+      query = `WHERE cn_corretorpf.id IN (${countId.join(',')}) `;
     } else {
       query = '';
     }
