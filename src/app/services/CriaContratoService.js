@@ -781,9 +781,9 @@ export default class CriaContratoService {
               moment().isSame(moment().set('date', parseInt(body.FormaPagamento.DiaVencimentoMes, 10))) ||
               moment().isAfter(moment().set('date', parseInt(body.FormaPagamento.DiaVencimentoMes, 10)))
             ) {
-              dataAdesao = moment().set('data', parseInt(body.FormaPagamento.DiaVencimentoMes, 10)).add(1, 'month');
+              dataAdesao = moment().set('date', parseInt(body.FormaPagamento.DiaVencimentoMes, 10)).add(1, 'month');
             } else {
-              dataAdesao = moment().set('data', parseInt(body.FormaPagamento.DiaVencimentoMes, 10));
+              dataAdesao = moment().set('date', parseInt(body.FormaPagamento.DiaVencimentoMes, 10));
             }
           }
 
@@ -791,7 +791,9 @@ export default class CriaContratoService {
            * Criando Ciclo Financeiro
            */
           const dataVencimentoTitulo = dataAdesao
-            ? dataAdesao.add(infoVigencia.mesesvigencia + 1, 'months').format()
+            ? moment(dataAdesao)
+                .add(infoVigencia.mesesvigencia + 1, 'months')
+                .format()
             : moment(moment(body.FormaPagamento.DiaVencimentoMes, 'DD').format())
                 .add(infoVigencia.mesesvigencia + 1, 'months')
                 .format();
