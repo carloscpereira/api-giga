@@ -524,7 +524,7 @@ export default class MigrarContratoService {
       // }
 
       if (!transaction) {
-        await t.rollback();
+        await t.commit();
       }
 
       return newContrato;
