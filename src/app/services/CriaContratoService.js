@@ -70,13 +70,15 @@ export default class CriaContratoService {
           CriarContratoEmpresa(body);
           return true;
         default: {
+          let statusContrato = 8;
+
           if (
             (parseInt(body.FormaPagamento.Modalidade, 10) === 7 ||
               parseInt(body.FormaPagamento.Modalidade, 10) === 34 ||
               parseInt(body.FormaPagamento.Modalidade, 10) === 2) &&
             !body.Pagamentos
           ) {
-            throw new Error('É necessário ter pago a primeira parcela para a modalidade informada');
+            statusContrato = 62;
           }
 
           /**
@@ -369,7 +371,7 @@ export default class CriaContratoService {
               id: contratoid,
               numerocontrato: contratoid.toString().padStart(10, '0'),
               operadoraid,
-              statusid: 8,
+              statusid: statusContrato,
               dataadesao: body.DataAdesao,
               datainicialvigencia: body.DataAdesao,
               datafinalvigencia: moment(body.FormaPagamento.DiaVencimentoMes, 'DD')
@@ -388,6 +390,7 @@ export default class CriaContratoService {
               motivoadesaoid: body.MotivoAdesao,
               con_in_renovacao_auto: body.RenovacaoAutomatica,
               importado: 'N',
+              contrato_parent: body.Parent || null,
               localid: 1,
               ...(cartaoCredito ? { cartaoid: cartaoCredito.id } : {}),
               bloqueadopesquisa: false,
@@ -771,10 +774,28 @@ export default class CriaContratoService {
           });
 
           if (!verifyCarteira) throw new Error('A carteira não pertence a modalidade escolhida');
+          let dataAdesao = null;
+
+          if (statusContrato === 62) {
+            if (
+              moment().isSame(moment().set('date', parseInt(body.FormaPagamento.DiaVencimentoMes, 10))) ||
+              moment().isAfter(moment().set('date', parseInt(body.FormaPagamento.DiaVencimentoMes, 10)))
+            ) {
+              dataAdesao = moment().set('data', parseInt(body.FormaPagamento.DiaVencimentoMes, 10)).add(1, 'month');
+            } else {
+              dataAdesao = moment().set('data', parseInt(body.FormaPagamento.DiaVencimentoMes, 10));
+            }
+          }
 
           /**
            * Criando Ciclo Financeiro
            */
+          const dataVencimentoTitulo = dataAdesao
+            ? dataAdesao.add(infoVigencia.mesesvigencia + 1, 'months').format()
+            : moment(moment(body.FormaPagamento.DiaVencimentoMes, 'DD').format())
+                .add(infoVigencia.mesesvigencia + 1, 'months')
+                .format();
+
           const titulo = await Titulo.create(
             {
               vinculopessoaid: 4,
@@ -788,13 +809,9 @@ export default class CriaContratoService {
               numerototalparcelas: qtdParcelas,
               numerodiavencimento: body.FormaPagamento.DiaVencimentoMes,
               ...(centroCusto ? { centrocustoid: centroCusto.id } : {}),
-              datavencimento: moment(moment(body.FormaPagamento.DiaVencimentoMes, 'DD').format())
-                .add(infoVigencia.mesesvigencia + 1, 'months')
-                .format(),
-              dataperiodoinicial: body.DataAdesao,
-              dataperiodofinal: moment(moment(body.FormaPagamento.DiaVencimentoMes, 'DD').format())
-                .add(infoVigencia.mesesvigencia, 'months')
-                .format(),
+              datavencimento: dataVencimentoTitulo,
+              dataperiodoinicial: dataAdesao || body.DataAdesao,
+              dataperiodofinal: dataVencimentoTitulo,
               datacadastro: new Date(),
               tipopessoa: 'F',
               pessoaid: responsavelFinanceiro.id,
@@ -846,7 +863,7 @@ export default class CriaContratoService {
           }
 
           for (let i = 1; i <= mesVigencia; i += 1) {
-            const dataVencimento = body.DataVencimento || body.DataPagamento || new Date();
+            const dataVencimento = dataAdesao || body.DataVencimento || body.DataPagamento || new Date();
 
             // eslint-disable-next-line no-await-in-loop
             await Parcela.create(
