@@ -523,6 +523,7 @@ export default class MigrarContratoService {
             DiaVencimentoMes: infoContrato.diavencimento,
             Modalidade: tipoDeCarteiraRF.modalidadepagamentoid,
           },
+          Pagamentos,
           Beneficiarios: formatarBeneficiraiosSubmit,
         },
       });
