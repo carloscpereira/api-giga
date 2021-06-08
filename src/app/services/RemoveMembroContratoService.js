@@ -35,7 +35,17 @@ export default class RemoveMembroContratoService {
           ],
           transaction: t,
         }),
-        Beneficiario.findOne({ where: { id: id_beneficiario, contratoid: id_contrato } }, { transaction: t }),
+        Beneficiario.findOne(
+          {
+            where: {
+              [Op.or]: [
+                { pessoabeneficiarioid: id_beneficiario, contratoid: id_contrato },
+                { id: id_beneficiario, contratoid: id_contrato },
+              ],
+            },
+          },
+          { transaction: t }
+        ),
       ]);
 
       if (!beneficiario) throw new Error('Beneficiario não encontrado para o contrato informado');
@@ -47,7 +57,7 @@ export default class RemoveMembroContratoService {
         {
           where: {
             numerocontratoid: contrato.id,
-            datavencimento: {
+            dataperiodofinal: {
               [Op.gte]: new Date(),
             },
             dataperiodoinicial: {
@@ -109,7 +119,7 @@ export default class RemoveMembroContratoService {
             id: {
               [Op.ne]: beneficiario.id,
             },
-            ativo: 1,
+            ativo: '1',
           },
         },
         { transaction: t }
@@ -177,6 +187,7 @@ export default class RemoveMembroContratoService {
 
       return;
     } catch (error) {
+      console.log(error);
       if (!transaction) t.rollback();
       throw error;
     }

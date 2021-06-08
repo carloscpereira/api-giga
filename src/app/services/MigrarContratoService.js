@@ -132,6 +132,7 @@ export default class MigrarContratoService {
         },
         { transaction: t }
       );
+
       // Verifica se o contrato atual existe ou se está ápito para realizar a operação
       if (!contrato) {
         throw new Error('Contrato inexiste, cancelado ou impossibilitado de realizar operação');
@@ -306,6 +307,7 @@ export default class MigrarContratoService {
 
       const formatarBeneficiraiosSubmit = beneficiariosProposta.map((b) => ({
         ...(Beneficiarios ? { ...b.beneficiarioSend } : {}),
+        beneficiario: b.beneficiario,
         Nome: b.beneficiario.nome,
         Vinculo: TipoVinculo[b.beneficiario.Beneficiario.tipobeneficiarioid],
         TipoVinculoID: b.beneficiario.Beneficiario.tipobeneficiarioid,
@@ -472,6 +474,24 @@ export default class MigrarContratoService {
       //   await CancelarContratoService.execute({ transaction: t, sequelize: connection, id: contrato.id });
       // }
 
+      // cns responsavel Financeiro
+
+      const [{ cns: cnsResponsavelFinanceiro }] = await connection.query(
+        `
+          SELECT sp.dadocampo as "cns"
+          FROM sp_camposdinamicos cd
+                   INNER JOIN sp_vinculo sv on sv.id = cd.sp_vinculoid
+                   INNER JOIN sp_pessoaatributovinculo sp on sv.id = sp.vinculoid and sp.campo = cd.campo
+          WHERE descricaocampo ILIKE '%CNS%' AND pessoaid = :ID_RESPONSAVEL_FINANCEIRO LIMIT 1;
+          `,
+        {
+          type: QueryTypes.SELECT,
+          replacements: {
+            ID_RESPONSAVEL_FINANCEIRO: rfContrato.id,
+          },
+        }
+      );
+
       const newContrato = await CriaContratoService.execute({
         sequelize: connection,
         transaction: t,
@@ -496,6 +516,7 @@ export default class MigrarContratoService {
             OrgaoEmissor: rfContrato.orgaoemissor,
             Nacionalidade: rfContrato.nacionalidade,
             NomeDaMae: rfContrato.nomedamae,
+            Cns: cnsResponsavelFinanceiro,
           },
           FormaPagamento: {
             TipoCarteira: contrato.tipodecarteiracontratoid,

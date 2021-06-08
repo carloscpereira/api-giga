@@ -5,6 +5,7 @@ export default class Beneficiario extends Model {
   static init(sequelize) {
     super.init(
       {
+        id: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
         contratoid: Sequelize.BIGINT,
         pessoabeneficiarioid: Sequelize.INTEGER,
         tipobeneficiarioid: Sequelize.INTEGER,
