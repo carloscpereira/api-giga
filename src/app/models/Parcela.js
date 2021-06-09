@@ -473,7 +473,7 @@ export default class Parcela {
               /*sobre Pessoa Física*/
               LEFT JOIN cn_associadopf ON (cn_contrato.id = cn_associadopf.id)
               LEFT JOIN sp_dadospessoafisica ON (cn_associadopf.responsavelfinanceiroid = sp_dadospessoafisica.id)
-              LEFT JOIN cartao ON (sp_dadospessoafisica.id = cartao.pessoaid AND cartao.car_in_principal)
+              LEFT JOIN cartao ON (cartao.id = cn_contrato.cartaoid)
               /*FIM sobre Pessoa Física*/
 
               /*sobre Pessoa Juridica*/
