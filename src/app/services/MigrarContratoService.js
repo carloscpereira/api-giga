@@ -69,6 +69,8 @@ export default class MigrarContratoService {
       Vendedor,
       FormaPagamento,
       Pagamentos,
+      DataPagamento,
+      DataVencimento,
       Valor,
     },
   }) {
@@ -305,6 +307,15 @@ export default class MigrarContratoService {
 
       const beneficiariosNaoInclusos = _.differenceBy(beneficiariosContrato, beneficiariosProposta, 'cpf');
 
+      const [{ id: idMotivoAdesao }] = await connection.query(
+        `
+        SELECT id FROM cn_tipocorrencia WHERE codigo_plano = '1' LIMIT 1;
+          `,
+        {
+          type: QueryTypes.SELECT,
+        }
+      );
+
       const formatarBeneficiraiosSubmit = beneficiariosProposta.map((b) => ({
         ...(Beneficiarios ? { ...b.beneficiarioSend } : {}),
         beneficiario: b.beneficiario,
@@ -319,6 +330,8 @@ export default class MigrarContratoService {
         Sexo: b.beneficiario.sexo,
         OrgaoEmissor: b.beneficiario.orgaoemissor,
         Nacionalidade: b.beneficiario.nacionalidade,
+        DataAdesao: b.beneficiario.Beneficiario.dataadesao,
+        MotivoAdesao: idMotivoAdesao,
       }));
 
       // const valorPropostaFinal =
@@ -498,6 +511,7 @@ export default class MigrarContratoService {
         alterarVinculo: false,
         formValidation: {
           TipoContrato: contrato.tipocontratoid,
+          MotivoAdesao: idMotivoAdesao,
           Vendedor,
           Corretora,
           PrazoVigencia: 'BIENAL',
@@ -505,6 +519,8 @@ export default class MigrarContratoService {
           Convenio: 'Pessoa Fisica',
           CentroCusto: '194',
           Produto: parseInt(produtoProposta.id, 10),
+          DataPagamento,
+          DataVencimento,
           ResponsavelFinanceiro: {
             TipoPessoa: 'F',
             Nome: rfContrato.nome,

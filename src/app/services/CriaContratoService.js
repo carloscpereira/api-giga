@@ -81,6 +81,23 @@ export default class CriaContratoService {
             statusContrato = 62;
           }
 
+          let dataAdesao = null;
+
+          if (statusContrato === 62) {
+            if (
+              moment().isSame(moment().set('date', parseInt(body.FormaPagamento.DiaVencimentoMes, 10))) ||
+              moment().isAfter(moment().set('date', parseInt(body.FormaPagamento.DiaVencimentoMes, 10)))
+            ) {
+              dataAdesao = moment().set('date', parseInt(body.FormaPagamento.DiaVencimentoMes, 10)).add(1, 'month');
+            } else {
+              dataAdesao = moment().set('date', parseInt(body.FormaPagamento.DiaVencimentoMes, 10));
+            }
+          } else if (body.Pagamentos && body.DataPagamento) {
+            dataAdesao = body.DataPagamento;
+          }
+
+          dataAdesao = body.DataAdesao || dataAdesao;
+
           /**
            * Seleciona o Produto
            */
@@ -372,8 +389,8 @@ export default class CriaContratoService {
               numerocontrato: contratoid.toString().padStart(10, '0'),
               operadoraid,
               statusid: statusContrato,
-              dataadesao: body.DataAdesao,
-              datainicialvigencia: body.DataAdesao,
+              dataadesao: dataAdesao,
+              datainicialvigencia: dataAdesao,
               datafinalvigencia: moment(body.FormaPagamento.DiaVencimentoMes, 'DD')
                 .add(infoVigencia.mesesvigencia - 1, 'months')
                 .format(),
@@ -436,7 +453,7 @@ export default class CriaContratoService {
                   P_ID_TIPOBENEFICIARIO: beneficiario.Titular ? bv.TITULAR : parseInt(beneficiario.Vinculo, 10),
                   P_ID_PLANO: produto.planoid,
                   P_ID_VERSAO: produto.versaoid,
-                  P_DT_ADESAO_BENEF: body.DataAdesao,
+                  P_DT_ADESAO_BENEF: dataAdesao,
                 },
                 transaction: t,
               }
@@ -595,6 +612,8 @@ export default class CriaContratoService {
               vinculo: beneficiario.Titular ? bv.TITULAR : parseInt(beneficiario.Vinculo, 10),
               valor: valor ? valor.valor : null,
               valorLiquido: beneficiario.Valor,
+              motivoAdesao: beneficiario.MotivoAdesao,
+              dataAdesao: beneficiario.DataAdesao,
             });
           }
 
@@ -621,7 +640,7 @@ export default class CriaContratoService {
                 P_ID_TIPOBENEFICIARIO: 4,
                 P_ID_PLANO: produto.planoid,
                 P_ID_VERSAO: produto.versaoid,
-                P_DT_ADESAO_BENEF: body.DataAdesao,
+                P_DT_ADESAO_BENEF: dataAdesao,
               },
               transaction: t,
             }
@@ -722,7 +741,7 @@ export default class CriaContratoService {
                 contratoid: contrato.numerocontrato,
                 tipobeneficiarioid: tipoBeneficiario.id,
                 dataregistrosistema: new Date(),
-                dataadesao: body.DataAdesao,
+                dataadesao: ben.dataAdesao || dataAdesao,
                 ...(vendedor ? { corretoraid: vendedor.corretoraid } : {}),
                 ...(vendedor ? { vendedorid: vendedor.vendedorid } : {}),
                 valor,
@@ -737,7 +756,7 @@ export default class CriaContratoService {
                 responsavelgrupo: pessoaBeneficiarioTitular.pessoa.id,
                 descontovalor: ben.valorLiquido ? valor - ben.valorLiquido : 0,
                 descontoporcent: ben.valorLiquido ? ((valor - ben.valorLiquido) * 100) / valor : 0,
-                motivoadesaoid: body.MotivoAdesao || 268,
+                motivoadesaoid: ben.motivoAdesao || body.MotivoAdesao || 268,
                 planoid: produto.planoid,
                 versaoplanoid: produto.versaoid,
                 tipocarteiraid: carteirinha.id,
@@ -774,18 +793,6 @@ export default class CriaContratoService {
           });
 
           if (!verifyCarteira) throw new Error('A carteira não pertence a modalidade escolhida');
-          let dataAdesao = null;
-
-          if (statusContrato === 62) {
-            if (
-              moment().isSame(moment().set('date', parseInt(body.FormaPagamento.DiaVencimentoMes, 10))) ||
-              moment().isAfter(moment().set('date', parseInt(body.FormaPagamento.DiaVencimentoMes, 10)))
-            ) {
-              dataAdesao = moment().set('date', parseInt(body.FormaPagamento.DiaVencimentoMes, 10)).add(1, 'month');
-            } else {
-              dataAdesao = moment().set('date', parseInt(body.FormaPagamento.DiaVencimentoMes, 10));
-            }
-          }
 
           /**
            * Criando Ciclo Financeiro
@@ -812,7 +819,7 @@ export default class CriaContratoService {
               numerodiavencimento: body.FormaPagamento.DiaVencimentoMes,
               ...(centroCusto ? { centrocustoid: centroCusto.id } : {}),
               datavencimento: dataVencimentoTitulo,
-              dataperiodoinicial: dataAdesao || body.DataAdesao,
+              dataperiodoinicial: dataAdesao,
               dataperiodofinal: dataVencimentoTitulo,
               datacadastro: new Date(),
               tipopessoa: 'F',
