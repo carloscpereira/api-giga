@@ -109,8 +109,10 @@ export default class RemoveMembroContratoService {
       const qtdParcelasContrato = dadosContrato.qtdparcela;
 
       const newTituloCost =
-        dadosContrato.valorcontrato - beneficiario.valor * (parcelasQuitadasTitulo.length - qtdParcelasContrato);
-      const newContractCost = dadosContrato.valorcontrato - beneficiario.valor * qtdParcelasContrato;
+        dadosContrato.valorcontrato -
+        (beneficiario.valor - beneficiario.descontovalor) * (qtdParcelasContrato - parcelasQuitadasTitulo.length);
+      const newContractCost =
+        dadosContrato.valorcontrato - (beneficiario.valor - beneficiario.descontovalor) * qtdParcelasContrato;
 
       const beneficiariosContrato = await Beneficiario.findAll(
         {
@@ -125,12 +127,15 @@ export default class RemoveMembroContratoService {
         { transaction: t }
       );
 
-      const newContractMonthCost = beneficiariosContrato.reduce((ant, { valor }) => ant + (valor || 0), 0);
+      const newContractMonthCost = beneficiariosContrato.reduce(
+        (ant, { valor, descontovalor }) => ant + (valor - descontovalor || 0),
+        0
+      );
 
       /**
        * Desativando Beneficiario
        */
-      await beneficiario.update({ ativo: 0, datadesativacao: new Date() }, { transaction: t });
+      await beneficiario.update({ ativo: '0', datadesativacao: new Date() }, { transaction: t });
 
       /**
        * Atualizando valor de Contrato
@@ -139,7 +144,7 @@ export default class RemoveMembroContratoService {
         await AssociadoPF.update(
           {
             valorcontrato: newContractCost,
-            valorliquido: newContractCost,
+            valorliquido: newContractMonthCost,
             valormes: newContractMonthCost,
           },
           { transaction: t, where: { id: contrato.id } }
@@ -148,7 +153,7 @@ export default class RemoveMembroContratoService {
         await AssociadoPJ.update(
           {
             valorcontrato: newContractCost,
-            valorliquido: newContractCost,
+            valorliquido: newContractMonthCost,
             valormes: newContractMonthCost,
           },
           { transaction: t, where: { id: contrato.id } }
@@ -183,12 +188,12 @@ export default class RemoveMembroContratoService {
         }
       );
 
-      if (!transaction) t.commit();
+      if (!transaction) await t.commit();
 
       return;
     } catch (error) {
       console.log(error);
-      if (!transaction) t.rollback();
+      if (!transaction) await t.rollback();
       throw error;
     }
   }
