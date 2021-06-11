@@ -659,7 +659,7 @@ class ContratoController {
     try {
       await AtivarContratoService({ sequelize, transaction, id_contrato, data_adesao });
 
-      await transaction.rollback();
+      await transaction.commit();
       return res.sendStatus(201);
     } catch (error) {
       await transaction.rollback();

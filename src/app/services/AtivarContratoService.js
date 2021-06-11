@@ -66,7 +66,7 @@ export default async ({ id_contrato, data_adesao = new Date(), sequelize, transa
       { transaction: t }
     );
 
-    if (!transaction) await t.rollback();
+    if (!transaction) await t.commit();
 
     return;
   } catch (error) {
