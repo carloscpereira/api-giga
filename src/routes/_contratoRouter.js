@@ -20,6 +20,7 @@ routes.get('/:operator/:id', operatorMiddleware, contratoController.show);
 routes.put('/:operator/:id/block', operatorMiddleware, contratoController.block);
 routes.put('/:operator/:id/unlock', operatorMiddleware, contratoController.unlock);
 routes.delete('/:operator/:id', operatorMiddleware, contratoController.delete);
+routes.post('/:operator/:id/enable', operatorMiddleware, contratoController.enable);
 routes.delete('/:operator/:id/beneficiario/:beneficiarioid', operatorMiddleware, contratoController.removerAssociado);
 routes.post(
   '/:operator/:id/beneficiario',

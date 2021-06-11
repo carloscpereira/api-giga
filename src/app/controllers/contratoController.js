@@ -21,6 +21,7 @@ import MigrarContratoService from '../services/MigrarContratoService';
 
 import RemoveMembroContratoService from '../services/RemoveMembroContratoService';
 import AdicionarMembroContratoService from '../services/AdicionarMembroContratoService';
+import AtivarContratoService from '../services/AtivarContratoService';
 
 class ContratoController {
   async index(req, res) {
@@ -294,7 +295,7 @@ class ContratoController {
         contratos.push(contrato);
       }
 
-      await transaction.commit();
+      await transaction.rollback();
       return res.json({ error: null, data: contratos });
     } catch (error) {
       await transaction.rollback();
@@ -643,6 +644,27 @@ class ContratoController {
         });
       }
       return res.status(404).json({ error: 404, data: { message: 'Internal Server Error' } });
+    }
+  }
+
+  async enable(req, res) {
+    const {
+      params: { id: id_contrato },
+      body: { dataAdesao: data_adesao },
+      sequelize,
+    } = req;
+
+    const transaction = await sequelize.transaction();
+
+    try {
+      await AtivarContratoService({ sequelize, transaction, id_contrato, data_adesao });
+
+      await transaction.rollback();
+      return res.sendStatus(201);
+    } catch (error) {
+      await transaction.rollback();
+      console.log(error);
+      throw error;
     }
   }
 }
