@@ -62,7 +62,7 @@ export default async ({ id_contrato, data_adesao = new Date(), sequelize, transa
     );
 
     await contrato.update(
-      { dataadesao: dataAdesao, datainicialvigencia: dataAdesao, datafinalvigencia: dataFinalVigencia },
+      { dataadesao: dataAdesao, datainicialvigencia: dataAdesao, datafinalvigencia: dataFinalVigencia, statusid: 8 },
       { transaction: t }
     );
 
