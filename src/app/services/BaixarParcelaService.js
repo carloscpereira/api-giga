@@ -10,6 +10,7 @@ import Pessoa from '../models/Sequelize/Pessoa';
 import Contrato from '../models/Sequelize/Contrato';
 import ParcelaDesconto from '../models/Sequelize/ParcelaAcrescimoDesconto';
 import CMF from '../models/Sequelize/CentroMovimentacaoFinanceira';
+import AtivarContratoService from './AtivarContratoService';
 
 export default class BaixarParcelaService {
   static async execute({
@@ -45,6 +46,14 @@ export default class BaixarParcelaService {
         Pessoa.findByPk(id_pessoa, { transaction: t }),
         Lote.findByPk(id_lote, { transaction: t }),
       ]);
+
+      await AtivarContratoService({
+        id_contrato: contrato.id,
+        sequelize: connection,
+        transaction: t,
+        data_adesao: data_pagamento,
+      });
+
       const getLoteParcela = await parcela.getLotes({ transaction: t });
       let tipoBaixa;
 
