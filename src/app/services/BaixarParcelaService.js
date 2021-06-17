@@ -47,12 +47,14 @@ export default class BaixarParcelaService {
         Lote.findByPk(id_lote, { transaction: t }),
       ]);
 
-      await AtivarContratoService({
-        id_contrato: contrato.id,
-        sequelize: connection,
-        transaction: t,
-        data_adesao: data_pagamento,
-      });
+      if (!contrato) {
+        await AtivarContratoService({
+          id_contrato: contrato.id,
+          sequelize: connection,
+          transaction: t,
+          data_adesao: data_pagamento,
+        });
+      }
 
       const getLoteParcela = await parcela.getLotes({ transaction: t });
       let tipoBaixa;
@@ -113,7 +115,8 @@ export default class BaixarParcelaService {
             lop_id_pessoa: pessoaUsuario.id,
             lop_id_tipo_baixa: tipoBaixa.id,
             lop_in_tipo_movimento: tipo_movimento,
-            ...(contrato ? { lop_id_contrato: contrato.id } : {}),
+            // eslint-disable-next-line spaced-comment
+            //...(contrato ? { lop_id_contrato: contrato.id } : {}),
             lop_in_cobranca: false,
           },
           { transaction: t }
@@ -221,7 +224,7 @@ export default class BaixarParcelaService {
           );
         }
 
-        if (descontosPagamento) {
+        if (descontosPagamento.length) {
           // eslint-disable-next-line no-restricted-syntax
           for (const desconto of descontosPagamento) {
             const cmfid = await CMF.findByPk(desconto.CMFID, { transaction: t });
@@ -248,7 +251,7 @@ export default class BaixarParcelaService {
           }
         }
 
-        if (acrescimosPagamento) {
+        if (acrescimosPagamento.length) {
           // eslint-disable-next-line no-restricted-syntax
           for (const acrescimo of acrescimosPagamento) {
             const cmfid = await CMF.findByPk(acrescimo.CMFID, { transaction: t });
