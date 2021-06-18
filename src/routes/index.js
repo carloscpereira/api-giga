@@ -33,6 +33,7 @@ import estadoCivilRouter from './_estadoCivilRouter';
 import vendedorRouter from './_vendedorRouter';
 import corretoraRouter from './_corretoraRouter';
 import regraFechamentoRouter from './_regraFechamentoRouter';
+import tipoCartaoRouter from './_tipoCartaoRouter';
 import testeRouter from './_testeRouter';
 
 import { checkAuthorization } from '../app/middlewares';
@@ -71,6 +72,7 @@ routes.use('/areas-cobertura', areaCoberturaRouter);
 routes.use('/tipos-area-abrangencia', tipoAreaAbrangenciaRouter);
 routes.use('/tipos-contratacoes', tipoContratacaoRouter);
 routes.use('/tipos-contratos', tipoContratoRouter);
+routes.use('/tipos-cartoes', tipoCartaoRouter);
 routes.use('/estado-civil', estadoCivilRouter);
 routes.use('/vendedores', vendedorRouter);
 routes.use('/corretoras', corretoraRouter);

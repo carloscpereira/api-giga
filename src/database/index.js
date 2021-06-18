@@ -72,6 +72,7 @@ import Especialidade from '../app/models/Sequelize/Especialidade';
 import EspecialidadeDentista from '../app/models/Sequelize/EspecialidadeDentista';
 import RolCoberturaPlanoProcedimento from '../app/models/Sequelize/RolCoberturaPlanoProcedimento';
 import RolCoberturaPlano from '../app/models/Sequelize/RolCoberturaPlano';
+import TipoCartao from '../app/models/Sequelize/TipoCartao';
 // import databaseConfig from '../config/database';
 
 const models = [
@@ -142,6 +143,7 @@ const models = [
   EspecialidadeDentista,
   RolCoberturaPlanoProcedimento,
   RolCoberturaPlano,
+  TipoCartao,
 ];
 
 class Database {
@@ -152,7 +154,7 @@ class Database {
   }
 
   init() {
-    this.connection = new Sequelize(this.config);
+    this.connection = new Sequelize({ ...this.config, logging: console.log });
 
     models
       .map((model) => model.init(this.connection))
