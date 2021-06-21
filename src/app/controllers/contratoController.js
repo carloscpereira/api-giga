@@ -404,7 +404,14 @@ class ContratoController {
 
   async adicionarAssociado(req, res) {
     const {
-      body: { GrupoFamiliar: id_grupofamiliar, Vinculo: vinculo, Pagamentos: pagamentos, ...beneficiario },
+      body: {
+        GrupoFamiliar: id_grupofamiliar,
+        Vinculo: vinculo,
+        Vendedor: id_vendedor,
+        Corretora: id_corretor,
+        Pagamentos: pagamentos,
+        ...beneficiario
+      },
       params: { id: id_contrato },
       sequelize,
     } = req;
@@ -413,6 +420,8 @@ class ContratoController {
       beneficiario,
       id_contrato,
       id_grupofamiliar,
+      id_vendedor,
+      id_corretor,
       sequelize,
       pagamentos,
       vinculo,

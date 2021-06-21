@@ -14,6 +14,9 @@ import GrupoFamiliar from '../models/Sequelize/GrupoFamiliar';
 import RegraFechamento from '../models/Sequelize/RegraFechamento';
 import TipoBeneficiario from '../models/Sequelize/TipoBeneficiario';
 import Produto from '../models/Sequelize/Produto';
+import EnderecoModel from '../models/Sequelize/Endereco';
+import TelefoneModel from '../models/Sequelize/Telefone';
+import EmailModel from '../models/Sequelize/Email';
 
 import GeraCarteira from '../helpers/GerarCarteira';
 
@@ -22,6 +25,8 @@ import AdicionarVinculoService from './AdicionarVinculoService';
 import AdicionarEmailService from './AdicionarEmailService';
 import AdicionarTelefoneService from './AdicionarTelefoneService';
 import AdicionarEnderecoService from './AdicionarEnderecoService';
+import TipoCarteira from '../models/Sequelize/TipoCarteira';
+import FormaPagamento from '../models/Sequelize/FormaPagamento';
 
 const bv = {
   PESSOA_FISICA: 4,
@@ -50,6 +55,7 @@ export default class AdicionarMembroContratoService {
     id_vendedor,
     id_corretor,
     vinculo,
+    pagamentos,
     // formaPagamento,
     sequelize,
     transaction,
@@ -66,6 +72,7 @@ export default class AdicionarMembroContratoService {
     }
 
     try {
+      // Seleciona o contrato
       const contrato = await Contrato.findOne(
         {
           where: {
@@ -93,16 +100,34 @@ export default class AdicionarMembroContratoService {
       // Testa se Contrato existe ou se ele está disponível para realizar a operação (Está ativo ou pré-cadastro, por exemplo)
       if (!contrato) throw new Error('Contrato não encontrato ou indisponível para realizar a operação');
 
-      // const contratoIsValide = contrato.tipocontratoid === 5 || contrato.tipocontratoid === 8;
+      const contratoIsValide = contrato.tipocontratoid === 5 || contrato.tipocontratoid === 8;
       const contratoIsPJ = contrato.tipocontratoid === 9;
 
       // Testa validade do contrato
-      // if (!contratoIsValide) {
-      //   throw new Error('É necessário que seja um contrato de associado para que seja adicionado um membro');
-      // }
+      if (!contratoIsValide) {
+        throw new Error('É necessário que seja um contrato de associado para que seja adicionado um membro');
+      }
 
       // Pega os dados do Responsável Financeiro do Contrato
-      const rfContrato = contratoIsPJ ? contrato.responsavel_pessoajuridica : contrato.responsavel_pessoafisica;
+      const [rfContrato] = contratoIsPJ ? contrato.responsavel_pessoajuridica : contrato.responsavel_pessoafisica;
+
+      if (!rfContrato) {
+        throw new Error('Não foi possível encontrar responsavel financeiro para o contrato');
+      }
+
+      const [enderecos, telefones, emails] = await Promise.all([
+        EnderecoModel.findAll({ where: { dadosid: rfContrato.id }, transaction: t }),
+        TelefoneModel.findAll({ where: { dadosid: rfContrato.id }, transaction: t }),
+        EmailModel.findAll({ where: { dadosid: rfContrato.id }, transaction: t }),
+      ]);
+
+      const tipoCarteira = await TipoCarteira.findByPk(contrato.tipodecarteiraid, { transaction: t });
+
+      if (!tipoCarteira) {
+        throw new Error('Tipo de Carteira não encontrado');
+      }
+
+      const modalidadeId = tipoCarteira.modalidadepagamentoid;
 
       // Seleciona o título em vigencia do contrato
       const tituloContratoVigente = await Titulo.findOne(
@@ -125,6 +150,39 @@ export default class AdicionarMembroContratoService {
       // Caso não haja nenhum título ativo, emite erro, pois, o ainda não foi renovado.
       if (!tituloContratoVigente) throw new Error('Contrato quitado ou não renovado');
 
+      const contratoIsInadimplente = await Parcela.findAndCountAll(
+        {
+          where: {
+            [Op.and]: [
+              {
+                datavencimento: {
+                  [Op.lt]: moment().format(),
+                },
+              },
+              {
+                statusgrupoid: 1,
+              },
+            ],
+          },
+
+          include: [
+            {
+              model: Titulo,
+              as: 'titulo',
+              required: true,
+              where: {
+                numerocontratoid: contrato.id,
+              },
+            },
+          ],
+        },
+        { transaction: t }
+      );
+
+      if (contratoIsInadimplente > 1) {
+        throw new Error('Contrato Inadimplente');
+      }
+
       // Todas parcelas do título em vigencia
       const parcelasTitulo = await tituloContratoVigente.getParcelas({ transaction: t });
 
@@ -136,41 +194,46 @@ export default class AdicionarMembroContratoService {
       // ).shift();
 
       // Regra do Giga para próxima parcela válida
-      const proximaParcelaValida = await sequelize.query(
-        `
-        SELECT parcela.* FROM parcela
-          INNER JOIN titulo ON parcela.tituloid = titulo.id
-          LEFT JOIN cn_fatura_empresa ON parcela.id = cn_fatura_empresa.parcelaid
-          LEFT JOIN parcelalote ON parcela.id = parcelalote.parcelaid
-          LEFT JOIN parcela_acrescimo_desconto ON parcela.id = parcela_acrescimo_desconto.parcelaid
-          WHERE  (parcela.datavencimento >= Current_Date + CASE
-            WHEN (SELECT MAX(v.periodovencimento) FROM cn_versaoplano v
-            WHERE v.id IN (SELECT b.versaoplanoid FROM cn_beneficiario b
-              WHERE (b.ativo = '1') AND (b.contratoid = :P_ID_CONTRATO))) IS NULL THEN 0
-            ELSE (SELECT MAX(v.periodovencimento) FROM cn_versaoplano v
-            WHERE v.id IN (SELECT b.versaoplanoid FROM cn_beneficiario b
-              WHERE (b.ativo = '1') AND (b.contratoid = :P_ID_CONTRATO))) END) AND
-          (parcela.statusgrupoid = 1) AND
-          (parcela.codigobarras IS NULL) AND
-          (parcela.statusarquivo IS NULL) AND
-          (cn_fatura_empresa.parcelaid IS NULL) AND
-          (parcelalote.parcelaid IS NULL) AND
-          (titulo.id = :P_ID_TITULO) AND
-          (parcela_acrescimo_desconto.parcelaid IS NULL) LIMIT 1
-      `,
-        {
-          type: QueryTypes.SELECT,
-          replacements: { P_ID_CONTRATO: contrato.id, P_ID_TITULO: tituloContratoVigente.id },
-          plain: true,
-          model: Parcela,
-          transaction: t,
-        }
+      // const proximaParcelaValida = await sequelize.query(
+      //   `
+      //   SELECT parcela.* FROM parcela
+      //     INNER JOIN titulo ON parcela.tituloid = titulo.id
+      //     LEFT JOIN cn_fatura_empresa ON parcela.id = cn_fatura_empresa.parcelaid
+      //     LEFT JOIN parcelalote ON parcela.id = parcelalote.parcelaid
+      //     LEFT JOIN parcela_acrescimo_desconto ON parcela.id = parcela_acrescimo_desconto.parcelaid
+      //     WHERE  (parcela.datavencimento >= Current_Date + CASE
+      //       WHEN (SELECT MAX(v.periodovencimento) FROM cn_versaoplano v
+      //       WHERE v.id IN (SELECT b.versaoplanoid FROM cn_beneficiario b
+      //         WHERE (b.ativo = '1') AND (b.contratoid = :P_ID_CONTRATO))) IS NULL THEN 0
+      //       ELSE (SELECT MAX(v.periodovencimento) FROM cn_versaoplano v
+      //       WHERE v.id IN (SELECT b.versaoplanoid FROM cn_beneficiario b
+      //         WHERE (b.ativo = '1') AND (b.contratoid = :P_ID_CONTRATO))) END) AND
+      //     (parcela.statusgrupoid = 1) AND
+      //     (parcela.codigobarras IS NULL) AND
+      //     (parcela.statusarquivo IS NULL) AND
+      //     (cn_fatura_empresa.parcelaid IS NULL) AND
+      //     (parcelalote.parcelaid IS NULL) AND
+      //     (titulo.id = :P_ID_TITULO) AND
+      //     (parcela_acrescimo_desconto.parcelaid IS NULL) LIMIT 1
+      // `,
+      //   {
+      //     type: QueryTypes.SELECT,
+      //     replacements: { P_ID_CONTRATO: contrato.id, P_ID_TITULO: tituloContratoVigente.id },
+      //     plain: true,
+      //     model: Parcela,
+      //     transaction: t,
+      //   }
+      // );
+
+      const parcelaVigente = await Parcela.findOne(
+        { where: { [Op.and]: [{ datavencimento: { [Op.lt]: new Date() } }, { tituloid: tituloContratoVigente.id }] } },
+        { transaction: t }
       );
 
       // Pega os dados financeiros do contrato
       const infoContrato = contratoIsPJ
-        ? await AssociadoPJ.findByPk(rfContrato.shift().AssociadoPJ.id, { transaction: t })
-        : await AssociadoPF.findByPk(rfContrato.shift().AssociadoPF.id, { transaction: t });
+        ? await AssociadoPJ.findByPk(rfContrato.AssociadoPJ.id, { transaction: t })
+        : await AssociadoPF.findByPk(rfContrato.AssociadoPF.id, { transaction: t });
       const beneficiariosContrato = _.flattenDeep(contrato.gruposfamiliar.map(({ beneficiarios }) => beneficiarios)); // Armazena beneficiarios do contrato atual
 
       const checaBeneficiario = beneficiariosContrato.filter(
@@ -180,6 +243,10 @@ export default class AdicionarMembroContratoService {
       if (checaBeneficiario && checaBeneficiario.length > 0) {
         throw new Error('O beneficiario já se encontra cadastrado no contrato');
       }
+
+      // if (!pagamentos && !contratoIsPJ) {
+      //   throw new Error('É necessário efetuar o pagamento da primeira parcela do beneficiário a ser adicionado');
+      // }
 
       // Seleciona Regra de Fechamento
       const regraFechamento = await RegraFechamento.findOne(
@@ -195,17 +262,6 @@ export default class AdicionarMembroContratoService {
         },
         { transaction: t }
       );
-
-      if (
-        !proximaParcelaValida ||
-        moment(proximaParcelaValida.datavencimento).diff(moment(), 'days') <= regraFechamento.fechamento
-      ) {
-        throw new Error('Parcela fechada, não é possível adicionar beneficiarios nesse contrato esse mês');
-      }
-
-      if (!proximaParcelaValida || moment(proximaParcelaValida.datavencimento).diff(moment(), 'days') > 1) {
-        throw new Error('Parcela fechada, não é possível adicionar beneficiarios nesse contrato esse mês');
-      }
 
       let grupoFamiliar = null; // Grupo Familiar, se selecionado
       let responsavelGrupoFamiliar = null; // Responsável do Grupo Familiar (titular)
@@ -256,7 +312,7 @@ export default class AdicionarMembroContratoService {
       // Seleciona o responsável do grupo para inserção do novo beneficiário
       if (grupoFamiliar) {
         responsavelGrupoFamiliar = grupoFamiliar.beneficiarios.find(
-          ({ id }) => id === grupoFamiliar.responsavelgrupoid.toString()
+          ({ Beneficiario: { tipobeneficiarioid } }) => tipobeneficiarioid === '1'
         );
       }
 
@@ -298,7 +354,7 @@ export default class AdicionarMembroContratoService {
         throw new Error('É necessário informar um produto para adicionar esse beneficiário');
 
       // Crio nova Pessoa // Beneficiario
-      const [novoBeneficiario] = await CriaPessoaFisicaService.execute({
+      const novoBeneficiario = await CriaPessoaFisicaService.execute({
         nome: beneficiario.Nome,
         cpf: beneficiario.CPF,
         datanascimento: moment(beneficiario.DataNascimento).format(),
@@ -313,20 +369,20 @@ export default class AdicionarMembroContratoService {
       });
 
       // Adiciono os endereços do beneficiario caso tenha enviado
-      if (beneficiario.Enderecos) {
+      if (enderecos && enderecos.length) {
         await Promise.all(
-          beneficiario.Enderecos.map((endereco) =>
+          enderecos.map((endereco) =>
             AdicionarEnderecoService.execute({
-              logradouro: endereco.Logradouro,
-              bairro: endereco.Bairro,
-              cidade: endereco.Cidade,
-              estado: endereco.Estado,
-              complemento: endereco.Complemento,
-              numero: endereco.Numero,
-              cep: endereco.Cep,
-              tipoenderecoid: endereco.TipoEndereco || 1,
-              end_in_principal: endereco.Principal,
-              vinculoid: beneficiarioIsTitular ? bv.TITULAR : bv[vinculo],
+              logradouro: endereco.logradouro,
+              bairro: endereco.bairro,
+              cidade: endereco.cidade,
+              estado: endereco.estado,
+              complemento: endereco.complemento,
+              numero: endereco.numero,
+              cep: endereco.cep,
+              tipoenderecoid: endereco.tipoenderecoid || 1,
+              end_in_principal: endereco.end_in_principal,
+              vinculoid: beneficiarioIsTitular ? bv.TITULAR : vinculo,
               pessoa: novoBeneficiario,
               sequelize,
               transaction: t,
@@ -336,15 +392,15 @@ export default class AdicionarMembroContratoService {
       }
 
       // Adiciono os telefones do beneficiario caso tenha enviado
-      if (beneficiario.Telefones) {
+      if (telefones && telefones.length) {
         await Promise.all(
-          beneficiario.Telefones.map((tel) =>
+          telefones.map((tel) =>
             AdicionarTelefoneService.execute({
-              numero: tel.Numero,
-              ramal: tel.Ramal,
-              tel_in_principal: tel.Principal,
-              vinculoid: beneficiarioIsTitular ? bv.TITULAR : bv[vinculo],
-              tipotelefoneid: tel.TipoTelefone || 3,
+              numero: tel.numero,
+              ramal: tel.ramal,
+              tel_in_principal: tel.tel_in_principal,
+              vinculoid: beneficiarioIsTitular ? bv.TITULAR : vinculo,
+              tipotelefoneid: tel.tipotelefoneid || 3,
               pessoa: novoBeneficiario,
               sequelize,
               transaction: t,
@@ -354,16 +410,16 @@ export default class AdicionarMembroContratoService {
       }
 
       // Adiciono os emails do beneficiario caso tenha enviado
-      if (beneficiario.Emails) {
+      if (emails && emails.length) {
         await Promise.all(
-          beneficiario.Emails.map((email) =>
+          emails.map((email) =>
             AdicionarEmailService.execute({
-              ema_in_principal: email.Principal,
-              vinculoid: beneficiarioIsTitular ? bv.TITULAR : bv[vinculo],
-              email: email.Email,
+              ema_in_principal: email.ema_in_principal,
+              vinculoid: beneficiarioIsTitular ? bv.TITULAR : vinculo,
+              email: email.email,
               pessoa: novoBeneficiario,
               sequelize,
-              tipoemail: email.TipoEmail || 3,
+              tipoemail: email.tipoemail || 3,
               transaction: t,
             })
           )
@@ -400,9 +456,13 @@ export default class AdicionarMembroContratoService {
           pessoa: novoBeneficiario,
           sequelize,
           transaction: t,
-          vinculo: bv[vinculo],
+          vinculo: parseInt(vinculo, 10),
         });
       }
+
+      await novoBeneficiario.addOrganogramas(contrato.centrocustoid, { transaction: t });
+
+      await novoBeneficiario.setTiposcontrato([contrato.tipocontratoid], { transaction: t });
 
       // Seleciona o Produto || Plano do Beneficiário
       if (grupoFamiliar && responsavelGrupoFamiliar) {
@@ -448,7 +508,7 @@ export default class AdicionarMembroContratoService {
       // Seleciona o Tipo de Beneficiário
       const tipoBeneficiario = beneficiarioIsTitular
         ? await TipoBeneficiario.findOne({ where: { codigo: bv.TITULAR } }, { transaction: t })
-        : await TipoBeneficiario.findOne({ where: { codigo: bv[vinculo] } }, { transaction: t });
+        : await TipoBeneficiario.findOne({ where: { codigo: vinculo } }, { transaction: t });
 
       // Seleciona Valor do Plano
       const [{ valor: valorPlano }] = await sequelize.query(
@@ -540,6 +600,7 @@ export default class AdicionarMembroContratoService {
           (ant, prox) => ant + (parseFloat(prox.Beneficiario.valor) - parseFloat(prox.Beneficiario.descontovalor)),
           0
         );
+
       const parcelasPagasTitulo = parcelasTitulo.filter(
         (p) => parseInt(p.statusgrupoid, 10) === 2 || moment(p.datavencimento).isBefore(moment())
       ); // pegando todas parcelas pagas do título
