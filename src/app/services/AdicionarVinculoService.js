@@ -58,11 +58,11 @@ export default class AdicinarVinculoPFService {
       if (!vinculo) throw new Error('Vinculo não encontrado');
 
       if (!alteravel && (await pessoa.hasVinculos(vinculoGet, { transaction: t }))) return;
-      const existsVinculo = await pessoa.hasVinculos(vinculoGet, { transaction: t });
-      if (existsVinculo) {
-        await AtributoVinculo.destroy({ where: { vinculoid: vinculoGet.id, pessoaid: pessoa.id }, transaction: t });
-        await pessoa.removeVinculos([vinculoGet], { transaction: t });
-      }
+      // const existsVinculo = await pessoa.hasVinculos(vinculoGet, { transaction: t });
+      // if (existsVinculo) {
+      //   await AtributoVinculo.destroy({ where: { vinculoid: vinculoGet.id, pessoaid: pessoa.id }, transaction: t });
+      //   await pessoa.removeVinculos([vinculoGet], { transaction: t });
+      // }
 
       let atributosVinculo = await sequelize.query('SELECT * FROM sp_camposdinamicos WHERE sp_vinculoid = :vinculoid', {
         replacements: { vinculoid: vinculoGet.id },

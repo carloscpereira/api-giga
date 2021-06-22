@@ -11,6 +11,7 @@ import Contrato from '../models/Sequelize/Contrato';
 import ParcelaDesconto from '../models/Sequelize/ParcelaAcrescimoDesconto';
 import CMF from '../models/Sequelize/CentroMovimentacaoFinanceira';
 import AtivarContratoService from './AtivarContratoService';
+import Titulo from '../models/Sequelize/Titulo';
 
 export default class BaixarParcelaService {
   static async execute({
@@ -40,14 +41,21 @@ export default class BaixarParcelaService {
     }
 
     try {
-      const [contrato, parcela, pessoaUsuario, checkLote] = await Promise.all([
-        Contrato.findByPk(id_contrato, { transaction: t }),
+      const [parcela, pessoaUsuario, checkLote] = await Promise.all([
         Parcela.findByPk(id_parcela, { transaction: t }),
         Pessoa.findByPk(id_pessoa, { transaction: t }),
         Lote.findByPk(id_lote, { transaction: t }),
       ]);
+      let contrato = null;
 
-      if (!contrato) {
+      if (!id_contrato) {
+        const titulo = await Titulo.findByPk(parcela.tituloid, { transaction: t });
+        contrato = await Contrato.findByPk(titulo.numerocontratoid, { transaction: t });
+      } else {
+        contrato = await Contrato.findByPk(id_contrato, { transaction: t });
+      }
+
+      if (contrato && contrato.statusid === '62') {
         await AtivarContratoService({
           id_contrato: contrato.id,
           sequelize: connection,

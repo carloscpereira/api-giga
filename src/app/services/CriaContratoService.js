@@ -85,18 +85,26 @@ export default class CriaContratoService {
 
           if (statusContrato === 62) {
             if (
-              moment().isSame(moment().set('date', parseInt(body.FormaPagamento.DiaVencimentoMes, 10))) ||
-              moment().isAfter(moment().set('date', parseInt(body.FormaPagamento.DiaVencimentoMes, 10)))
+              moment(moment().isSame(moment().set('date', parseInt(body.FormaPagamento.DiaVencimentoMes, 10)))).format(
+                'YYYY-MM-DD'
+              ) ||
+              moment(moment().isAfter(moment().set('date', parseInt(body.FormaPagamento.DiaVencimentoMes, 10)))).format(
+                'YYYY-MM-DD'
+              )
             ) {
-              dataAdesao = moment().set('date', parseInt(body.FormaPagamento.DiaVencimentoMes, 10)).add(1, 'month');
+              dataAdesao = moment(
+                moment().set('date', parseInt(body.FormaPagamento.DiaVencimentoMes, 10)).add(1, 'month')
+              ).format('YYYY-MM-DD');
             } else {
-              dataAdesao = moment().set('date', parseInt(body.FormaPagamento.DiaVencimentoMes, 10));
+              dataAdesao = moment(moment().set('date', parseInt(body.FormaPagamento.DiaVencimentoMes, 10))).format(
+                'YYYY-MM-DD'
+              );
             }
           } else if (body.Pagamentos && body.DataPagamento) {
             dataAdesao = body.DataPagamento;
           }
 
-          dataAdesao = body.DataAdesao || dataAdesao;
+          dataAdesao = body.DataPagamento || dataAdesao || body.DataAdesao;
 
           /**
            * Seleciona o Produto
