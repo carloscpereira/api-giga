@@ -72,12 +72,7 @@ export default class CriaContratoService {
         default: {
           let statusContrato = 8;
 
-          if (
-            (parseInt(body.FormaPagamento.Modalidade, 10) === 7 ||
-              parseInt(body.FormaPagamento.Modalidade, 10) === 34 ||
-              parseInt(body.FormaPagamento.Modalidade, 10) === 2) &&
-            !body.Pagamentos
-          ) {
+          if (!body.Pagamentos) {
             statusContrato = 62;
           }
 
