@@ -85,12 +85,8 @@ export default class CriaContratoService {
 
           if (statusContrato === 62) {
             if (
-              moment(moment().isSame(moment().set('date', parseInt(body.FormaPagamento.DiaVencimentoMes, 10)))).format(
-                'YYYY-MM-DD'
-              ) ||
-              moment(moment().isAfter(moment().set('date', parseInt(body.FormaPagamento.DiaVencimentoMes, 10)))).format(
-                'YYYY-MM-DD'
-              )
+              moment().isSame(moment().set('date', parseInt(body.FormaPagamento.DiaVencimentoMes, 10))) ||
+              moment().isAfter(moment().set('date', parseInt(body.FormaPagamento.DiaVencimentoMes, 10)))
             ) {
               dataAdesao = moment(
                 moment().set('date', parseInt(body.FormaPagamento.DiaVencimentoMes, 10)).add(1, 'month')
