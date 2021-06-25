@@ -467,8 +467,8 @@ export default class Parcela {
             FROM parcela
               INNER JOIN statusgrupo ON (parcela.statusgrupoid = statusgrupo.id)
               INNER JOIN titulo ON (parcela.tituloid = titulo.id)
-              INNER JOIN cn_tipodecarteira ON (titulo.tipodecarteiraid = cn_tipodecarteira.id)
               INNER JOIN cn_contrato ON (titulo.numerocontratoid = cn_contrato.id AND cn_contrato.tipocontratoid IN (5, 9))
+              INNER JOIN cn_tipodecarteira ON (cn_contrato.tipodecarteiraid = cn_tipodecarteira.id)
 
               /*sobre Pessoa Física*/
               LEFT JOIN cn_associadopf ON (cn_contrato.id = cn_associadopf.id)
