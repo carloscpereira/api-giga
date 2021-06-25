@@ -81,14 +81,14 @@ export default class BaixarParcelaService {
         throw new Error('Parcela not found');
       }
 
-      if (parcela && parseInt(parcela.statusgrupoid, 10) !== 1 && parseInt(parcela.statusgrupoid, 10) !== 55) {
-        throw new Error('Portion cannot be invoiced because it has already been invoiced');
+      if (parcela && parseInt(parcela.statusgrupoid, 10) === 2) {
+        throw new Error('Parcela já baixada');
       }
 
       if (!id_pessoa || !pessoaUsuario) {
         throw new Error('Usuário pessoa informado não encontrado no sistema');
       }
-      console.log();
+
       if (tipo_movimento !== 'C' && tipo_movimento !== 'D' && !tipo_movimento) {
         throw new Error('Tipo de movimento informado é inválido');
       }
@@ -124,7 +124,7 @@ export default class BaixarParcelaService {
             lop_id_tipo_baixa: tipoBaixa.id,
             lop_in_tipo_movimento: tipo_movimento,
             // eslint-disable-next-line spaced-comment
-            //...(contrato ? { lop_id_contrato: contrato.id } : {}),
+            // ...(contrato ? { lop_id_contrato: contrato.id } : {}),
             lop_in_cobranca: false,
           },
           { transaction: t }
