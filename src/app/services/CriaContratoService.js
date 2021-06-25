@@ -663,9 +663,10 @@ export default class CriaContratoService {
               versaoplanoid: produto.versaoid,
               diavencimento: parseInt(body.FormaPagamento.DiaVencimentoMes, 10),
               datavencimento:
-                dataAdesao || body.DataVencimento
+                dataAdesao ||
+                (body.DataVencimento
                   ? moment(body.DataVencimento).format()
-                  : moment(body.FormaPagamento.DiaVencimentoMes, 'DD').format(),
+                  : moment(body.FormaPagamento.DiaVencimentoMes, 'DD').format()),
               tipodecarteiraid: body.TipoCarteira,
               qtdparcela: qtdParcelas,
               valorcontrato: valorContratoLiquido * infoVigencia.mesesvigencia,
@@ -821,6 +822,7 @@ export default class CriaContratoService {
               datavencimento: dataVencimentoTitulo,
               dataperiodoinicial: dataAdesao,
               dataperiodofinal: dataVencimentoTitulo,
+              modpagamentoid: modPagamento.id,
               datacadastro: new Date(),
               tipopessoa: 'F',
               pessoaid: responsavelFinanceiro.id,
@@ -914,6 +916,7 @@ export default class CriaContratoService {
           }
 
           // Verifica metodos de pagamento
+          // modPagamento.id (3 -> Débito em conta) (10 -> Consignatária)
           if (modPagamento.id === '3' || modPagamento.id === '10') {
             // Seleciona a regra fechamento
             const regraFechamento = await RegraFechamento.findOne({
