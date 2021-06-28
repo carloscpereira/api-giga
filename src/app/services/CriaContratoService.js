@@ -92,10 +92,10 @@ export default class CriaContratoService {
               );
             }
           } else if (body.Pagamentos && body.DataPagamento) {
-            dataAdesao = body.DataPagamento;
+            dataAdesao = moment(body.DataPagamento).format('YYYY-MM-DD');
           }
 
-          dataAdesao = body.DataPagamento || dataAdesao || body.DataAdesao;
+          dataAdesao = dataAdesao || body.DataAdesao;
 
           /**
            * Seleciona o Produto
@@ -834,6 +834,7 @@ export default class CriaContratoService {
             { transaction: t }
           );
 
+          const margemAntecipacao = 5;
           let addMonth = 1;
           let j = 1;
           let mesVigencia = qtdParcelas;
@@ -841,7 +842,24 @@ export default class CriaContratoService {
           if (body.Pagamentos && body.DataPagamento) {
             mesVigencia -= 1;
 
-            const dataVencimento = body.DataVencimento || body.DataPagamento;
+            let dataVencimento = body.DataVencimento ? moment(body.DataVencimento, 'YYYY-MM-DD').format() : null;
+
+            if (!dataVencimento) {
+              const dataPagamento = moment(body.DataPagamento, 'YYYY-MM-DD');
+              const vencimentoAtual = moment().set('date', parseInt(body.FormaPagamento.DiaVencimentoMes, 10));
+              const proximoVencimento = vencimentoAtual.add({ months: 1 });
+              const margemAplicada = proximoVencimento.subtract({ days: margemAntecipacao });
+
+              if (
+                dataPagamento.isSame(proximoVencimento) ||
+                (dataPagamento.isBefore(proximoVencimento) &&
+                  (dataPagamento.isAfter(margemAplicada) || dataPagamento.isSame(margemAplicada)))
+              ) {
+                dataVencimento = proximoVencimento.format();
+              } else {
+                dataVencimento = vencimentoAtual.format();
+              }
+            }
 
             await Parcela.create(
               {

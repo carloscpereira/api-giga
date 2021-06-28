@@ -22,6 +22,7 @@ import MigrarContratoService from '../services/MigrarContratoService';
 import RemoveMembroContratoService from '../services/RemoveMembroContratoService';
 import AdicionarMembroContratoService from '../services/AdicionarMembroContratoService';
 import AtivarContratoService from '../services/AtivarContratoService';
+import DestroyContractService from '../services/DestroyContractService';
 
 class ContratoController {
   async index(req, res) {
@@ -550,7 +551,7 @@ class ContratoController {
     return res.json({ error: null, data: contrato });
   }
 
-  async delete(req, res) {
+  async cancel(req, res) {
     const { id } = req.params;
 
     const contrato = await Contrato.findByPk(id);
@@ -567,6 +568,27 @@ class ContratoController {
       error: null,
       data: { message: 'Contract canceled successfully' },
     });
+  }
+
+  async destroy(req, res) {
+    const {
+      sequelize,
+      params: { id },
+    } = req;
+
+    const transaction = await sequelize.transaction();
+
+    try {
+      await DestroyContractService.execute({ id_contrato: id, connection: sequelize, transaction });
+
+      await transaction.commit();
+
+      return res.sendStatus(202);
+    } catch (error) {
+      await transaction.rollback();
+
+      throw error;
+    }
   }
 
   async block(req, res) {

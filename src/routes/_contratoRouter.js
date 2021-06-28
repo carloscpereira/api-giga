@@ -19,7 +19,8 @@ routes.put('/:operator/:id/migrar', operatorMiddleware, contratoController.migra
 routes.get('/:operator/:id', operatorMiddleware, contratoController.show);
 routes.put('/:operator/:id/block', operatorMiddleware, contratoController.block);
 routes.put('/:operator/:id/unlock', operatorMiddleware, contratoController.unlock);
-routes.delete('/:operator/:id', operatorMiddleware, contratoController.delete);
+routes.put('/:operator/:id/cancelar', operatorMiddleware, contratoController.cancel);
+routes.delete('/:operator/:id', operatorMiddleware, contratoController.destroy);
 routes.post('/:operator/:id/enable', operatorMiddleware, contratoController.enable);
 routes.delete('/:operator/:id/beneficiario/:beneficiarioid', operatorMiddleware, contratoController.removerAssociado);
 routes.post(

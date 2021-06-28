@@ -86,7 +86,7 @@ export default class BaixarParcelaService {
       }
 
       if (!id_pessoa || !pessoaUsuario) {
-        throw new Error('Usuário pessoa informado não encontrado no sistema');
+        throw new Error('Usuário informado não encontrado no sistema');
       }
 
       if (tipo_movimento !== 'C' && tipo_movimento !== 'D' && !tipo_movimento) {
