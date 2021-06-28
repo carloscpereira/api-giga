@@ -6,13 +6,17 @@ class RegraFechamentoController {
   async index(req, res) {
     const { page = 1, limit = 20, tiposcontrato_id, centrocusto_id, tipodecarteira_id } = req.query;
 
+    console.log('estou aqui');
+
+    const checkFilter = !!(tiposcontrato_id || centrocusto_id || tiposcontrato_id);
+
     const regrasFechamento = await RegraFechamento.findAll({
       limit,
       offset: (page - 1) * limit,
       where: {
-        ...(tiposcontrato_id ? { tiposcontrato_id } : { tiposcontrato_id: { [Op.in]: null } }),
-        ...(centrocusto_id ? { centrocusto_id } : { centrocusto_id: { [Op.in]: null } }),
-        ...(tipodecarteira_id ? { tipodecarteira_id } : { tipodecarteira_id: { [Op.in]: null } }),
+        ...(tiposcontrato_id ? { [Op.or]: [{ tiposcontrato_id }, { tiposcontrato_id: { [Op.is]: null } }] } : {}),
+        ...(centrocusto_id ? { [Op.or]: [{ centrocusto_id }, { centrocusto_id: { [Op.is]: null } }] } : {}),
+        ...(tipodecarteira_id ? { [Op.or]: [{ tipodecarteira_id }, { tipodecarteira_id: { [Op.is]: null } }] } : {}),
       },
     });
     return res.json({ error: null, data: regrasFechamento });
