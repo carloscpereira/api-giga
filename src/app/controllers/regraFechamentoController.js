@@ -1,17 +1,20 @@
-import queryStringConverter from 'sequelize-querystring-converter';
+import { Op } from 'sequelize';
 
 import RegraFechamento from '../models/Sequelize/RegraFechamento';
 
 class RegraFechamentoController {
   async index(req, res) {
-    const { page = 1, limit = 20, ...query } = req.query;
-    const criteria = queryStringConverter.convert({
-      query: { limit, ...query, offset: (page - 1) * limit },
+    const { page = 1, limit = 20, tiposcontrato_id, centrocusto_id, tipodecarteira_id } = req.query;
+
+    const regrasFechamento = await RegraFechamento.findAll({
+      limit,
+      offset: (page - 1) * limit,
+      where: {
+        ...(tiposcontrato_id ? { tiposcontrato_id } : { tiposcontrato_id: { [Op.in]: null } }),
+        ...(centrocusto_id ? { centrocusto_id } : { centrocusto_id: { [Op.in]: null } }),
+        ...(tipodecarteira_id ? { tipodecarteira_id } : { tipodecarteira_id: { [Op.in]: null } }),
+      },
     });
-
-    console.log(criteria);
-
-    const regrasFechamento = await RegraFechamento.findAll(criteria);
     return res.json({ error: null, data: regrasFechamento });
   }
 
