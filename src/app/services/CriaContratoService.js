@@ -933,6 +933,75 @@ export default class CriaContratoService {
             });
           }
 
+          // Caso a modalidade seja Boleto Bancário e não houver primeiro pagamento
+          if (modPagamento.id === '7' && !body.Pagamentos) {
+            const primeiraParcela = parcelas[0];
+
+            const enderecos = await responsavelFinanceiro.getEnderecos({ transaction: t });
+
+            const endereco = enderecos && enderecos.length > 0 ? enderecos[0] : null;
+
+            if (!endereco) {
+              throw new Error('É necessário informar ao menos um endereço para o responsável financeiro');
+            }
+
+            const {
+              data: { data: boleto },
+            } = await axios.post(
+              `https://www.idental.com.br/api/bb/${operadora}`,
+              {
+                TipoTitulo: 1,
+                ValorBruto: primeiraParcela.valor,
+                DataVencimento: format(parseISO(primeiraParcela.datavencimento), 'yyyy-MM-dd'),
+                Pagador: {
+                  Tipo: 1,
+                  Nome: body.ResponsavelFinanceiro.Nome,
+                  Documento: body.ResponsavelFinanceiro.CPF,
+                  Estado: endereco.estado,
+                  Cidade: endereco.cidade,
+                  Bairro: endereco.bairro,
+                  Endereco: endereco.logradouro,
+                  Cep: endereco.cep,
+                },
+              },
+              { headers: { appAuthorization: 'ff4e09f0-241d-4bbf-85f0-76dd1bd67919' } }
+            );
+
+            await Parcela.update(
+              {
+                linhadigitavel: boleto.linhaDigitavel,
+                codigobarras: boleto.codigoBarraNumerico,
+                nossonumero: boleto.numero,
+              },
+              {
+                where: {
+                  id: primeiraParcela.id,
+                },
+                transaction: t,
+              }
+            );
+
+            // Enviar boleto
+            const responsavelFinanceiroEmail = body.ResponsavelFinanceiro.Emails[0];
+            if (responsavelFinanceiroEmail) {
+              try {
+                await axios.post(
+                  `https://www.idental.com.br/api/cobranca/${operadora}/send-boleto/email`,
+                  {
+                    destinatario: responsavelFinanceiroEmail,
+                    parcela_id: primeiraParcela.id,
+                    nome: responsavelFinanceiro.nome,
+                    nosso_numero: boleto.numero,
+                    vencimento: primeiraParcela.datavencimento,
+                  },
+                  { headers: { appAuthorization: '90b63cf1-4061-49e8-8f99-6f3692fdaa6d' } }
+                );
+              } catch (error) {
+                console.error(error);
+              }
+            }
+          }
+
           // Verifica metodos de pagamento
           // modPagamento.id (3 -> Débito em conta) (10 -> Consignatária)
           if (modPagamento.id === '3' || modPagamento.id === '10') {
