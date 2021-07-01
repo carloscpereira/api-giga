@@ -1,20 +1,18 @@
-import { Op } from 'sequelize';
-
 import RegraFechamento from '../models/Sequelize/RegraFechamento';
 
 class RegraFechamentoController {
   async index(req, res) {
-    const { page = 1, limit = 20, tiposcontrato_id, centrocusto_id, tipodecarteira_id } = req.query;
+    const { tiposcontrato_id, centrocusto_id, tipodecarteira_id } = req.query;
+
+    let regrasFechamento = [];
 
     const regrasFechamentoCentroCusto = await RegraFechamento.findAll({
       where: {
-        tiposcontrato_id,
-        tipodecarteira_id,
-        centrocusto_id,
+        ...(tiposcontrato_id ? { tiposcontrato_id } : {}),
+        ...(tipodecarteira_id ? { tipodecarteira_id } : {}),
+        ...(centrocusto_id ? { centrocusto_id } : {}),
       },
     });
-
-    let regrasFechamento = [];
 
     if (regrasFechamentoCentroCusto.length) {
       regrasFechamento = regrasFechamentoCentroCusto;
