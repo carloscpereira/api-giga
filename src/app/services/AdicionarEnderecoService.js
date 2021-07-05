@@ -59,7 +59,7 @@ export default class AdicionarEnderecoService {
     if (!findCidade) throw new Error('Cidade não encontrada');
 
     if (verifyExistsEndereco) {
-      await verifyExistsEndereco.destroy({ transaction: t });
+      return verifyExistsEndereco;
     }
 
     if (end_in_principal) {
