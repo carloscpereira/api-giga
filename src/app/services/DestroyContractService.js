@@ -93,6 +93,14 @@ export default class DestroyContractService {
         type: QueryTypes.DELETE,
         replacements: { contrato: contrato.id },
       });
+      await connection.query(
+        'DELETE FROM cn_requerimento WHERE id_beneficiario IN (SELECT id FROM cn_beneficiario WHERE contratoid = :contrato)',
+        {
+          transaction: t,
+          type: QueryTypes.DELETE,
+          replacements: { contrato: contrato.id },
+        }
+      );
       await connection.query('DELETE FROM cn_beneficiario WHERE contratoid = :contrato', {
         transaction: t,
         type: QueryTypes.DELETE,
