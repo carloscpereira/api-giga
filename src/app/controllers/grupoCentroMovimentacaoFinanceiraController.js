@@ -4,7 +4,7 @@ import queryStringConverter from 'sequelize-querystring-converter';
 import CMF from '../models/Sequelize/CentroMovimentacaoFinanceira';
 import GCMF from '../models/Sequelize/GrupoCentroMovimentacaoFinanceira';
 
-class CentroMovimentacaoFinanceiraController {
+class GrupoCentroMovimentacaoFinanceiraController {
   async index(req, res) {
     const { page = 1, limit, with: withColumn, ...query } = req.query;
 
@@ -39,4 +39,4 @@ class CentroMovimentacaoFinanceiraController {
   }
 }
 
-export default new CentroMovimentacaoFinanceiraController();
+export default new GrupoCentroMovimentacaoFinanceiraController();

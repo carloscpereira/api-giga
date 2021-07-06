@@ -5,9 +5,9 @@ import CMF from '../models/Sequelize/CentroMovimentacaoFinanceira';
 
 class CentroMovimentacaoFinanceiraController {
   async index(req, res) {
-    const { page = 1, limit = 20, search: querySearch, ...query } = req.query;
+    const { page = 1, limit, ...query } = req.query;
     const criteria = queryStringConverter.convert({
-      query: { ...(querySearch ? {} : { offset: (page - 1) * limit, limit }), ...query },
+      query: { ...(limit ? { offset: (page - 1) * limit, limit } : {}), ...query },
     });
 
     console.log(criteria);
