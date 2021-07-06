@@ -214,7 +214,7 @@ export default class BaixarParcelaService {
             },
             { transaction: t }
           );
-        } else {
+        } else if (diffValorBruto > 0) {
           await ParcelaDesconto.create(
             {
               cmfid: 10,
