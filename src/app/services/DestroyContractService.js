@@ -63,6 +63,14 @@ export default class DestroyContractService {
         replacements: { contrato: contrato.id },
       });
       await connection.query(
+        'DELETE FROM sys_log_contato WHERE parcela_id in (SELECT id FROM parcela p WHERE p.tituloid = (SELECT titulo.id FROM titulo WHERE numerocontratoid = :contrato))',
+        {
+          transaction: t,
+          type: QueryTypes.DELETE,
+          replacements: { contrato: contrato.id },
+        }
+      );
+      await connection.query(
         'DELETE  FROM parcela p WHERE p.tituloid = (SELECT titulo.id FROM titulo WHERE numerocontratoid = :contrato)',
         { transaction: t, type: QueryTypes.DELETE, replacements: { contrato: contrato.id } }
       );
