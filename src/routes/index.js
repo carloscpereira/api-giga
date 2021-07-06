@@ -35,6 +35,7 @@ import corretoraRouter from './_corretoraRouter';
 import regraFechamentoRouter from './_regraFechamentoRouter';
 import tipoCartaoRouter from './_tipoCartaoRouter';
 import testeRouter from './_testeRouter';
+import cmfRouter from './_centroMovimentacaoFinanceiraRouter';
 
 import { checkAuthorization } from '../app/middlewares';
 
@@ -77,5 +78,6 @@ routes.use('/estado-civil', estadoCivilRouter);
 routes.use('/vendedores', vendedorRouter);
 routes.use('/corretoras', corretoraRouter);
 routes.use('/regras-fechamento', regraFechamentoRouter);
+routes.use('/cmf', cmfRouter);
 
 export default routes;
