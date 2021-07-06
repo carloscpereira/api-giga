@@ -245,8 +245,8 @@ export default class BaixarParcelaService {
               {
                 cmfid: cmfid.id,
                 parcelaid: parcela.id,
-                valor: Math.abs(diffValorBruto),
-                porcent: (Math.abs(diffValorBruto) / parcela.valor_bruto) * 100,
+                valor: Math.abs(desconto.Valor),
+                porcent: (Math.abs(desconto.Valor) / parcela.valor_bruto) * 100,
                 tipomovimento: 'C',
                 dataaplicacao: moment().format(),
                 pessoausuarioid: pessoaUsuario.id,
@@ -272,8 +272,8 @@ export default class BaixarParcelaService {
               {
                 cmfid: cmfid.id,
                 parcelaid: parcela.id,
-                valor: Math.abs(diffValorBruto),
-                porcent: (Math.abs(diffValorBruto) / parcela.valor_bruto) * 100,
+                valor: Math.abs(acrescimo.Valor),
+                porcent: (Math.abs(acrescimo.Valor) / parcela.valor_bruto) * 100,
                 tipomovimento: 'C',
                 dataaplicacao: moment().format(),
                 pessoausuarioid: pessoaUsuario.id,
