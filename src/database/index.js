@@ -73,6 +73,7 @@ import EspecialidadeDentista from '../app/models/Sequelize/EspecialidadeDentista
 import RolCoberturaPlanoProcedimento from '../app/models/Sequelize/RolCoberturaPlanoProcedimento';
 import RolCoberturaPlano from '../app/models/Sequelize/RolCoberturaPlano';
 import TipoCartao from '../app/models/Sequelize/TipoCartao';
+import GrupoCentroMovimentacaoFinanceira from '../app/models/Sequelize/GrupoCentroMovimentacaoFinanceira';
 // import databaseConfig from '../config/database';
 
 const models = [
@@ -144,6 +145,7 @@ const models = [
   RolCoberturaPlanoProcedimento,
   RolCoberturaPlano,
   TipoCartao,
+  GrupoCentroMovimentacaoFinanceira,
 ];
 
 class Database {
