@@ -19,7 +19,7 @@ import TipoCarteira from '../models/Sequelize/TipoCarteira';
 // import CriarContratoService from '../services/CriaContratoService';
 import CriarContratoService from '../services/CriarContratoService';
 import MigrarContratoService from '../services/MigrarContratoService';
-import MigrarContratoServiceOther from '../services/MigrarContratoServiceOther';
+// import MigrarContratoServiceOther from '../services/MigrarContratoServiceOther';
 
 import RemoveMembroContratoService from '../services/RemoveMembroContratoService';
 import AdicionarMembroContratoService from '../services/AdicionarMembroContratoService';
