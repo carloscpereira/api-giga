@@ -16,8 +16,10 @@ import GrupoFamiliar from '../models/Sequelize/GrupoFamiliar';
 import Status from '../models/Sequelize/Status';
 import TipoCarteira from '../models/Sequelize/TipoCarteira';
 
-import CriarContratoService from '../services/CriaContratoService';
+// import CriarContratoService from '../services/CriaContratoService';
+import CriarContratoService from '../services/CriarContratoService';
 import MigrarContratoService from '../services/MigrarContratoService';
+import MigrarContratoServiceOther from '../services/MigrarContratoServiceOther';
 
 import RemoveMembroContratoService from '../services/RemoveMembroContratoService';
 import AdicionarMembroContratoService from '../services/AdicionarMembroContratoService';
@@ -267,11 +269,11 @@ class ContratoController {
             parseInt(infoVigencia.mesesvigencia, 10)) /
           parseInt(rest.FormaPagamento.Parcelas, 10);
 
-        const contrato = await CriarContratoService.execute({
+        const contrato = await CriarContratoService({
           transaction,
-          sequelize,
+          connection: sequelize,
           operadora,
-          formValidation: {
+          data: {
             ...rest,
             Produto: beneficiarios[0].Produto,
             Beneficiarios: beneficiarios,
@@ -296,7 +298,7 @@ class ContratoController {
         contratos.push(contrato);
       }
 
-      await transaction.commit();
+      await transaction.rollback();
       return res.json({ error: null, data: contratos });
     } catch (error) {
       await transaction.rollback();
@@ -311,7 +313,11 @@ class ContratoController {
       connection: req.sequelize,
       proposta: req.body,
     });
-
+    // const contrato = await MigrarContratoServiceOther({
+    //   connection: req.sequelize,
+    //   idcontrato: req.params.id,
+    //   data: req.body,
+    // });
     return res.json({ contrato });
   }
 
