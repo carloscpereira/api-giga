@@ -271,9 +271,9 @@ class ContratoController {
 
         const contrato = await CriarContratoService.execute({
           transaction,
-          connection: sequelize,
+          sequelize,
           operadora,
-          data: {
+          formValidation: {
             ...rest,
             Produto: beneficiarios[0].Produto,
             Beneficiarios: beneficiarios,
