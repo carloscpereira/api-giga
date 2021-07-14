@@ -16,8 +16,8 @@ import GrupoFamiliar from '../models/Sequelize/GrupoFamiliar';
 import Status from '../models/Sequelize/Status';
 import TipoCarteira from '../models/Sequelize/TipoCarteira';
 
-// import CriarContratoService from '../services/CriaContratoService';
-import CriarContratoService from '../services/CriarContratoService';
+import CriarContratoService from '../services/CriaContratoService';
+// import CriarContratoService from '../services/CriarContratoService';
 import MigrarContratoService from '../services/MigrarContratoService';
 // import MigrarContratoServiceOther from '../services/MigrarContratoServiceOther';
 
