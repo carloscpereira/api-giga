@@ -298,7 +298,7 @@ class ContratoController {
         contratos.push(contrato);
       }
 
-      await transaction.rollback();
+      await transaction.commit();
       return res.json({ error: null, data: contratos });
     } catch (error) {
       await transaction.rollback();
