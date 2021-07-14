@@ -269,7 +269,7 @@ class ContratoController {
             parseInt(infoVigencia.mesesvigencia, 10)) /
           parseInt(rest.FormaPagamento.Parcelas, 10);
 
-        const contrato = await CriarContratoService({
+        const contrato = await CriarContratoService.execute({
           transaction,
           connection: sequelize,
           operadora,
