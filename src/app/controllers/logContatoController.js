@@ -73,6 +73,8 @@ class LogContatoController {
       is_error,
     };
 
+    console.log(data);
+
     const log = await LogContato.create(data);
 
     return res.json({ error: null, data: log });
