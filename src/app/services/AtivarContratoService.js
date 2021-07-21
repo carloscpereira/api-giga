@@ -46,6 +46,11 @@ export default async ({ id_contrato, data_adesao = new Date(), sequelize, transa
     const dataAdesao = data_adesao instanceof Date ? data_adesao : parseISO(data_adesao);
     const dataFinalVigencia = add(dataAdesao, { months: regraVigencia.mesesvigencia || 24 });
 
+    await contrato.update(
+      { dataadesao: dataAdesao, datainicialvigencia: dataAdesao, datafinalvigencia: dataFinalVigencia, statusid: 8 },
+      { transaction: t }
+    );
+
     await Beneficiario.update(
       {
         dataadesao: dataAdesao,
@@ -59,11 +64,6 @@ export default async ({ id_contrato, data_adesao = new Date(), sequelize, transa
           },
         },
       }
-    );
-
-    await contrato.update(
-      { dataadesao: dataAdesao, datainicialvigencia: dataAdesao, datafinalvigencia: dataFinalVigencia, statusid: 8 },
-      { transaction: t }
     );
 
     if (!transaction) await t.commit();
