@@ -355,7 +355,7 @@ export default class Parcela {
         -- Referentes a Boleto
         parcela.linhadigitavel                                                                    as boleto_linhadigitavel,
         parcela.codigobarras                                                                      as boleto_codigobarras,
-        CASE LENGTH(parcela.nossonumero) 
+        CASE LENGTH(parcela.nossonumero)
           WHEN 20 THEN parcela.nossonumero
                    ELSE SUBSTRING(parcela.nossonumero,1,17) END                                   as boleto_nossonumero,
         parcela.taxaboleto                                                                        as boleto_taxaboleto,
