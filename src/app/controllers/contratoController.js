@@ -228,7 +228,7 @@ class ContratoController {
     const {
       formValidation: { Beneficiarios, Pagamentos, ResponsavelFinanceiro, ...rest },
       sequelize,
-      operator: operadora,
+      params: { operator: operadora },
     } = req;
     const transaction = await sequelize.transaction();
 
@@ -269,11 +269,11 @@ class ContratoController {
             parseInt(infoVigencia.mesesvigencia, 10)) /
           parseInt(rest.FormaPagamento.Parcelas, 10);
 
-        const contrato = await CriarContratoService.execute({
-          transaction,
-          sequelize,
+        const contrato = await CriarContratoService({
           operadora,
-          formValidation: {
+          connection: sequelize,
+          transaction,
+          data: {
             ...rest,
             Produto: beneficiarios[0].Produto,
             Beneficiarios: beneficiarios,
