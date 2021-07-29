@@ -922,7 +922,7 @@ export default async ({
         );
 
         // Enviar boleto
-        const responsavelFinanceiroEmail = ResponsavelFinanceiro.Emails[0];
+        const responsavelFinanceiroEmail = ResponsavelFinanceiro.Emails ? ResponsavelFinanceiro.Emails[0] : null;
         if (responsavelFinanceiroEmail) {
           try {
             await axios.post(
@@ -973,7 +973,7 @@ export default async ({
       if (regraFechamento && !Averbacao) {
         const closingDay = DataFechamento
           ? setDate(new Date(), DataFechamento)
-          : setDate(new Date(), regraFechamento.fechamento); // Peda o dia de fechamento
+          : setDate(new Date(), regraFechamento.fechamento); // Pega o dia de fechamento
 
         const dayOfTheWeek = getDay(closingDay); // Pega o dia da semana do fechamento
 
