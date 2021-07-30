@@ -5,6 +5,8 @@ import Contrato from '../models/Sequelize/Contrato';
 import Beneficiario from '../models/Sequelize/Beneficiario';
 import TipoOcorrencia from '../models/Sequelize/TipoOcorrencia';
 import RegraVigenciaContrato from '../models/Sequelize/RegraVigenciaContrato';
+import PessoaFisica from '../models/Sequelize/PessoaFisica';
+import CancelarContratoService from './CancelarContratoService';
 
 export default async ({ id_contrato, data_adesao = new Date(), sequelize, transaction }) => {
   let t = transaction;
@@ -51,20 +53,65 @@ export default async ({ id_contrato, data_adesao = new Date(), sequelize, transa
       { transaction: t }
     );
 
-    await Beneficiario.update(
-      {
-        dataadesao: dataAdesao,
-      },
-      {
-        transaction: t,
-        where: {
-          contratoid: contrato.id,
-          motivoadesaoid: {
-            [Op.not]: tipoOcorrencia.id,
-          },
+    if (!contrato.contrato_parent) {
+      // Criação de novo contrato
+      await Beneficiario.update(
+        {
+          dataadesao: dataAdesao,
+          ativo: 1,
         },
+        {
+          transaction: t,
+          where: {
+            contratoid: contrato.id,
+            motivoadesaoid: {
+              [Op.not]: tipoOcorrencia.id,
+            },
+          },
+        }
+      );
+    } else {
+      // Contrato Migração
+      const [contratoParent, beneficiariosContratoParent, beneficiariosContrato] = await Promise.all([
+        Contrato.findByPk(contrato.contrato_parent, { transaction: t }),
+        Beneficiario.findAll({
+          where: {
+            contratoid: contrato.contrato_parent,
+            ativo: 1,
+          },
+          include: [{ model: PessoaFisica, as: 'dados' }],
+          transaction: t,
+        }),
+        Beneficiario.findAll({
+          where: {
+            contratoid: contrato.id,
+          },
+          include: [{ model: PessoaFisica, as: 'dados' }],
+          transaction: t,
+        }),
+      ]);
+
+      const diferencaBeneficiarios = beneficiariosContratoParent.filter(
+        ({ dados: { cpf } }) =>
+          !beneficiariosContrato.map(({ dados: { cpf: beneficiarioCpf } }) => beneficiarioCpf).includes(cpf)
+      );
+
+      const intersecaoBeneficiarios = beneficiariosContratoParent.filter(({ dados: { cpf } }) =>
+        beneficiariosContrato.map(({ dados: { cpf: beneficiarioCpf } }) => beneficiarioCpf).includes(cpf)
+      );
+
+      if (!intersecaoBeneficiarios) {
+        throw new Error('Erro ao tentar migrar contrato');
       }
-    );
+
+      if (!diferencaBeneficiarios) {
+        await CancelarContratoService.execute({ id: contratoParent.id, sequelize, transaction: t });
+      } else {
+        await intersecaoBeneficiarios.update({ ativo: 0 }, { transaction: t });
+      }
+
+      await beneficiariosContrato.update({ ativo: 1 }, { transaction: t });
+    }
 
     if (!transaction) await t.commit();
 
