@@ -19,7 +19,7 @@ import TipoCarteira from '../models/Sequelize/TipoCarteira';
 import CriarContratoService from '../services/CriaContratoService';
 // import CriarContratoService from '../services/CriarContratoService';
 import MigrarContratoService from '../services/MigrarContratoService';
-// import MigrarContratoServiceOther from '../services/MigrarContratoServiceOther';
+import MigrarContratoServiceOther from '../services/MigrarContratoServiceOther';
 
 import RemoveMembroContratoService from '../services/RemoveMembroContratoService';
 import AdicionarMembroContratoService from '../services/AdicionarMembroContratoService';
@@ -308,17 +308,30 @@ class ContratoController {
 
   async migrar(req, res) {
     console.log(req.sequelize instanceof Sequelize);
-    const contrato = await MigrarContratoService.execute({
-      id_contrato: req.params.id,
+    const transaction = await req.sequelize.transaction();
+
+    const migration = await MigrarContratoService({
       connection: req.sequelize,
-      proposta: req.body,
+      transaction,
+      idcontrato: req.params.id,
+      operadora: req.params.operator,
+      data: req.body,
     });
+
+    return res.json(migration);
+
+    // const contrato = await MigrarContratoService.execute({
+    //   id_contrato: req.params.id,
+    //   connection: req.sequelize,
+    //   proposta: req.body,
+    // });
     // const contrato = await MigrarContratoServiceOther({
     //   connection: req.sequelize,
     //   idcontrato: req.params.id,
+    //   operadora: req.params.operator,
     //   data: req.body,
     // });
-    return res.json({ contrato });
+    // return res.json({ contrato });
   }
 
   async update(req, res) {
