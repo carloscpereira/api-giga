@@ -834,7 +834,7 @@ export default async ({
       }
 
       for (let i = 1; i <= mesVigencia; i += 1) {
-        const dataVencimento = dataAdesao || DataVencimento || DataPagamento || new Date();
+        const dataVencimento = DataVencimento || DataPagamento || dataAdesao || new Date();
 
         // eslint-disable-next-line no-await-in-loop
         await Parcela.create(

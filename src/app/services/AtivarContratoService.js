@@ -1,3 +1,4 @@
+/* eslint-disable no-restricted-syntax */
 import { Op, Sequelize, Transaction } from 'sequelize';
 import { parseISO, add } from 'date-fns';
 
@@ -7,6 +8,7 @@ import TipoOcorrencia from '../models/Sequelize/TipoOcorrencia';
 import RegraVigenciaContrato from '../models/Sequelize/RegraVigenciaContrato';
 import PessoaFisica from '../models/Sequelize/PessoaFisica';
 import CancelarContratoService from './CancelarContratoService';
+import RemoveMembroContratoService from './RemoveMembroContratoService';
 
 export default async ({ id_contrato, data_adesao = new Date(), sequelize, transaction }) => {
   let t = transaction;
@@ -107,7 +109,14 @@ export default async ({ id_contrato, data_adesao = new Date(), sequelize, transa
       if (!diferencaBeneficiarios) {
         await CancelarContratoService.execute({ id: contratoParent.id, sequelize, transaction: t });
       } else {
-        await intersecaoBeneficiarios.update({ ativo: 0 }, { transaction: t });
+        for (const beneficiario of intersecaoBeneficiarios) {
+          await RemoveMembroContratoService.execute({
+            id_beneficiario: beneficiario.id,
+            id_contrato: contratoParent.id,
+            sequelize,
+            transaction: t,
+          });
+        }
       }
 
       await beneficiariosContrato.update({ ativo: 1 }, { transaction: t });
