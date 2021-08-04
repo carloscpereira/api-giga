@@ -12,6 +12,7 @@ import TipoBeneficiario from '../models/Sequelize/TipoBeneficiario';
 import PessoaFisica from '../models/Sequelize/PessoaFisica';
 import AssociadoPJ from '../models/Sequelize/AssociadoPJ';
 import AssociadoPF from '../models/Sequelize/AssociadoPF';
+import TipoCarteira from '../models/Sequelize/TipoCarteira';
 
 import CriarContratoService from './CriarContratoService';
 
@@ -137,13 +138,13 @@ export default async ({
 
     if (contrato.tipocontratoid === 5) {
       beneficiarios = await Beneficiario.findAll({
-        where: { contratoid: contrato.id, ativo: 1 },
+        where: { contratoid: contrato.id, ativo: '1' },
         include: [{ model: PessoaFisica, as: 'dados' }],
         transaction: t,
       });
     } else {
       beneficiarios = await Beneficiario.findAll({
-        where: { contratoid: contrato.id, responsavelgrupo: responsavel.id, ativo: 1 },
+        where: { contratoid: contrato.id, responsavelgrupo: responsavel.id, ativo: '1' },
         include: [{ model: PessoaFisica, as: 'dados' }],
         transaction: t,
       });
@@ -264,13 +265,13 @@ export default async ({
       throw new Error('É necessário informar beneficiários do contrato para realizar a migração');
     }
 
-    const [{ id: motivoAdesaoID }] = await connection.query(
-      `SELECT * FROM cn_tipocorrencia WHERE codigo_plano = '1' LIMIT 1`,
-      {
+    const [{ id: motivoAdesaoID }, tipoCarteira] = await Promise.all([
+      connection.query(`SELECT * FROM cn_tipocorrencia WHERE codigo_plano = '1' LIMIT 1`, {
         type: QueryTypes.SELECT,
         transaction: t,
-      }
-    );
+      }),
+      TipoCarteira.findByPk(contrato.tipodecarteiracontratoid),
+    ]);
 
     const beneficiariosFormatados = beneficiariosProposta.map((beneficiario) => ({
       Produto: produto.id,
@@ -309,7 +310,7 @@ export default async ({
         FormaPagamento: {
           TipoCarteira: contrato.tipodecarteiracontratoid,
           DiaVencimentoMes: dadosContrato.diavencimento,
-          Modalidade: contrato.tipodecarteiracontratoid,
+          Modalidade: tipoCarteira.modalidadepagamentoid,
         },
         ResponsavelFinanceiro: {
           TipoPessoa: 'F',
@@ -339,6 +340,7 @@ export default async ({
     return { old: contrato, new: novoContrato };
     // await t.rollback();
   } catch (error) {
+    console.log(error);
     if (!transaction) await t.rollback();
 
     throw error;

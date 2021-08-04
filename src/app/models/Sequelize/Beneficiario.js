@@ -81,6 +81,11 @@ export default class Beneficiario extends Model {
       as: 'pessoa',
     });
 
+    this.belongsTo(models.PessoaFisica, {
+      foreignKey: 'pessoabeneficiarioid',
+      as: 'dados',
+    });
+
     this.belongsTo(models.GrupoFamiliar, {
       foreignKey: 'grupofamiliarid',
       as: 'grupofamiliar',

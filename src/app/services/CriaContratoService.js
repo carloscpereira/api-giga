@@ -571,7 +571,7 @@ export default async ({
     const [infoVigencia] = await connection.query(
       'SELECT * FROM cn_regravigenciacontrato WHERE rvc_ds_vigencia_contrato ILIKE :vigencia LIMIT 1',
       {
-        replacements: { vigencia: PrazoVigencia || produto.pro_id_regra_vigencia },
+        replacements: { vigencia: PrazoVigencia || 'bienal' },
         type: QueryTypes.SELECT,
         transaction: t,
       }
