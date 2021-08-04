@@ -2,6 +2,7 @@
 import { Op, Sequelize, Transaction } from 'sequelize';
 import { parseISO, add } from 'date-fns';
 
+import axios from 'axios';
 import Contrato from '../models/Sequelize/Contrato';
 import Beneficiario from '../models/Sequelize/Beneficiario';
 import TipoOcorrencia from '../models/Sequelize/TipoOcorrencia';
@@ -121,6 +122,10 @@ export default async ({ id_contrato, data_adesao = new Date(), sequelize, transa
 
       await beneficiariosContrato.update({ ativo: 1 }, { transaction: t });
     }
+
+    axios.put(`https://www.idental.com.br/api/corretor/propostas/vendas/ativar/contrato/${contrato.id}`, {
+      dataAtivacao: dataAdesao,
+    });
 
     if (!transaction) await t.commit();
 
