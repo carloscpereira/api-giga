@@ -832,7 +832,7 @@ export default async ({
 
         if (
           isEqual(dataVencimento, setDate(dataVencimento, DiaVencimentoMes)) ||
-          isAfter(dataVencimento, setDate(DiaVencimentoMes))
+          isAfter(dataVencimento, setDate(new Date(), DiaVencimentoMes))
         ) {
           mesAdicional += 1;
         }
@@ -1093,6 +1093,7 @@ export default async ({
 
     return contrato;
   } catch (error) {
+    console.log(error);
     if (!transaction) t.rollback();
 
     throw error;

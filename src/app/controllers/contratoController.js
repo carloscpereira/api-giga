@@ -307,31 +307,23 @@ class ContratoController {
   }
 
   async migrar(req, res) {
-    console.log(req.sequelize instanceof Sequelize);
     const transaction = await req.sequelize.transaction();
+    try {
+      const migration = await MigrarContratoService({
+        connection: req.sequelize,
+        transaction,
+        idcontrato: req.params.id,
+        operadora: req.params.operator,
+        data: req.body,
+      });
 
-    const migration = await MigrarContratoService({
-      connection: req.sequelize,
-      transaction,
-      idcontrato: req.params.id,
-      operadora: req.params.operator,
-      data: req.body,
-    });
+      await transaction.commit();
 
-    return res.json(migration);
-
-    // const contrato = await MigrarContratoService.execute({
-    //   id_contrato: req.params.id,
-    //   connection: req.sequelize,
-    //   proposta: req.body,
-    // });
-    // const contrato = await MigrarContratoServiceOther({
-    //   connection: req.sequelize,
-    //   idcontrato: req.params.id,
-    //   operadora: req.params.operator,
-    //   data: req.body,
-    // });
-    // return res.json({ contrato });
+      return res.json(migration);
+    } catch (error) {
+      await transaction.rollback();
+      throw new Error();
+    }
   }
 
   async update(req, res) {
