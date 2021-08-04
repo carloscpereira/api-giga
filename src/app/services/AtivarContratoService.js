@@ -123,7 +123,7 @@ export default async ({ id_contrato, data_adesao = new Date(), sequelize, transa
       await beneficiariosContrato.update({ ativo: 1 }, { transaction: t });
     }
 
-    axios.put(`https://www.idental.com.br/api/corretor/propostas/vendas/ativar/contrato/${contrato.id}`, {
+    await axios.put(`https://www.idental.com.br/api/corretor/propostas/vendas/ativar/contrato/${contrato.id}`, {
       dataAtivacao: dataAdesao,
     });
 
