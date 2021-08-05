@@ -1087,7 +1087,7 @@ export default async ({
     // Final
     if (!transaction) t.commit();
 
-    return contrato;
+    return { contrato, grupoFamiliar };
   } catch (error) {
     if (!transaction) t.rollback();
 
