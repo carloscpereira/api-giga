@@ -43,5 +43,6 @@ export default class Titulo extends Model {
       foreignKey: 'numerocontratoid',
       as: 'contrato',
     });
+    this.belongsTo(models.TipoCarteira, { foreignKey: 'tipodecarteiraid', as: 'carteira' });
   }
 }

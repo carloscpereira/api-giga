@@ -26,6 +26,7 @@ export default class Parcela extends Model {
         cobranca_cancelada: Sequelize.BOOLEAN,
         valor_bruto: Sequelize.STRING,
         pcl_in_cobranca: Sequelize.BOOLEAN,
+        pcl_in_pause: Sequelize.BOOLEAN,
       },
       { sequelize, tableName: 'parcela' }
     );

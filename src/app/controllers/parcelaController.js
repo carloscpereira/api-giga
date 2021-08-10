@@ -8,6 +8,8 @@ import TipoCarteira from '../models/TipoCarteira';
 import Parcela from '../models/Parcela';
 import ParcelaSeq from '../models/Sequelize/Parcela';
 
+import ProcessamentoCartaoCreditoService from '../services/ProcessamentoCartaoCreditoService';
+
 class ParcelaController {
   async index(req, res) {
     // const parcelas = await req.pool.query(query);
@@ -240,24 +242,28 @@ class ParcelaController {
   }
 
   async filterParecelas(req, res) {
-    try {
-      const {
-        query: { limit },
-      } = req;
+    const contratos = await ProcessamentoCartaoCreditoService({ connection: req.sequelize });
 
-      const parcelas = await new Parcela(req.pool).filterParcelas(limit);
+    return res.json(contratos);
 
-      if (parcelas && parcelas.error) {
-        return res.status(parcelas.error).json(parcelas);
-      }
+    // try {
+    //   const {
+    //     query: { limit },
+    //   } = req;
 
-      return res.json({ error: null, data: parcelas });
-    } catch (err) {
-      return res.status(400).json({
-        error: 400,
-        data: { error: 'Internal Server Error', message: err.message },
-      });
-    }
+    //   const parcelas = await new Parcela(req.pool).filterParcelas(limit);
+
+    //   if (parcelas && parcelas.error) {
+    //     return res.status(parcelas.error).json(parcelas);
+    //   }
+
+    //   return res.json({ error: null, data: parcelas });
+    // } catch (err) {
+    //   return res.status(400).json({
+    //     error: 400,
+    //     data: { error: 'Internal Server Error', message: err.message },
+    //   });
+    // }
   }
 
   async pause(req, res) {

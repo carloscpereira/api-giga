@@ -52,6 +52,7 @@ export default class Contrato extends Model {
           },
         },
         tipotabelausoid: Sequelize.INTEGER,
+        contrato_parent: Sequelize.INTEGER,
         tipotabelauso: {
           type: Sequelize.VIRTUAL,
           get() {
@@ -216,6 +217,11 @@ export default class Contrato extends Model {
     this.hasOne(models.DentistaPF, {
       foreignKey: 'id',
       as: 'dentista',
+    });
+
+    this.belongsTo(models.CartaoCredito, {
+      foreignKey: 'cartaoid',
+      as: 'cartao',
     });
   }
 }
