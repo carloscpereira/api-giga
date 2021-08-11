@@ -1,11 +1,10 @@
 /* eslint-disable no-restricted-syntax */
 /* eslint-disable no-unused-vars */
 import * as Yup from 'yup';
-import { Sequelize, Op, QueryTypes } from 'sequelize';
+import { Op, QueryTypes } from 'sequelize';
 import _ from 'lodash';
 
 import queryStringConverter from 'sequelize-querystring-converter';
-import { response } from 'express';
 import Contrato from '../models/Sequelize/Contrato';
 import TipoContrato from '../models/Sequelize/TipoContrato';
 import PessoaJuridica from '../models/Sequelize/PessoaJuridica';
@@ -17,9 +16,7 @@ import Status from '../models/Sequelize/Status';
 import TipoCarteira from '../models/Sequelize/TipoCarteira';
 
 import CriarContratoService from '../services/CriarContratoService';
-// import CriarContratoService from '../services/CriarContratoService';
 import MigrarContratoService from '../services/MigrarContratoService';
-// import MigrarContratoServiceOther from '../services/MigrarContratoServiceOther';
 
 import RemoveMembroContratoService from '../services/RemoveMembroContratoService';
 import AdicionarMembroContratoService from '../services/AdicionarMembroContratoService';
