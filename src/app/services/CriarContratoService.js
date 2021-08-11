@@ -104,8 +104,13 @@ export default async ({
 
     let dataAdesao;
 
-    if (isEqual(dataVencimentoMes, dataAtual) || isAfter(dataAtual, dataVencimentoMes)) {
+    if (
+      isEqual(dataVencimentoMes, dataAtual) ||
+      (isAfter(dataAtual, dataVencimentoMes) && !DataPagamento && !DataVencimento)
+    ) {
       dataAdesao = addMonths(dataVencimentoMes, 1);
+    } else if (DataPagamento || DataVencimento) {
+      dataAdesao = DataVencimento || setDate(DataPagamento, DiaVencimentoMes);
     } else {
       dataAdesao = dataVencimentoMes;
     }
