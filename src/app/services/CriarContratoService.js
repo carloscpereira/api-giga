@@ -928,7 +928,7 @@ export default async ({
         );
 
         // Enviar boleto
-        const responsavelFinanceiroEmail = ResponsavelFinanceiro.Emails[0];
+        const responsavelFinanceiroEmail = Emails[0];
         if (responsavelFinanceiroEmail) {
           try {
             await axios.post(
