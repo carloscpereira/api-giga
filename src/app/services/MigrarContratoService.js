@@ -16,6 +16,8 @@ import TipoCarteira from '../models/Sequelize/TipoCarteira';
 
 import CriarContratoService from './CriarContratoService';
 
+import AppError from '../errors/AppError';
+
 export default async ({
   connection,
   transaction,
@@ -36,7 +38,7 @@ export default async ({
   let t = transaction;
 
   if (!connection || !(connection instanceof Sequelize)) {
-    throw new Error('Não foi possível estabalecer conexão com o banco de dados');
+    throw new AppError(500, 'Não foi possível estabalecer conexão com o banco de dados');
   }
 
   if (!transaction || !(transaction instanceof Transaction)) {
@@ -55,7 +57,7 @@ export default async ({
     });
 
     if (!contrato) {
-      throw new Error('Contrato inexistente, cancelado ou impossibilitado de realizar operação');
+      throw new AppError(404, 'Contrato inexistente, cancelado ou impossibilitado de realizar operação');
     }
 
     let dadosContrato = null;
@@ -67,7 +69,7 @@ export default async ({
     }
 
     if (!dadosContrato) {
-      throw new Error('Não foi possível estabelecer os dados do contrato');
+      throw new AppError(404, 'Não foi possível estabelecer os dados do contrato');
     }
 
     const titulo = await Titulo.findOne({
@@ -81,7 +83,10 @@ export default async ({
     });
 
     if (!titulo) {
-      throw new Error('Não é possível completar a operação, pois, o contrato escolhido não possui titulos em vigencia');
+      throw new AppError(
+        406,
+        'Não é possível completar a operação, pois, o contrato escolhido não possui titulos em vigencia'
+      );
     }
 
     // const parcelas = await Parcela.findAll({
@@ -116,7 +121,7 @@ export default async ({
     }
 
     if (!responsavel) {
-      throw new Error('Não foi possível encontrar o responsável');
+      throw new AppError(406, 'Não foi possível encontrar o responsável');
     }
 
     const [{ cns: cnsResponsavel }] = await connection.query(
@@ -159,7 +164,10 @@ export default async ({
     });
 
     if (!produto) {
-      throw new Error('Produto selecionado não encontrado ou está indisponível para o tipo contrato selecionado');
+      throw new AppError(
+        406,
+        'Produto selecionado não encontrado ou está indisponível para o tipo contrato selecionado'
+      );
     }
 
     const beneficiariosProposta = [];
@@ -212,7 +220,7 @@ export default async ({
         });
 
         if (!tipoBeneficiario) {
-          throw new Error('Tipo de beneficiário informado não existe');
+          throw new AppError(404, 'Tipo de beneficiário informado não existe');
         }
 
         const [{ valor: valorProduto }] = await connection.query(
@@ -262,7 +270,7 @@ export default async ({
     }
 
     if (!beneficiariosProposta.length) {
-      throw new Error('É necessário informar beneficiários do contrato para realizar a migração');
+      throw new AppError(400, 'É necessário informar beneficiários do contrato para realizar a migração');
     }
 
     const [{ id: motivoAdesaoID }, tipoCarteira] = await Promise.all([
@@ -340,7 +348,6 @@ export default async ({
     return { old: contrato, new: novoContrato };
     // await t.rollback();
   } catch (error) {
-    console.log(error);
     if (!transaction) await t.rollback();
 
     throw error;
