@@ -1044,10 +1044,10 @@ export default async ({
       const titulo = await Titulo.findOne({
         where: {
           dataperiodoinicial: {
-            [Op.gte]: new Date(),
+            [Op.lte]: new Date(),
           },
           dataperiodofinal: {
-            [Op.lt]: new Date(),
+            [Op.gte]: new Date(),
           },
           statusid: 1,
         },

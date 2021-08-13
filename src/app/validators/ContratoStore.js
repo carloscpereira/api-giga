@@ -131,20 +131,20 @@ export default async (req, res, next) => {
           .default(null),
       }),
       Beneficiarios: Yup.array().of(beneficiarioSchema),
-      GrupoFamiliar: Yup.array()
-        .ensure()
-        .compact()
-        .when('TipoContrato', (validator, s) => (validator === '9' ? s.required() : s.nullable().default(null)))
-        .of(
-          Yup.object()
-            .shape({
-              Produto: Yup.number().required(),
-              Beneficiarios: Yup.array().of(beneficiarioSchema),
-            })
-            .notRequired()
-            .nullable()
-            .default(null)
-        ),
+      // GrupoFamiliar: Yup.array()
+      //   .ensure()
+      //   .compact()
+      //   .when('TipoContrato', (validator, s) => (validator === '9' ? s.required() : s.nullable().default(null)))
+      //   .of(
+      //     Yup.object()
+      //       .shape({
+      //         Produto: Yup.number().required(),
+      //         Beneficiarios: Yup.array().of(beneficiarioSchema),
+      //       })
+      //       .notRequired()
+      //       .nullable()
+      //       .default(null)
+      //   ),
       DataPagamento: Yup.date(),
       Pagamentos: Yup.array().of(
         Yup.object({
