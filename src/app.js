@@ -13,6 +13,7 @@ import swaggerUi from 'swagger-ui-express';
 
 import 'express-async-errors';
 
+import { ValidationError } from 'yup';
 import routes from './routes';
 
 import sentryConfig from './config/sentry';
@@ -77,6 +78,9 @@ class App {
 
       if (err instanceof AppError) {
         return res.status(err.statusCode).json({ statusCode: err.statusCode, message: err.message });
+      }
+      if (err instanceof ValidationError) {
+        return res.status(400).json({ error: 400, message: err.inner, name: 'Validation fails' });
       }
       return res.status(500).json({ error: 500, data: { message: 'Internal Server Error' } });
     });
