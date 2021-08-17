@@ -12,6 +12,7 @@ import ParcelaDesconto from '../models/Sequelize/ParcelaAcrescimoDesconto';
 import CMF from '../models/Sequelize/CentroMovimentacaoFinanceira';
 import AtivarContratoService from './AtivarContratoService';
 import Titulo from '../models/Sequelize/Titulo';
+import AppError from '../errors/AppError';
 
 export default class BaixarParcelaService {
   static async execute({
@@ -31,7 +32,8 @@ export default class BaixarParcelaService {
     let t = transaction;
 
     if (!connection || !(connection instanceof Sequelize)) {
-      throw new Error(
+      throw new AppError(
+        500,
         'Não foi possível estabelecer uma conexão com o banco de dados, verifique se houve a instancia da conexão'
       );
     }
@@ -74,23 +76,23 @@ export default class BaixarParcelaService {
       const acrescimosPagamento = acrescimos ? (Array.isArray(acrescimos) ? acrescimos : [acrescimos]) : [];
 
       if (checkLote && checkLote.statusid !== 1) {
-        throw new Error('It is not possible to change a batch that has already been finalized');
+        throw new AppError(409, 'It is not possible to change a batch that has already been finalized');
       }
 
       if (!parcela) {
-        throw new Error('Parcela not found');
+        throw new AppError(404, 'Parcela not found');
       }
 
       if (parcela && parseInt(parcela.statusgrupoid, 10) === 2) {
-        throw new Error('Parcela já baixada');
+        throw new AppError(409, 'Parcela já baixada');
       }
 
       if (!id_pessoa || !pessoaUsuario) {
-        throw new Error('Usuário informado não encontrado no sistema');
+        throw new AppError(400, 'Usuário informado não encontrado no sistema');
       }
 
       if (tipo_movimento !== 'C' && tipo_movimento !== 'D' && !tipo_movimento) {
-        throw new Error('Tipo de movimento informado é inválido');
+        throw new AppError(400, 'Tipo de movimento informado é inválido');
       }
 
       // Verifica e pega o tipo de baixa
@@ -109,7 +111,7 @@ export default class BaixarParcelaService {
       }
 
       if (!tipo_baixa || !tipoBaixa) {
-        throw new Error('É necessário informar um tipo de Baixa correto');
+        throw new AppError(400, 'É necessário informar um tipo de Baixa correto');
       }
 
       const lote =
@@ -238,7 +240,7 @@ export default class BaixarParcelaService {
             const cmfid = await CMF.findByPk(desconto.CMFID, { transaction: t });
 
             if (!cmfid) {
-              throw new Error('Não foi possível localizar o Centro de Movimentacao Financeiro espeficado');
+              throw new AppError(404, 'Não foi possível localizar o Centro de Movimentacao Financeiro espeficado');
             }
 
             await ParcelaDesconto.create(
@@ -265,7 +267,7 @@ export default class BaixarParcelaService {
             const cmfid = await CMF.findByPk(acrescimo.CMFID, { transaction: t });
 
             if (!cmfid) {
-              throw new Error('Não foi possível localizar o Centro de Movimentacao Financeiro espeficado');
+              throw new AppError(404, 'Não foi possível localizar o Centro de Movimentacao Financeiro espeficado');
             }
 
             await ParcelaDesconto.create(

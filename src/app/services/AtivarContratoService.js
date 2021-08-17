@@ -10,12 +10,14 @@ import RegraVigenciaContrato from '../models/Sequelize/RegraVigenciaContrato';
 import PessoaFisica from '../models/Sequelize/PessoaFisica';
 import CancelarContratoService from './CancelarContratoService';
 import RemoveMembroContratoService from './RemoveMembroContratoService';
+import AppError from '../errors/AppError';
 
 export default async ({ id_contrato, data_adesao = new Date(), sequelize, transaction }) => {
   let t = transaction;
 
   if (!sequelize || !(sequelize instanceof Sequelize)) {
-    throw new Error(
+    throw new AppError(
+      500,
       'Não foi possível estabelecer uma conexão com o banco de dados, certifique que houve a inilialização do mesmo.'
     );
   }
@@ -25,7 +27,7 @@ export default async ({ id_contrato, data_adesao = new Date(), sequelize, transa
   }
 
   if (!(t instanceof Transaction)) {
-    throw new Error('Erro ao criar transaction');
+    throw new AppError(500, 'Erro ao criar transaction');
   }
 
   try {
@@ -104,7 +106,7 @@ export default async ({ id_contrato, data_adesao = new Date(), sequelize, transa
       );
 
       if (!intersecaoBeneficiarios) {
-        throw new Error('Erro ao tentar migrar contrato');
+        throw new AppError(500, 'Erro ao tentar migrar contrato');
       }
 
       if (!diferencaBeneficiarios) {

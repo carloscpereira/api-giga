@@ -18,6 +18,8 @@ import routes from './routes';
 import sentryConfig from './config/sentry';
 import corsConfig from './config/cors';
 
+import AppError from './app/errors/AppError';
+
 const YAML = require('yamljs');
 
 const swaggerDocument = YAML.load(resolve(__dirname, '..', 'swagger', 'swagger.yaml'));
@@ -69,13 +71,14 @@ class App {
 
   exceptionHandler() {
     this.server.use(async (err, req, res, next) => {
-      console.log(err);
       const errors = await new Youch(err, req).toJSON();
 
-      return res.status(500).json(errors);
-      // if (process.env.NODE_ENV !== 'production') return res.status(500).json(errors);
+      if (process.env.NODE_ENV !== 'production') return res.status(500).json(errors);
 
-      // return res.status(500).json({ error: 500, data: { message: 'Internal Server Error' } });
+      if (err instanceof AppError) {
+        return res.status(err.statusCode).json({ statusCode: err.statusCode, message: err.message });
+      }
+      return res.status(500).json({ error: 500, data: { message: 'Internal Server Error' } });
     });
   }
 }

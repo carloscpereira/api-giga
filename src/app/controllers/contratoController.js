@@ -22,6 +22,7 @@ import RemoveMembroContratoService from '../services/RemoveMembroContratoService
 import AdicionarMembroContratoService from '../services/AdicionarMembroContratoService';
 import AtivarContratoService from '../services/AtivarContratoService';
 import DestroyContractService from '../services/DestroyContractService';
+import AppError from '../errors/AppError';
 
 class ContratoController {
   async index(req, res) {
@@ -319,7 +320,7 @@ class ContratoController {
       return res.json(migration);
     } catch (error) {
       await transaction.rollback();
-      throw new Error();
+      throw error;
     }
   }
 

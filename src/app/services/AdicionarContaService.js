@@ -1,4 +1,5 @@
 import { Sequelize, Transaction } from 'sequelize';
+import AppError from '../errors/AppError';
 
 import Conta from '../models/Sequelize/Conta';
 
@@ -20,7 +21,8 @@ export default class AdicionarContaService {
     let t = transaction;
 
     if (!sequelize || !(sequelize instanceof Sequelize)) {
-      throw new Error(
+      throw new AppError(
+        500,
         'Não foi possível estabelecer uma conexão com o banco de dados, verifique se houve a instancia da conexão'
       );
     }

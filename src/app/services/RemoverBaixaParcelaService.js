@@ -3,12 +3,14 @@ import { Sequelize, Transaction } from 'sequelize';
 import Parcela from '../models/Sequelize/Parcela';
 import FormaPagamento from '../models/Sequelize/FormaPagamento';
 import Lote from '../models/Sequelize/LotePagamento';
+import AppError from '../errors/AppError';
 
 export default class RemoverBaixaParcelaService {
   static async execute({ id_parcela, transaction, connection }) {
     let t = transaction;
     if (!connection || !(connection instanceof Sequelize)) {
-      throw new Error(
+      throw new AppError(
+        500,
         'Não foi possível estabelecer uma conexão com o banco de dados, verifique se houve a instanciação da conexãor'
       );
     }
@@ -21,7 +23,7 @@ export default class RemoverBaixaParcelaService {
       const parcela = await Parcela.findByPk(id_parcela, { transaction: t });
 
       if (parseInt(parcela.statusgrupoid, 10) !== 1) {
-        throw new Error('Installment not settled');
+        throw new AppError(400, 'Installment not settled');
       }
 
       const lotes = await parcela.getLotes({ transaction: t });

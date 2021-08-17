@@ -1,4 +1,5 @@
 import { QueryTypes, Sequelize, Transaction } from 'sequelize';
+import AppError from '../errors/AppError';
 import Contrato from '../models/Sequelize/Contrato';
 
 export default class DestroyContractService {
@@ -6,7 +7,8 @@ export default class DestroyContractService {
     let t = transaction;
 
     if (!connection || !(connection instanceof Sequelize)) {
-      throw new Error(
+      throw new AppError(
+        500,
         'Não foi possível estabelecer uma conexão com o banco de dados, verifique se houve a instancia da conexão'
       );
     }
@@ -19,7 +21,7 @@ export default class DestroyContractService {
       const contrato = await Contrato.findByPk(id_contrato, { transaction: t });
 
       if (!contrato) {
-        throw new Error('Contrato não encontrado');
+        throw new AppError(404, 'Contrato não encontrado');
       }
 
       /**

@@ -37,6 +37,7 @@ import Titulo from '../models/Sequelize/Titulo';
 import Parcela from '../models/Sequelize/Parcela';
 import RegraFechamento from '../models/Sequelize/RegraFechamento';
 import AssociadoPJ from '../models/Sequelize/AssociadoPJ';
+import AppError from '../errors/AppError';
 
 const bv = {
   PESSOA_FISICA: 4,
@@ -89,7 +90,7 @@ export default async ({
   let t = transaction;
 
   if (!connection || !(connection instanceof Sequelize)) {
-    throw new Error('Não foi possível estabalecer conexão com o banco de dados');
+    throw new AppError(500, 'Não foi possível estabalecer conexão com o banco de dados');
   }
 
   if (!transaction || !(transaction instanceof Transaction)) {
@@ -127,7 +128,10 @@ export default async ({
     });
 
     if (!produto) {
-      throw new Error('Produto selecionado não encontrado ou não está disponível para o tipo de contrato selecionado');
+      throw new AppError(
+        404,
+        'Produto selecionado não encontrado ou não está disponível para o tipo de contrato selecionado'
+      );
     }
 
     let centroCusto = centroCustoId ? await CentroCusto.findByPk(centroCustoId, { transaction: t }) : null;
@@ -137,7 +141,7 @@ export default async ({
     }
 
     if (!centroCusto) {
-      throw new Error('Centro de Resultados não informado ou inválido');
+      throw new AppError(400, 'Centro de Resultados não informado ou inválido');
     }
 
     let vendedor = null;
@@ -166,14 +170,14 @@ export default async ({
       );
 
       if (!row) {
-        throw new Error('Vendedor não encontrado em nosso banco de dados');
+        throw new AppError(404, 'Vendedor não encontrado em nosso banco de dados');
       }
 
       vendedor = row;
     }
 
     if (!Beneficiarios) {
-      throw new Error('Você deve informar os Beneficiarios a serem inseridos no contrato');
+      throw new AppError(400, 'Você deve informar os Beneficiarios a serem inseridos no contrato');
     }
 
     const responsavel = await CriaPessoaFisicaService.execute({
@@ -367,7 +371,7 @@ export default async ({
       Beneficiarios[0];
 
     if (!beneficiarioTitular) {
-      throw new Error('É necessário informar um beneficiário titular para criação de um novo contrato');
+      throw new AppError(400, 'É necessário informar um beneficiário titular para criação de um novo contrato');
     }
 
     for (const beneficiario of Beneficiarios) {
@@ -511,7 +515,7 @@ export default async ({
     }
 
     if (!beneficiarios.length) {
-      throw new Error('Erro ao tentar cadastrar o usuário');
+      throw new AppError(412, 'Erro ao tentar cadastrar o usuário');
     }
 
     const [{ valor: valorPadrao }] = await connection.query(
@@ -646,7 +650,7 @@ export default async ({
     }
 
     if (!contrato || !(contrato instanceof Contrato)) {
-      throw new Error('Não foi possível criar ou encontrar o contrato selecionado');
+      throw new AppError(500, 'Não foi possível criar ou encontrar o contrato selecionado');
     }
 
     const grupoFamiliar = await contrato.createGrupofamiliar(
@@ -746,7 +750,7 @@ export default async ({
       const quantidadeParcelas = Parcelas || infoVigencia.mesesvigencia;
 
       if (!modalidadePagamento || !(modalidadePagamento instanceof ModalidadePagamento)) {
-        throw new Error('É necessário informar uma modalidade de pagamento válida');
+        throw new AppError(400, 'É necessário informar uma modalidade de pagamento válida');
       }
 
       const checarCarteira = await TipoCarteira.findOne({
@@ -755,7 +759,7 @@ export default async ({
       });
 
       if (!checarCarteira) {
-        throw new Error('A carteira não pertence a modalidade escolhida');
+        throw new AppError(400, 'A carteira não pertence a modalidade escolhida');
       }
 
       const dataVencimentoTitulo = dataAdesao;
@@ -888,7 +892,7 @@ export default async ({
         const endereco = enderecos && enderecos.length > 0 ? enderecos[0] : null;
 
         if (!endereco) {
-          throw new Error('É necessário informar ao menos um endereço para o responsável financeiro');
+          throw new AppError(400, 'É necessário informar ao menos um endereço para o responsável financeiro');
         }
 
         const {
@@ -991,7 +995,7 @@ export default async ({
           const secondInstallment = parcelas[1];
 
           if (!secondInstallment) {
-            throw new Error('Erro ao gerar parcela');
+            throw new AppError(500, 'Erro ao gerar parcela');
           }
 
           const enderecos = await responsavel.getEnderecos({ transaction: t });
@@ -999,7 +1003,7 @@ export default async ({
           const endereco = enderecos && enderecos.length > 0 ? enderecos[0] : null;
 
           if (!endereco) {
-            throw new Error('É necessário informar ao menos um endereço para o responsável financeiro');
+            throw new AppError(400, 'É necessário informar ao menos um endereço para o responsável financeiro');
           }
 
           const {

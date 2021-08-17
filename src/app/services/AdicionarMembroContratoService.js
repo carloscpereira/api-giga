@@ -27,6 +27,7 @@ import AdicionarTelefoneService from './AdicionarTelefoneService';
 import AdicionarEnderecoService from './AdicionarEnderecoService';
 import TipoCarteira from '../models/Sequelize/TipoCarteira';
 import FormaPagamento from '../models/Sequelize/FormaPagamento';
+import AppError from '../errors/AppError';
 
 const bv = {
   PESSOA_FISICA: 4,
@@ -63,7 +64,7 @@ export default class AdicionarMembroContratoService {
     let t = transaction;
     // Testa se a instancia de conexão com o banco de dados foi passada corretamente
     if (!sequelize || !(sequelize instanceof Sequelize)) {
-      throw new Error('Não foi possível estabalecer conexão com o banco de dados');
+      throw new AppError(500, 'Não foi possível estabalecer conexão com o banco de dados');
     }
 
     // Testa se a instancia de transação foi mandada corretamente, caso não, cria uma nova instancia
@@ -98,21 +99,21 @@ export default class AdicionarMembroContratoService {
       );
 
       // Testa se Contrato existe ou se ele está disponível para realizar a operação (Está ativo ou pré-cadastro, por exemplo)
-      if (!contrato) throw new Error('Contrato não encontrato ou indisponível para realizar a operação');
+      if (!contrato) throw new AppError(404, 'Contrato não encontrato ou indisponível para realizar a operação');
 
       const contratoIsValide = contrato.tipocontratoid === 5 || contrato.tipocontratoid === 8;
       const contratoIsPJ = contrato.tipocontratoid === 9;
 
       // Testa validade do contrato
       if (!contratoIsValide) {
-        throw new Error('É necessário que seja um contrato de associado para que seja adicionado um membro');
+        throw new AppError(400, 'É necessário que seja um contrato de associado para que seja adicionado um membro');
       }
 
       // Pega os dados do Responsável Financeiro do Contrato
       const [rfContrato] = contratoIsPJ ? contrato.responsavel_pessoajuridica : contrato.responsavel_pessoafisica;
 
       if (!rfContrato) {
-        throw new Error('Não foi possível encontrar responsavel financeiro para o contrato');
+        throw new AppError(404, 'Não foi possível encontrar responsavel financeiro para o contrato');
       }
 
       const [enderecos, telefones, emails] = await Promise.all([
@@ -124,7 +125,7 @@ export default class AdicionarMembroContratoService {
       const tipoCarteira = await TipoCarteira.findByPk(contrato.tipodecarteiraid, { transaction: t });
 
       if (!tipoCarteira) {
-        throw new Error('Tipo de Carteira não encontrado');
+        throw new AppError(404, 'Tipo de Carteira não encontrado');
       }
 
       const modalidadeId = tipoCarteira.modalidadepagamentoid;
@@ -148,7 +149,7 @@ export default class AdicionarMembroContratoService {
       );
 
       // Caso não haja nenhum título ativo, emite erro, pois, o ainda não foi renovado.
-      if (!tituloContratoVigente) throw new Error('Contrato quitado ou não renovado');
+      if (!tituloContratoVigente) throw new AppError(400, 'Contrato quitado ou não renovado');
 
       const contratoIsInadimplente = await Parcela.findAndCountAll(
         {
@@ -180,7 +181,7 @@ export default class AdicionarMembroContratoService {
       );
 
       if (contratoIsInadimplente > 1) {
-        throw new Error('Contrato Inadimplente');
+        throw new AppError(400, 'Contrato Inadimplente');
       }
 
       // Todas parcelas do título em vigencia
@@ -241,7 +242,7 @@ export default class AdicionarMembroContratoService {
       );
 
       if (checaBeneficiario && checaBeneficiario.length > 0) {
-        throw new Error('O beneficiario já se encontra cadastrado no contrato');
+        throw new AppError(409, 'O beneficiario já se encontra cadastrado no contrato');
       }
 
       // if (!pagamentos && !contratoIsPJ) {
@@ -347,11 +348,11 @@ export default class AdicionarMembroContratoService {
 
       // Verifica se o vendedor é válido
       if (!vendedor) {
-        throw new Error('Informa um vendedor e uma corretora válido');
+        throw new AppError(400, 'Informa um vendedor e uma corretora válido');
       }
 
       if (contratoIsPJ && !grupoFamiliar && !beneficiario.Produto)
-        throw new Error('É necessário informar um produto para adicionar esse beneficiário');
+        throw new AppError(400, 'É necessário informar um produto para adicionar esse beneficiário');
 
       // Crio nova Pessoa // Beneficiario
       const novoBeneficiario = await CriaPessoaFisicaService.execute({
@@ -478,7 +479,7 @@ export default class AdicionarMembroContratoService {
       } else if (beneficiarioIsTitular) {
         produto = await Produto.findByPk(beneficiario.Produto, { transaction: t });
       } else {
-        throw new Error('Lancei a braba');
+        throw new AppError(500, 'Lancei a braba');
       }
 
       // Crio grupo novo no caso de contrato pessoa jurídica

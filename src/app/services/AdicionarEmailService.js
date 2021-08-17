@@ -1,4 +1,5 @@
 import { Op, Sequelize, Transaction } from 'sequelize';
+import AppError from '../errors/AppError';
 
 import Email from '../models/Sequelize/Email';
 
@@ -7,7 +8,8 @@ export default class AdicionarEmailService {
     let t = transaction;
 
     if (!sequelize || !(sequelize instanceof Sequelize)) {
-      throw new Error(
+      throw new AppError(
+        500,
         'Não foi possível estabelecer uma conexão com o banco de dados, verifique se houve a instancia da conexão'
       );
     }

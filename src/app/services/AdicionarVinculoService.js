@@ -8,6 +8,7 @@ import PessoaVinculo from '../models/Sequelize/PessoaVinculo';
 // import EstadoCivil from '../models/Sequelize/EstadoCivil';
 
 import RemoverAcentos from '../helpers/RemoverAcentos';
+import AppError from '../errors/AppError';
 
 const snakeToPascal = (string) => {
   return string
@@ -32,12 +33,12 @@ const snakeToPascal = (string) => {
 export default class AdicinarVinculoPFService {
   static async execute({ pessoa, vinculo, atributos, alteravel = true, sequelize, transaction }) {
     if (pessoa instanceof Pessoa) {
-      if (typeof atributos !== 'object') throw new Error('Atributos precisa ser um objeto');
+      if (typeof atributos !== 'object') throw new AppError(400, 'Atributos precisa ser um objeto');
 
       let t = transaction;
       // Testa se a instancia de conexão com o banco de dados foi passada corretamente
       if (!sequelize || !(sequelize instanceof Sequelize)) {
-        throw new Error('Não foi possível estabalecer conexão com o banco de dados');
+        throw new AppError(500, 'Não foi possível estabalecer conexão com o banco de dados');
       }
 
       // Testa se a instancia de transação foi mandada corretamente, caso não, cria uma nova instancia
@@ -55,7 +56,7 @@ export default class AdicinarVinculoPFService {
         transaction: t,
       });
 
-      if (!vinculo) throw new Error('Vinculo não encontrado');
+      if (!vinculo) throw new AppError(404, 'Vinculo não encontrado');
 
       if (!alteravel && (await pessoa.hasVinculos(vinculoGet, { transaction: t }))) return;
       // const existsVinculo = await pessoa.hasVinculos(vinculoGet, { transaction: t });
@@ -88,7 +89,7 @@ export default class AdicinarVinculoPFService {
             );
         });
 
-      if (propertyErrors.length > 0) throw new Error(propertyErrors);
+      if (propertyErrors.length > 0) throw new AppError(400, propertyErrors);
 
       const vinculoExists = await PessoaVinculo.findOne({
         where: { pessoaid: pessoa.id, vinculoid: vinculoGet.id },
@@ -130,7 +131,7 @@ export default class AdicinarVinculoPFService {
 
       if (!transaction) t.commit();
     } else {
-      throw new Error('Você precisa dar uma instancia de pessoa para efetuar o registro de vínculo');
+      throw new AppError(500, 'Você precisa dar uma instancia de pessoa para efetuar o registro de vínculo');
     }
   }
 }

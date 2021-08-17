@@ -1,4 +1,5 @@
 import { Sequelize, Transaction } from 'sequelize';
+import AppError from '../errors/AppError';
 import Telefone from '../models/Sequelize/Telefone';
 
 export default class AdicionarTelefoneService {
@@ -15,7 +16,8 @@ export default class AdicionarTelefoneService {
     let t = transaction;
 
     if (!sequelize || !(sequelize instanceof Sequelize)) {
-      throw new Error(
+      throw new AppError(
+        500,
         'Não foi possível estabelecer uma conexão com o banco de dados, verifique se houve a instancia da conexão'
       );
     }

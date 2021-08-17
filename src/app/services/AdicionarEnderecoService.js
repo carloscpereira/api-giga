@@ -4,6 +4,7 @@ import Endereco from '../models/Sequelize/Endereco';
 import Cidade from '../models/Sequelize/Cidade';
 import Estado from '../models/Sequelize/Estado';
 import Bairro from '../models/Sequelize/Bairro';
+import AppError from '../errors/AppError';
 
 export default class AdicionarEnderecoService {
   static async execute({
@@ -24,7 +25,8 @@ export default class AdicionarEnderecoService {
     let t = transaction;
 
     if (!sequelize || !(sequelize instanceof Sequelize)) {
-      throw new Error(
+      throw new AppError(
+        500,
         'Não foi possível estabelecer uma conexão com o banco de dados, verifique se houve a instancia da conexão'
       );
     }
@@ -56,7 +58,7 @@ export default class AdicionarEnderecoService {
       transaction: t,
     });
 
-    if (!findCidade) throw new Error('Cidade não encontrada');
+    if (!findCidade) throw new AppError(400, 'Cidade não encontrada');
 
     if (verifyExistsEndereco) {
       return verifyExistsEndereco;

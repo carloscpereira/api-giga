@@ -9,12 +9,14 @@ import PessoaFisica from '../models/Sequelize/PessoaFisica';
 import PessoaJuridica from '../models/Sequelize/PessoaJuridica';
 import AssociadoPF from '../models/Sequelize/AssociadoPF';
 import AssociadoPJ from '../models/Sequelize/AssociadoPJ';
+import AppError from '../errors/AppError';
 
 export default class RemoveMembroContratoService {
   static async execute({ id_contrato, id_beneficiario, sequelize, transaction }) {
     let t = transaction;
     if (!sequelize || !(sequelize instanceof Sequelize)) {
-      throw new Error(
+      throw new AppError(
+        500,
         'Não foi possível estabelecer uma conexão com o banco de dados, verifique se houve a instanciação da conexãor'
       );
     }
@@ -48,7 +50,7 @@ export default class RemoveMembroContratoService {
         ),
       ]);
 
-      if (!beneficiario) throw new Error('Beneficiario não encontrado para o contrato informado');
+      if (!beneficiario) throw new AppError(404, 'Beneficiario não encontrado para o contrato informado');
 
       /**
        * Seleciono o Beneficiario e titulo
@@ -95,7 +97,7 @@ export default class RemoveMembroContratoService {
         return;
       }
 
-      if (!titulo) throw new Error('Não há titulos em vigencia para contrado selecionado');
+      if (!titulo) throw new AppError(401, 'Não há titulos em vigencia para contrado selecionado');
 
       const parcelasTitulo = await titulo.getParcelas({ transaction: t });
 

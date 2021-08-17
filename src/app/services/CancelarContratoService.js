@@ -5,6 +5,7 @@ import GrupoFamiliar from '../models/Sequelize/GrupoFamiliar';
 import Titulo from '../models/Sequelize/Titulo';
 import Parcela from '../models/Sequelize/Parcela';
 import Beneficiario from '../models/Sequelize/Beneficiario';
+import AppError from '../errors/AppError';
 
 export default class CancelarContratoService {
   static async execute({ id, sequelize, transaction, motivocancelamentoid = 38 }) {
@@ -12,7 +13,7 @@ export default class CancelarContratoService {
 
     // Testa se a instancia de conexão com o banco de dados foi passada corretamente
     if (!sequelize || !(sequelize instanceof Sequelize)) {
-      throw new Error('Não foi possível estabalecer conexão com o banco de dados');
+      throw new AppError(500, 'Não foi possível estabalecer conexão com o banco de dados');
     }
 
     // Testa se a instancia de transação foi mandada corretamente, caso não, cria uma nova instancia
@@ -40,7 +41,7 @@ export default class CancelarContratoService {
       );
 
       // Caso o contrato não exista, retorna um erro
-      if (!contrato) throw new Error('Impossível cancelar um contrato inexistente');
+      if (!contrato) throw new AppError(400, 'Impossível cancelar um contrato inexistente');
 
       // Atualiza o status do contrato para status de cancelado (7)
       await contrato.update(
