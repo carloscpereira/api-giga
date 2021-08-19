@@ -634,7 +634,8 @@ export default async({
                     statusid: 8,
                     tipocontratoid: 9,
                     datacancelamento: {
-                        [Op.is]: null },
+                        [Op.is]: null,
+                    },
                 },
             }, { transaction: t });
         }
@@ -817,7 +818,7 @@ export default async({
 
                 if (
                     isEqual(dataVencimento, setDate(dataVencimento, DiaVencimentoMes)) ||
-                    isAfter(dataVencimento, setDate(dataVenvimento, DiaVencimentoMes))
+                    isAfter(dataVencimento, setDate(dataVencimento, DiaVencimentoMes))
                 ) {
                     mesAdicional += 1;
                 }
@@ -1051,7 +1052,7 @@ export default async({
         }
 
         // Final
-        if (!transaction) t.commit();
+        if (!transaction) t.rollback();
 
         return { contrato, grupoFamiliar };
     } catch (error) {
