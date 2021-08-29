@@ -17,6 +17,8 @@ routes.get('/:operator/homolog', operatorMiddleware, newParcelaController.index)
 
 routes.get('/', gettersController.parcelas);
 
+routes.get('/newFilter', gettersController.newParcelas);
+
 routes.get('/:operator/query/srv', operatorMiddleware, parcelaController.filterParecelas);
 
 routes.get('/:operator/query/srv', operatorMiddleware, parcelaController.filterParecelas);
