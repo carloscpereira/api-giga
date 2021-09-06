@@ -40,40 +40,36 @@ class ProdutoController {
         //        on "cn_planotipobeneficiario"."tabelaprecoplanoid" = "cn_tabelaprecoplano"."id" and
         //           "cn_planotipobeneficiario"."tipobeneficiarioid" = 1`;
 
-        let querySql = `SELECT "cn_produto"."id" as "id",
-                      "cn_produto"."descricao" as "plano",
-                      "cn_versaoplano"."descricao" as "versaoplano",
-                      coalesce("cn_planotipobeneficiario".valor,0) as "preco",
-                      "cn_segmentacaoassistencial"."descricao" as "segmentacao_assistencial",
-                      "cn_tipocontratacao"."descricao" as "tipo_contratacao",
-                      "cn_tipoareaabrangencia"."descricao" as "tipo_area_abrangencia",
-                      "cn_areacobertura"."descricao" as "area_cobertura",
-                      "cn_produto"."registroans" as "ans",
-                      especialidades
-                      FROM cn_produto
-                      inner join cn_rolcoberturaplano on cn_rolcoberturaplano.planoid = cn_produto.planoid
-                          and cn_rolcoberturaplano.versaoid = cn_produto.versaoid
-                      inner join cn_versaoplano on cn_versaoplano.id = cn_produto.versaoid
-                      inner join cn_segmentacaoassistencial on cn_segmentacaoassistencial.id = cn_produto.segmentacaoassistencialid
-                      inner join cn_tipocontratacao on cn_tipocontratacao.id = cn_produto.tipocontratacaoid
-                      inner join cn_tipoareaabrangencia on cn_tipoareaabrangencia.id = cn_produto.tipoareaabrangenciaid
-                      inner join cn_areacobertura on cn_areacobertura.id = cn_produto.areacoberturaid
-                      inner join cn_tabelaprecoplano on cn_tabelaprecoplano.planoid = cn_produto.planoid
-                          and cn_tabelaprecoplano.versaoid = cn_produto.versaoid
-                      left Join cn_planotipobeneficiario on cn_planotipobeneficiario.tabelaprecoplanoid = cn_tabelaprecoplano.id
-                          and cn_planotipobeneficiario.tipobeneficiarioid = 1
-                      cross Join lateral(select array_to_json(array_agg(row_to_json(d))) AS especialidades
-                      from (select ce.id as "id", ce.descricao as "especialidade", procedimentos
-                              from cn_rolcoberturaplanoprocedimento rcpp
-                                  left join cn_especialidade ce on rcpp.especialidadeid = ce.id
-                                  cross join lateral (select array_to_json(array_agg(row_to_json(d))) AS procedimentos
-                                  from (select cp.id as "id", cp.descricao as "procedimento",
-                                              rcpp2.prazocarencia as "carencia" from cn_rolcoberturaplanoprocedimento rcpp2
-                                                  left join cn_procedimento cp on rcpp2.procedimentoid = cp.id
-                                  WHERE rcpp2.rolcoberturaplanoid = cn_rolcoberturaplano.id AND rcpp2.especialidadeid = ce.id) d limit 1)
-                                      procedimento
-                      where rcpp.rolcoberturaplanoid = cn_rolcoberturaplano.id) d limit 1) especialidades
-                  where cn_rolcoberturaplano.tipobeneficiarioid = 1`;
+        let querySql = `SELECT distinct  "cn_produto"."id" as "id",
+        "cn_produto"."descricao" as "plano",
+        "cn_versaoplano"."descricao" as "versao",
+        coalesce("cn_planotipobeneficiario".valor,0) as "preco",
+        "cn_segmentacaoassistencial"."descricao" as "segmentacao_assistencial",
+        "cn_tipocontratacao"."descricao" as "tipo_contratacao",
+        "cn_tipoareaabrangencia"."descricao" as "tipo_area_abrangencia",
+        "cn_areacobertura"."descricao" as "area_cobertura",
+        "cn_produto"."registroans" as "ans",
+
+          array_agg(jsonb_build_object('carencia',"cn_rolcoberturaplanoprocedimento".prazocarencia,
+              'procedimento',"cp".descricao, 'especialidade', ce.descricao)) as procedimentos
+        FROM cn_produto
+        inner join cn_rolcoberturaplano on cn_rolcoberturaplano.planoid = cn_produto.planoid
+            and cn_rolcoberturaplano.versaoid = cn_produto.versaoid
+        inner join cn_versaoplano on cn_versaoplano.id = cn_produto.versaoid
+        inner join cn_segmentacaoassistencial on cn_segmentacaoassistencial.id = cn_produto.segmentacaoassistencialid
+        inner join cn_tipocontratacao on cn_tipocontratacao.id = cn_produto.tipocontratacaoid
+        inner join cn_tipoareaabrangencia on cn_tipoareaabrangencia.id = cn_produto.tipoareaabrangenciaid
+        inner join cn_areacobertura on cn_areacobertura.id = cn_produto.areacoberturaid
+        inner join cn_tabelaprecoplano on cn_tabelaprecoplano.planoid = cn_produto.planoid
+            and cn_tabelaprecoplano.versaoid = cn_produto.versaoid
+        left Join cn_planotipobeneficiario on cn_planotipobeneficiario.tabelaprecoplanoid = cn_tabelaprecoplano.id
+            and cn_planotipobeneficiario.tipobeneficiarioid = 1
+
+        left join cn_rolcoberturaplanoprocedimento on cn_rolcoberturaplanoprocedimento.rolcoberturaplanoid = cn_rolcoberturaplano.id
+        left join cn_especialidade ce on cn_rolcoberturaplanoprocedimento.especialidadeid = ce.id
+        left join cn_procedimento cp on cn_rolcoberturaplanoprocedimento.procedimentoid = cp.id
+
+    where cn_rolcoberturaplano.tipobeneficiarioid = 1`;
 
         let andWhere = '';
 
@@ -86,8 +82,10 @@ class ProdutoController {
             andWhere = `${andWhere} AND "cn_produto".${v} = $${i + 1}`;
         }
 
+        const groupBy = `  group by 1,2,3,4,5,6,7,8,9`;
+
         if (andWhere) {
-            querySql = `${querySql} ${andWhere}`;
+            querySql = `${querySql} ${andWhere} ${groupBy}`;
         }
 
         console.log(querySql);
