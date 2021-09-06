@@ -585,13 +585,16 @@ export default async({
 
             const qtdParcelas = Parcelas || infoVigencia.mesesvigencia;
 
-            contrato = await Contrato.create({
+            // const novaData = new Date(dataAdesao);
+            // const dateTest = format(new Date(dataAdesao), formatoData);
+
+            const dataTeste = {
                 id: contratoId,
                 numerocontrato: contratoId.toString().padStart(10, '0'),
                 operadoraid,
                 statusid: 8,
-                dataadesao: format(dataAdesao, formatoData),
-                datainicialvigencia: format(dataAdesao, formatoData),
+                dataadesao: format(new Date(dataAdesao), formatoData),
+                datainicialvigencia: format(new Date(dataAdesao), formatoData),
                 datafinalvigencia: format(addMonths(dataVencimentoMes, infoVigencia.mesesvigencia - 1), formatoData),
                 dataregistrosistema: format(new Date(), formatoData),
                 ciclovigenciacontrato: 1,
@@ -610,7 +613,40 @@ export default async({
                 ...(centroCusto ? { centrocustoid: centroCusto.id } : {}),
                 ...(cartaoCredito ? { cartaoid: cartaoCredito.id } : {}),
                 ...(Observacao ? { obs: Observacao } : {}),
-            }, { transaction: t });
+            };
+
+            console.log(dataTeste);
+
+            try {
+                contrato = await Contrato.create({
+                    id: contratoId,
+                    numerocontrato: contratoId.toString().padStart(10, '0'),
+                    operadoraid,
+                    statusid: 8,
+                    dataadesao: format(new Date(dataAdesao), formatoData),
+                    datainicialvigencia: format(new Date(dataAdesao), formatoData),
+                    datafinalvigencia: format(addMonths(dataVencimentoMes, infoVigencia.mesesvigencia - 1), formatoData),
+                    dataregistrosistema: format(new Date(), formatoData),
+                    ciclovigenciacontrato: 1,
+                    quantidadedemesesvigencia: infoVigencia.mesesvigencia,
+                    con_id_regra_vigencia: infoVigencia.id,
+                    con_nu_prazo_cancela_inad: infoVigencia.rvc_nu_prazo_cancela_inad,
+                    prazolimitebloqueio: infoVigencia.prazobloqueio,
+                    tipocontratoid: 5,
+                    tipodecarteiraid: tipoCarteiraId,
+                    motivoadesaoid: MotivoAdesao,
+                    con_in_renovacao_auto: produto.prd_in_renovaauto,
+                    importado: 'N',
+                    localid: 1,
+                    bloqueadopesquisa: false,
+                    ...(Parent ? { contrato_parent: Number.parseInt(Parent, 10) } : {}),
+                    ...(centroCusto ? { centrocustoid: centroCusto.id } : {}),
+                    ...(cartaoCredito ? { cartaoid: cartaoCredito.id } : {}),
+                    ...(Observacao ? { obs: Observacao } : {}),
+                }, { transaction: t });
+            } catch (error) {
+                console.log(error);
+            }
 
             await contrato.setResponsavelpf(responsavel, {
                 through: {
@@ -618,7 +654,7 @@ export default async({
                     tipocarteiraid: carteirinha.id,
                     versaoplanoid: produto.versaoid,
                     diavencimento: Number.parseInt(DiaVencimentoMes, 10),
-                    datavencimento: format(dataAdesao, formatoData),
+                    datavencimento: format(new Date(dataAdesao), formatoData),
                     tipodecarteiraid: tipoCarteiraId,
                     qtdparcela: qtdParcelas,
                     valorcontrato: valorBeneficiarios * infoVigencia.mesesvigencia,
@@ -806,8 +842,8 @@ export default async({
                     tituloid: titulo.id,
                     tipodocumentoid: 1,
                     numero: j,
-                    datavencimento: format(dataVencimento, formatoData),
-                    datacadastramento: new Date(),
+                    datavencimento: format(new Date(dataVencimento), formatoData),
+                    datacadastramento: format(new Date(), formatoData),
                     statusgrupoid: 1,
                     valor: (valorBeneficiarios * infoVigencia.mesesvigencia) / quantidadeParcelas,
                     valor_bruto: (valorBeneficiarios * infoVigencia.mesesvigencia) / quantidadeParcelas,
@@ -834,7 +870,7 @@ export default async({
                     tipodocumentoid: 1,
                     numero: j,
                     datavencimento: addMonths(setDate(dataVencimento, DiaVencimentoMes), mesAdicional - 1),
-                    datacadastramento: new Date(),
+                    datacadastramento: format(new Date(), formatoData),
                     statusgrupoid: 1,
                     valor: (valorBeneficiarios * infoVigencia.mesesvigencia) / quantidadeParcelas,
                     valor_bruto: (valorBeneficiarios * infoVigencia.mesesvigencia) / quantidadeParcelas,
