@@ -42,7 +42,7 @@ class ProdutoController {
 
         let querySql = `SELECT distinct  "cn_produto"."id" as "id",
         "cn_produto"."descricao" as "plano",
-        "cn_versaoplano"."descricao" as "versao",
+        "cn_versaoplano"."descricao" as "versaoplano",
         coalesce("cn_planotipobeneficiario".valor,0) as "preco",
         "cn_segmentacaoassistencial"."descricao" as "segmentacao_assistencial",
         "cn_tipocontratacao"."descricao" as "tipo_contratacao",
