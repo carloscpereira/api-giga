@@ -60,8 +60,20 @@ class ContratoController {
           model: PessoaFisica,
           as: 'responsavel_pessoafisica',
           where: {
-            ...(cpf ? { cpf: { [Op.iLike]: `${cpf}%` } } : {}),
-            ...(nome ? { nome: { [Op.iLike]: `%${nome}%` } } : {}),
+            ...(cpf
+              ? {
+                  cpf: {
+                    [Op.iLike]: `${cpf}%`,
+                  },
+                }
+              : {}),
+            ...(nome
+              ? {
+                  nome: {
+                    [Op.iLike]: `%${nome}%`,
+                  },
+                }
+              : {}),
           },
         },
         { model: PessoaJuridica, as: 'responsavel_pessoajuridica' },
@@ -231,9 +243,7 @@ class ContratoController {
     const transaction = await sequelize.transaction();
 
     try {
-      const [
-        infoVigencia,
-      ] = await sequelize.query(
+      const [infoVigencia] = await sequelize.query(
         'SELECT * FROM cn_regravigenciacontrato WHERE rvc_ds_vigencia_contrato ILIKE :vigencia LIMIT 1',
         { replacements: { vigencia: rest.PrazoVigencia }, type: QueryTypes.SELECT, transaction }
       );
@@ -706,6 +716,27 @@ class ContratoController {
       console.log(error);
       throw error;
     }
+  }
+
+  async findContratoWithProduto(req, res) {
+    const {
+      params: { id },
+      sequelize,
+    } = req;
+
+    let querySql = `select b.contratoid, cp.id as produtoid, cp.descricao as produto,
+                            b.planoid,  c.descricao as plano,
+                            b.versaoplanoid, cv.descricao as versao, b.valor from cn_beneficiario b
+                        inner join cn_produto cp on b.planoid = cp.planoid and b.versaoplanoid = cp.versaoid
+                        inner join cn_plano c on cp.planoid = c.id
+                        inner join cn_versaoplano cv on cp.versaoid = cv.id
+                        where b.ativo = '1' and contratoid = ${id};`;
+
+    console.log(querySql);
+
+    const [contrato] = await sequelize.query(querySql);
+
+    return res.json({ error: null, data: contrato });
   }
 }
 

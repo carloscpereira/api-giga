@@ -11,6 +11,8 @@ import validateAdicaoBeneficiario from '../app/validators/AdicaoBeneficiario';
 const routes = new Router();
 
 routes.get('/:operator', operatorMiddleware, contratoController.index);
+routes.get('/:operator/produto/:id', operatorMiddleware, contratoController.findContratoWithProduto);
+
 routes.post('/:operator', operatorMiddleware, validateStore, contratoController.store);
 
 routes.put('/:operator/:id', operatorMiddleware, validateUpdate, contratoController.update);
@@ -24,10 +26,10 @@ routes.delete('/:operator/:id', operatorMiddleware, contratoController.destroy);
 routes.post('/:operator/:id/enable', operatorMiddleware, contratoController.enable);
 routes.delete('/:operator/:id/beneficiario/:beneficiarioid', operatorMiddleware, contratoController.removerAssociado);
 routes.post(
-  '/:operator/:id/beneficiario',
-  operatorMiddleware,
-  validateAdicaoBeneficiario,
-  contratoController.adicionarAssociado
+    '/:operator/:id/beneficiario',
+    operatorMiddleware,
+    validateAdicaoBeneficiario,
+    contratoController.adicionarAssociado
 );
 
 export default routes;
