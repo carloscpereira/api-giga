@@ -50,7 +50,7 @@ class ProdutoController {
         "cn_areacobertura"."descricao" as "area_cobertura",
         "cn_produto"."registroans" as "ans",
 
-          array_agg(jsonb_build_object('carencia',"cn_rolcoberturaplanoprocedimento".prazocarencia,
+          array_agg(jsonb_build_object('carencia',coalesce("cn_rolcoberturaplanoprocedimento".prazocarencia,0),
               'procedimento',"cp".descricao, 'especialidade', ce.descricao)) as procedimentos
         FROM cn_produto
         inner join cn_rolcoberturaplano on cn_rolcoberturaplano.planoid = cn_produto.planoid
