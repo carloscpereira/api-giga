@@ -35,7 +35,7 @@ class UsuarioController {
         const resQuery = await sequelize.query(query, { type: QueryTypes.SELECT });
 
         if (resQuery.length != 0) {
-            return res.json({ error: 400, message: 'Usuário já cadastrado.' });
+            return res.status(400).json({ error: 400, message: 'Usuário já cadastrado.' });
         }
 
         /**find pessoaID */
@@ -43,7 +43,7 @@ class UsuarioController {
         const { id: pessoaID } = await sequelize.query(queryFindPessoa, { type: QueryTypes.SELECT });
 
         if (!pessoaID) {
-            return res.json({ error: 400, message: 'Usuário sem cadastro na operadora.' });
+            return res.status(400).json({ error: 400, message: 'Usuário sem cadastro na operadora.' });
         }
 
         const queryContrato = `SELECT id FROM cn_associadopf
@@ -54,7 +54,7 @@ class UsuarioController {
 
         const contrato = await sequelize.query(queryContrato, { type: QueryTypes.SELECT });
         if (contrato.length != 0) {
-            return res.json({ error: 400, message: 'Usuário não possue contrato na operadora.' });
+            return res.status(400).json({ error: 400, message: 'Usuário não possue contrato na operadora.' });
         }
 
         const insertUsuario = `INSERT INTO sc_portal_associado.fr_usuario (
