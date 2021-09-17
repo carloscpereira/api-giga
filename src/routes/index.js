@@ -38,6 +38,7 @@ import testeRouter from './_testeRouter';
 import cmfRouter from './_centroMovimentacaoFinanceiraRouter';
 import gcmfRouter from './_grupoCentroMovimentacaoFinanceiraRouter';
 import usuarioRouter from './_usuarioRouter';
+import fichaMedicaRouter from './_fichaMedicaRouter';
 
 import { checkAuthorization } from '../app/middlewares';
 
@@ -59,7 +60,6 @@ routes.use('/pessoa-juridica', pessoaJuridicaRouter);
 routes.use('/pessoa', pessoaRouter);
 routes.use('/pessoa-fisica', pessoaFisicaRouter);
 routes.use('/system/log/contato', logContatoRouter);
-// routes.use('/parcelas', boletoRouter);
 routes.use('/vinculos', vinculoRouter);
 routes.use('/centro-resultados', centroCustoRouter);
 routes.use('/bancos', bancoRouter);
@@ -83,5 +83,6 @@ routes.use('/regras-fechamento', regraFechamentoRouter);
 routes.use('/cmf', cmfRouter);
 routes.use('/grupocmf', gcmfRouter);
 routes.use('/usuario', usuarioRouter);
+routes.use('/ficha-medica', fichaMedicaRouter);
 
 export default routes;
