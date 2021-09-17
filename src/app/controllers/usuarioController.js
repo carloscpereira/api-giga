@@ -40,7 +40,7 @@ class UsuarioController {
 
         /**find pessoaID */
         const queryFindPessoa = `SELECT id FROM sp_dadospessoafisica WHERE cpf = '${usr_login}'`;
-        const { id: pessoaID } = await sequelize.query(queryFindPessoa, { type: QueryTypes.SELECT });
+        const [{ id: pessoaID }] = await sequelize.query(queryFindPessoa, { type: QueryTypes.SELECT });
 
         if (!pessoaID) {
             return res.status(400).json({ error: 400, message: 'Usuário sem cadastro na operadora.' });
