@@ -13,13 +13,18 @@ class UsuarioController {
     }
 
     async show(req, res) {
-        const { id } = req.params;
+        const { usr_login, usr_senha } = req.body;
         const { sequelize } = req;
 
         const queryUsuario = `SELECT usr_codigo, usr_login, usr_senha, usr_nome, usr_email, pessoaid
-        FROM sc_portal_associado.fr_usuario WHERE usr_codigo = ${id}`;
+        FROM sc_portal_associado.fr_usuario WHERE usr_login = '${usr_login}' and usr_senha = md5(cast(usr_codigo as varchar)||'${usr_senha}')`;
 
+        console.log(queryUsuario);
         const usuario = await sequelize.query(queryUsuario, { type: QueryTypes.SELECT });
+
+        if (usuario.length === 0) {
+            return res.status(400).json({ error: 400, message: 'Login e/ou senha inválidos.' });
+        }
 
         return res.json({ error: null, data: usuario });
     }
