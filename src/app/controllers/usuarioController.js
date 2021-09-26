@@ -13,11 +13,11 @@ class UsuarioController {
     }
 
     async show(req, res) {
-        const { usr_login, usr_senha } = req.body;
+        const { login, senha } = req.params;
         const { sequelize } = req;
 
         const queryUsuario = `SELECT usr_codigo, usr_login, usr_senha, usr_nome, usr_email, pessoaid
-        FROM sc_portal_associado.fr_usuario WHERE usr_login = '${usr_login}' and usr_senha = md5(cast(usr_codigo as varchar)||'${usr_senha}')`;
+        FROM sc_portal_associado.fr_usuario WHERE usr_login = '${login}' and usr_senha = md5(cast(usr_codigo as varchar)||'${senha}')`;
 
         console.log(queryUsuario);
         const usuario = await sequelize.query(queryUsuario, { type: QueryTypes.SELECT });
