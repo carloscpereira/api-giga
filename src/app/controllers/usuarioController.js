@@ -31,7 +31,7 @@ class UsuarioController {
 
     async create(req, res) {
         const { sequelize } = req;
-        const { usr_login, usr_senha, usr_nome, usr_email } = req.body;
+        const { usr_login, usr_senha, usr_email } = req.body;
 
         /** Testa se já existe o usuario */
         const query = `SELECT  usr_codigo, usr_login, usr_senha, usr_nome, usr_email, pessoaid
@@ -47,6 +47,8 @@ class UsuarioController {
         const queryFindPessoa = `SELECT id FROM sp_dadospessoafisica WHERE cpf = '${usr_login}'`;
         const [{ id: pessoaID }] = await sequelize.query(queryFindPessoa, { type: QueryTypes.SELECT });
 
+        console.log(pessoaID);
+
         if (!pessoaID) {
             return res.status(400).json({ error: 400, message: 'Usuário sem cadastro na operadora.' });
         }
@@ -58,20 +60,20 @@ class UsuarioController {
                               WHERE pessoabeneficiarioid = ${pessoaID}`;
 
         const contrato = await sequelize.query(queryContrato, { type: QueryTypes.SELECT });
-        if (contrato.length != 0) {
+        if (contrato.length === 0) {
             return res.status(400).json({ error: 400, message: 'Usuário não possue contrato na operadora.' });
         }
 
         const insertUsuario = `INSERT INTO sc_portal_associado.fr_usuario (
           usr_login, usr_senha, usr_nome, usr_email, pessoaid) VALUES (
-            '${usr_login}', '${usr_senha}', '${usr_nome}', '${usr_email}', ${pessoaID})
+            '${usr_login}', '${usr_senha}', '${usr_login}', '${usr_email}', ${pessoaID})
             RETURNING usr_codigo, usr_login, usr_senha, usr_nome, usr_email, pessoaid`;
 
         const newUsuario = await sequelize.query(insertUsuario, { type: QueryTypes.INSERT });
 
         const queryCriptSenha = `UPDATE sc_portal_associado.fr_usuario
-        SET usr_senha = 'md5(${newUsuario.usr_codigo}||${newUsuario.usr_senha})'
-        WHERE usr_codigo = ${newUsuario.usr_codigo}
+        SET usr_senha = md5(cast(${newUsuario[0][0].usr_codigo} as varchar)||cast(${newUsuario[0][0].usr_senha} as varchar))
+        WHERE usr_codigo = ${newUsuario[0][0].usr_codigo}
         RETURNING usr_codigo, usr_login, usr_senha, usr_nome, usr_email, pessoaid`;
 
         const resultUsuario = await sequelize.query(queryCriptSenha, { type: QueryTypes.UPDATE });
