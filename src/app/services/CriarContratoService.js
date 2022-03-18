@@ -918,16 +918,20 @@ export default async ({
       const parcelas = await titulo.getParcelas({ transaction: t });
 
       if (Pagamentos) {
-        const firstInstallment = parcelas.sort((a, b) => parseInt(a.numero, 10) - parseInt(b.numero, 10))[0];
-        await BaixarParcelaService.execute({
-          transaction: t,
-          forma_pagamento: Pagamentos,
-          id_parcela: firstInstallment.id,
-          id_contrato: contrato.id,
-          ...(Descontos ? { descontos: Descontos } : {}),
-          ...(Acrescimos ? { acrescimos: Acrescimos } : {}),
-          data_pagamento: DataPagamento || new Date(),
-          connection,
+        // const firstInstallment = parcelas.sort((a, b) => parseInt(a.numero, 10) - parseInt(b.numero, 10))[0];
+        const Installment = parcelas.filter((parcela) => parcela.numero <= Pagamentos[0].Parcelas);
+
+        Installment.forEach(async (newParcela) => {
+          await BaixarParcelaService.execute({
+            transaction: t,
+            forma_pagamento: Pagamentos,
+            id_parcela: newParcela.id,
+            id_contrato: contrato.id,
+            ...(Descontos ? { descontos: Descontos } : {}),
+            ...(Acrescimos ? { acrescimos: Acrescimos } : {}),
+            data_pagamento: DataPagamento || new Date(),
+            connection,
+          });
         });
       }
 
