@@ -895,8 +895,10 @@ export default async({
 
             if (Pagamentos) {
                 const firstInstallment = parcelas.sort((a, b) => parseInt(a.numero, 10) - parseInt(b.numero, 10))[0];
-                // const Installment = parcelas.filter((parcela) => parcela.numero <= Pagamentos[0].Parcelas);
+                const Installment = parcelas.filter((parcela) => parcela.numero <= Pagamentos[0].Parcelas)[0];
 
+                console.log(Installment.id);
+                console.log(firstInstallment.id);
                 // Installment.forEach(async(newParcela) => {
                 await BaixarParcelaService.execute({
                     transaction: t,
@@ -922,54 +924,59 @@ export default async({
                     throw new AppError(400, 'É necessário informar ao menos um endereço para o responsável financeiro');
                 }
 
-                const {
-                    data: { data: boleto },
-                } = await axios.post(
-                    `https://www.idental.com.br/api/bb/${operadora}`, {
-                        TipoTitulo: 1,
-                        ValorBruto: primeiraParcela.valor,
-                        DataVencimento: primeiraParcela.datavencimento,
-                        Pagador: {
-                            Tipo: 1,
-                            Nome: ResponsavelFinanceiro.Nome,
-                            Documento: ResponsavelFinanceiro.CPF,
-                            Estado: endereco.estado,
-                            Cidade: endereco.cidade,
-                            Bairro: endereco.bairro,
-                            Endereco: endereco.logradouro,
-                            Cep: endereco.cep,
-                        },
-                    }, { headers: { appAuthorization: 'ff4e09f0-241d-4bbf-85f0-76dd1bd67919' } }
-                );
+                //Tratativa de envio de boleto quando está em aberto o pagamento
+                // try {
+                //     const {
+                //         data: { data: boleto },
+                //     } = await axios.post(
+                //         `https://www.idental.com.br/api/bb/${operadora}`, {
+                //             TipoTitulo: 1,
+                //             ValorBruto: primeiraParcela.valor,
+                //             DataVencimento: primeiraParcela.datavencimento,
+                //             Pagador: {
+                //                 Tipo: 1,
+                //                 Nome: ResponsavelFinanceiro.Nome,
+                //                 Documento: ResponsavelFinanceiro.CPF,
+                //                 Estado: endereco.estado,
+                //                 Cidade: endereco.cidade,
+                //                 Bairro: endereco.bairro,
+                //                 Endereco: endereco.logradouro,
+                //                 Cep: endereco.cep,
+                //             },
+                //         }, { headers: { appAuthorization: 'ff4e09f0-241d-4bbf-85f0-76dd1bd67919' } }
+                //     );
 
-                await Parcela.update({
-                    linhadigitavel: boleto.linhaDigitavel,
-                    codigobarras: boleto.codigoBarraNumerico,
-                    nossonumero: boleto.numero,
-                }, {
-                    where: {
-                        id: primeiraParcela.id,
-                    },
-                    transaction: t,
-                });
+                //     await Parcela.update({
+                //         linhadigitavel: boleto.linhaDigitavel,
+                //         codigobarras: boleto.codigoBarraNumerico,
+                //         nossonumero: boleto.numero,
+                //     }, {
+                //         where: {
+                //             id: primeiraParcela.id,
+                //         },
+                //         transaction: t,
+                //     });
 
-                // Enviar boleto
-                const responsavelFinanceiroEmail = Emails[0];
-                if (responsavelFinanceiroEmail) {
-                    try {
-                        await axios.post(
-                            `https://www.idental.com.br/api/cobranca/${operadora}/send-boleto/email`, {
-                                destinatario: responsavelFinanceiroEmail,
-                                parcela_id: primeiraParcela.id,
-                                nome: responsavel.nome,
-                                nosso_numero: boleto.numero,
-                                vencimento: primeiraParcela.datavencimento,
-                            }, { headers: { appAuthorization: '90b63cf1-4061-49e8-8f99-6f3692fdaa6d' } }
-                        );
-                    } catch (error) {
-                        console.error(error);
-                    }
-                }
+                //     // Enviar boleto
+                //     const responsavelFinanceiroEmail = Emails[0];
+                //     if (responsavelFinanceiroEmail) {
+                //         try {
+                //             await axios.post(
+                //                 `https://www.idental.com.br/api/cobranca/${operadora}/send-boleto/email`, {
+                //                     destinatario: responsavelFinanceiroEmail,
+                //                     parcela_id: primeiraParcela.id,
+                //                     nome: responsavel.nome,
+                //                     nosso_numero: boleto.numero,
+                //                     vencimento: primeiraParcela.datavencimento,
+                //                 }, { headers: { appAuthorization: '90b63cf1-4061-49e8-8f99-6f3692fdaa6d' } }
+                //             );
+                //         } catch (error) {
+                //             console.error(error);
+                //         }
+                //     }
+                // } catch (error) {
+                //     console.log(error);
+                // }
             }
 
             const regraFechamento = await RegraFechamento.findOne({
