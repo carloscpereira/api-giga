@@ -66,6 +66,7 @@ export default class BaixarParcelaService {
                 });
             }
 
+            console.log(parcela);
             const getLoteParcela = await parcela.getLotes({ transaction: t });
             let tipoBaixa;
 

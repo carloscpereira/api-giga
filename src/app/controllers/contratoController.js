@@ -324,7 +324,7 @@ class ContratoController {
             });
 
             await transaction.commit();
-
+            // await transaction.rollback();
             return res.json(migration);
         } catch (error) {
             await transaction.rollback();
@@ -597,6 +597,7 @@ class ContratoController {
             await DestroyContractService.execute({ id_contrato: id, connection: sequelize, transaction });
 
             await transaction.commit();
+            // await transaction.rollback();
 
             return res.sendStatus(202);
         } catch (error) {
@@ -703,6 +704,7 @@ class ContratoController {
             await AtivarContratoService({ sequelize, transaction, id_contrato, data_adesao });
 
             await transaction.commit();
+            // await transaction.rollback();
             return res.sendStatus(201);
         } catch (error) {
             await transaction.rollback();
