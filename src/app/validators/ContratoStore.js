@@ -88,7 +88,7 @@ export default async(req, res, next) => {
                     }),
                 InscricaoEstadual: Yup.string().when('TipoPessoa', { is: 'J', then: Yup.string().required() }),
                 IncricaoMunicipal: Yup.string().when('TipoPessoa', { is: 'J', then: Yup.string() }),
-                RG: Yup.string().min(7).max(14).when('TipoPessoa', { is: 'F', then: Yup.string().required() }),
+                RG: Yup.string().min(5).max(14).when('TipoPessoa', { is: 'F', then: Yup.string().required() }),
                 CPF: Yup.string().length(11).when('TipoPessoa', { is: 'F', then: Yup.string().required() }),
                 CNPJ: Yup.string().length(14).when('TipoPessoa', { is: 'J', then: Yup.string().required() }),
                 DataNascimento: Yup.date().when('TipoPessoa', { is: 'F', then: Yup.date().required() }),
